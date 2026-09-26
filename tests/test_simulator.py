@@ -195,5 +195,24 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(code, 0)
 
 
+class SolarTests(unittest.TestCase):
+    def test_solar_adds_an_inverter_and_a_battery_that_the_contract_accepts(self):
+        code, out, _ = run("--count", "300", "--solar", "--validate", "--health-every", "0")
+        self.assertEqual(code, 0)
+        lines = [json.loads(line) for line in out.strip().splitlines()]
+        solar = [line for line in lines if line["topic"].startswith("armor/solar/")]
+        self.assertEqual(len(solar), 600)
+        inverters = [line["payload"] for line in solar if line["payload"]["kind"] == "inverter"]
+        self.assertEqual({item["mode"] for item in inverters}, {"line", "battery"})          # the mains outage of the fast day
+        self.assertTrue(any(item["pv_w"] > 2000 for item in inverters))
+        battery = next(line["payload"] for line in solar if line["payload"]["kind"] == "battery")
+        self.assertEqual([len(module["cells_v"]) for module in battery["stack"]], [15, 15])
+        self.assertEqual(battery["full_capacity_ah"], 148.0)
+
+    def test_the_solar_stream_is_repeatable_and_off_by_default(self):
+        self.assertEqual(run("--count", "5", "--solar", "--seed", "3"), run("--count", "5", "--solar", "--seed", "3"))
+        self.assertNotIn("armor/solar/", run("--count", "5")[1])
+
+
 if __name__ == "__main__":
     unittest.main()

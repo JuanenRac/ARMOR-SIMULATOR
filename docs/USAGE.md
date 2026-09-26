@@ -20,6 +20,7 @@ built in, so a test can never reach a production broker by accident.
 | `--light` | `cycle` (day and night) or `night` (fixed 0.3 lux, for the low-light vision profile) |
 | `--seed` | Same seed, same output |
 | `--health-every` | One health message every N samples (0 disables) |
+| `--solar` | Also emit an inverter and a two-module battery stack (fifteen cells each, with capacities) over a fast day of 240 samples, with a mains outage late in the day |
 | `--fault`, `--fault-every` | Inject a repeatable fault (below) |
 | `--allow-invalid` | Required for faults that break the contract on purpose |
 | `--validate` | Check every message against ARMOR-COMMON before it is emitted |

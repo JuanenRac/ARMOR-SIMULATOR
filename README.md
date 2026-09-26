@@ -25,7 +25,7 @@
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 24 tests are real. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 26 tests are real. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -36,13 +36,14 @@
 * **Deterministic:** the same seed always prints the same lines; nothing is sent unless you give `--server-url` and `--ingest-token`.
 * **Checked against the contract:** `--validate` runs every message through ARMOR-COMMON before it is emitted.
 * **Careful delivery:** only a plain http(s) origin is accepted; a 4xx stops the run, a 5xx or a network error is retried.
+* **Solar equipment:** `--solar` adds an inverter and a two-module battery stack (fifteen cells each, capacities included) over a fast day of 240 samples, with a mains outage late in the day; the messages are checked against the solar contract of ARMOR-COMMON and delivered to `/api/v1/solar`.
 
 ## 📂 Repository Structure
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, publisher, cli
-├── tests/                 24 tests, including a local HTTP server
+├── tests/                 26 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -51,7 +52,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 24 tests
+python -m unittest discover -s tests   # 26 tests
 ```
 
 Full options, scenarios and faults: [usage](docs/USAGE.md).

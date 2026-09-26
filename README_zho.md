@@ -25,7 +25,7 @@
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器投递以及 24 个测试都是真实的。几何模型只是**示意性的**，并非真实 LD2450 雷达的模型，且没有任何内容与真实硬件对照过。
+**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器投递以及 26 个测试都是真实的。几何模型只是**示意性的**，并非真实 LD2450 雷达的模型，且没有任何内容与真实硬件对照过。
 
 ---
 
@@ -36,13 +36,14 @@
 * **确定性：** 相同的种子总是打印相同的行；除非提供 `--server-url` 和 `--ingest-token`，否则不会发送任何内容。
 * **对照契约检查：** `--validate` 在发出每条消息之前先让它通过 ARMOR-COMMON。
 * **谨慎投递：** 只接受简单的 http(s) 源；4xx 会终止运行，5xx 或网络错误会重试。
+* **太阳能设备：** `--solar` 会在 240 个样本的快进一天中加入一台逆变器和一个两模块的电池组（每个模块十五个电芯，含容量），并在傍晚出现一次市电中断；消息会对照 ARMOR-COMMON 的太阳能契约检查，并投递到 `/api/v1/solar`。
 
 ## 📂 仓库结构
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, publisher, cli
-├── tests/                 24 tests, including a local HTTP server
+├── tests/                 26 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -51,7 +52,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 24 tests
+python -m unittest discover -s tests   # 26 tests
 ```
 
 完整的选项、场景和故障：[用法](docs/USAGE.md)。
