@@ -25,7 +25,7 @@
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 26 tests are real. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 28 tests are real. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -36,14 +36,15 @@
 * **Deterministic:** the same seed always prints the same lines; nothing is sent unless you give `--server-url` and `--ingest-token`.
 * **Checked against the contract:** `--validate` runs every message through ARMOR-COMMON before it is emitted.
 * **Careful delivery:** only a plain http(s) origin is accepted; a 4xx stops the run, a 5xx or a network error is retried.
+* **Electrical node:** `--electrical` adds the three channels of an electrical node (the grid input, a water heater and a DC bus) over a fast day, with a mains outage, a spell of high voltage and a meter alarm.
 * **Solar equipment:** `--solar` adds an inverter and a two-module battery stack (fifteen cells each, capacities included) over a fast day of 240 samples, with a mains outage late in the day; the messages are checked against the solar contract of ARMOR-COMMON and delivered to `/api/v1/solar`.
 
 ## 📂 Repository Structure
 
 ```text
 ARMOR-SIMULATOR/
-├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), publisher, cli
-├── tests/                 26 tests, including a local HTTP server
+├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
+├── tests/                 28 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -52,7 +53,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 26 tests
+python -m unittest discover -s tests   # 28 tests
 ```
 
 Full options, scenarios and faults: [usage](docs/USAGE.md).

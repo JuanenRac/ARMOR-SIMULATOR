@@ -21,6 +21,7 @@ built in, so a test can never reach a production broker by accident.
 | `--seed` | Same seed, same output |
 | `--health-every` | One health message every N samples (0 disables) |
 | `--solar` | Also emit an inverter and a two-module battery stack (fifteen cells each, with capacities) over a fast day of 240 samples, with a mains outage late in the day |
+| `--electrical` | Also emit the three channels of an electrical node (the grid input, a water heater and a DC bus) over the same fast day, with the mains outage, a spell of high voltage and a meter alarm |
 | `--fault`, `--fault-every` | Inject a repeatable fault (below) |
 | `--allow-invalid` | Required for faults that break the contract on purpose |
 | `--validate` | Check every message against ARMOR-COMMON before it is emitted |
