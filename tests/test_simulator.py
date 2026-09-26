@@ -216,3 +216,25 @@ class SolarTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ElectricalTests(unittest.TestCase):
+    def test_electrical_adds_a_node_that_the_contract_accepts(self):
+        code, out, _ = run("--count", "300", "--electrical", "--validate", "--health-every", "0")
+        self.assertEqual(code, 0)
+        lines = [json.loads(line) for line in out.strip().splitlines()]
+        electrical = [line for line in lines if line["topic"].startswith("armor/electrical/")]
+        self.assertEqual(len(electrical), 300)
+        self.assertTrue(all(line["payload"]["kind"] == "electrical" and len(line["payload"]["channels"]) == 3 for line in electrical))
+        grid = [next(c for c in line["payload"]["channels"] if c["id"] == "grid") for line in electrical]
+        self.assertTrue(any(c["voltage_v"] == 0.0 for c in grid))                            # the mains outage of the fast day
+        self.assertTrue(any(c["voltage_v"] > 253 for c in grid))                             # a spell of high voltage
+        self.assertTrue(any(c["voltage_v"] > 220 for c in grid))
+        heater = [next(c for c in line["payload"]["channels"] if c["id"] == "heater") for line in electrical]
+        self.assertTrue(any(c["alarm"] for c in heater) and not all(c["alarm"] for c in heater))
+        self.assertTrue(any(c["power_w"] > 1500 for c in heater) and any(c["power_w"] == 0 for c in heater))
+
+    def test_the_electrical_stream_is_repeatable_and_off_by_default(self):
+        self.assertEqual(run("--count", "5", "--electrical", "--seed", "3"), run("--count", "5", "--electrical", "--seed", "3"))
+        self.assertNotIn("armor/electrical/", run("--count", "5")[1])
+        self.assertNotIn("armor/electrical/", run("--count", "5", "--solar")[1])

@@ -25,7 +25,7 @@
 
 ---
 
-**Controllo di onestà - cosa funziona oggi:** Gli scenari, i guasti, l'invio a un server e i 26 test sono reali. La geometria è **illustrativa**, non un modello del vero radar LD2450, e nulla è stato confrontato con hardware reale.
+**Controllo di onestà - cosa funziona oggi:** Gli scenari, i guasti, l'invio a un server e i 28 test sono reali. La geometria è **illustrativa**, non un modello del vero radar LD2450, e nulla è stato confrontato con hardware reale.
 
 ---
 
@@ -36,14 +36,15 @@
 * **Deterministico:** lo stesso seme stampa sempre le stesse righe; non viene inviato nulla senza `--server-url` e `--ingest-token`.
 * **Verificato contro il contratto:** `--validate` fa passare ogni messaggio per ARMOR-COMMON prima di emetterlo.
 * **Invio prudente:** si accetta solo un'origine http(s) semplice; un 4xx ferma l'esecuzione, un 5xx o un errore di rete viene ritentato.
+* **Nodo elettrico:** `--electrical` aggiunge i tre canali di un nodo elettrico (l'ingresso di rete, uno scaldabagno e un bus in continua) su una giornata accelerata, con un'interruzione di rete, un periodo di tensione alta e un allarme di contatore.
 * **Impianto solare:** `--solar` aggiunge un inverter e un pacco batterie da due moduli (quindici celle ciascuno, con le capacità) su un giorno accelerato di 240 campioni, con un'interruzione di rete a fine giornata; i messaggi sono verificati contro il contratto solare di ARMOR-COMMON e consegnati a `/api/v1/solar`.
 
 ## 📂 Struttura del repository
 
 ```text
 ARMOR-SIMULATOR/
-├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), publisher, cli
-├── tests/                 26 tests, including a local HTTP server
+├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
+├── tests/                 28 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -52,7 +53,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 26 tests
+python -m unittest discover -s tests   # 28 tests
 ```
 
 Tutte le opzioni, gli scenari e i guasti: [uso](docs/USAGE.md).
