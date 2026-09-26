@@ -42,7 +42,7 @@
 
 ```text
 ARMOR-SIMULATOR/
-├── src/armor_simulator/   scenarios, faults, publisher, cli
+├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), publisher, cli
 ├── tests/                 26 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
