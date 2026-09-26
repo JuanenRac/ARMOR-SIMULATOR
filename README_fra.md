@@ -25,7 +25,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne aujourd'hui:** Les scénarios, les pannes, l'envoi vers un serveur et les 24 tests sont réels. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel.
+**Vérification d'honnêteté - ce qui fonctionne aujourd'hui:** Les scénarios, les pannes, l'envoi vers un serveur et les 26 tests sont réels. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel.
 
 ---
 
@@ -36,13 +36,14 @@
 * **Déterministe :** la même graine imprime toujours les mêmes lignes ; rien n'est envoyé sans `--server-url` et `--ingest-token`.
 * **Vérifié contre le contrat :** `--validate` fait passer chaque message par ARMOR-COMMON avant de l'émettre.
 * **Envoi prudent :** seule une origine http(s) simple est acceptée ; une erreur 4xx arrête l'exécution, une 5xx ou une erreur réseau est retentée.
+* **Équipement solaire :** `--solar` ajoute un onduleur et une pile de batteries de deux modules (quinze cellules chacun, capacités comprises) sur une journée accélérée de 240 échantillons, avec une coupure du réseau en fin de journée ; les messages sont vérifiés contre le contrat solaire d'ARMOR-COMMON et envoyés à `/api/v1/solar`.
 
 ## 📂 Structure du dépôt
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, publisher, cli
-├── tests/                 24 tests, including a local HTTP server
+├── tests/                 26 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -51,7 +52,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 24 tests
+python -m unittest discover -s tests   # 26 tests
 ```
 
 Toutes les options, scénarios et pannes : [utilisation](docs/USAGE.md).

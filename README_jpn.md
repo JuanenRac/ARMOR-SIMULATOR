@@ -25,7 +25,7 @@
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、24 件のテストは実在します。ジオメトリは**説明用**であり、実際の LD2450 レーダーのモデルではなく、実ハードウェアと比較したものは何もありません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、26 件のテストは実在します。ジオメトリは**説明用**であり、実際の LD2450 レーダーのモデルではなく、実ハードウェアと比較したものは何もありません。
 
 ---
 
@@ -36,13 +36,14 @@
 * **決定的：** 同じシードは常に同じ行を出力します。`--server-url` と `--ingest-token` を指定しない限り何も送信しません。
 * **契約に照らして検査：** `--validate` は各メッセージを送り出す前に ARMOR-COMMON に通します。
 * **慎重な送信：** 単純な http(s) オリジンのみ受け付けます。4xx は実行を止め、5xx やネットワークエラーは再試行します。
+* **太陽光設備：** `--solar` は、240 サンプルの早送りの 1 日の間に、インバーターと 2 モジュールのバッテリースタック（各 15 セル、容量付き）を加え、夕方に系統の停電を起こします。メッセージは ARMOR-COMMON の太陽光契約で検査され、`/api/v1/solar` に送られます。
 
 ## 📂 リポジトリの構成
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, publisher, cli
-├── tests/                 24 tests, including a local HTTP server
+├── tests/                 26 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -51,7 +52,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 24 tests
+python -m unittest discover -s tests   # 26 tests
 ```
 
 全オプション、シナリオ、故障：[使い方](docs/USAGE.md)。

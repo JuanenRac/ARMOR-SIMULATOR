@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-ROUTES = {"telemetry": "/api/v1/telemetry", "health": "/api/v1/health"}
+ROUTES = {"telemetry": "/api/v1/telemetry", "health": "/api/v1/health", "solar": "/api/v1/solar"}
 
 
 class DeliveryError(RuntimeError):
