@@ -10,7 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 COMMON = ROOT.parent / "ARMOR-COMMON" / "src"
-if COMMON.is_dir():
+HAS_ARMOR_COMMON = COMMON.is_dir()
+if HAS_ARMOR_COMMON:
     sys.path.insert(0, str(COMMON))
 
 from armor_simulator import health, telemetry
@@ -94,6 +95,7 @@ class FaultTests(unittest.TestCase):
         self.assertIn(False, flags)
         self.assertIn(True, flags)
 
+    @unittest.skipUnless(HAS_ARMOR_COMMON, "needs a sibling ARMOR-COMMON checkout")
     def test_invalid_faults_are_flagged_and_really_are_invalid(self):
         from armor_common import ContractError, validate_topic_and_payload
         for name in INVALID_FAULTS:
@@ -105,6 +107,7 @@ class FaultTests(unittest.TestCase):
                     bad += 1
             self.assertGreater(bad, 0, name)
 
+    @unittest.skipUnless(HAS_ARMOR_COMMON, "needs a sibling ARMOR-COMMON checkout")
     def test_the_valid_faults_produce_only_valid_messages(self):
         from armor_common import validate_topic_and_payload
         for name in set(FAULTS) - INVALID_FAULTS:
@@ -113,6 +116,7 @@ class FaultTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_ARMOR_COMMON, "needs a sibling ARMOR-COMMON checkout")
     def test_default_output_is_valid_json_lines(self):
         code, out, _ = run("--count", "4", "--validate")
         self.assertEqual(code, 0)
@@ -196,6 +200,7 @@ class DeliveryTests(unittest.TestCase):
 
 
 class SolarTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_ARMOR_COMMON, "needs a sibling ARMOR-COMMON checkout")
     def test_solar_adds_an_inverter_and_a_battery_that_the_contract_accepts(self):
         code, out, _ = run("--count", "300", "--solar", "--validate", "--health-every", "0")
         self.assertEqual(code, 0)
@@ -219,6 +224,7 @@ if __name__ == "__main__":
 
 
 class ElectricalTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_ARMOR_COMMON, "needs a sibling ARMOR-COMMON checkout")
     def test_electrical_adds_a_node_that_the_contract_accepts(self):
         code, out, _ = run("--count", "300", "--electrical", "--validate", "--health-every", "0")
         self.assertEqual(code, 0)
