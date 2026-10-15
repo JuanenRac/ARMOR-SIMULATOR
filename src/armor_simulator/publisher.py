@@ -67,6 +67,8 @@ def post(server_url: str, token: str, kind: str, payload: dict, timeout: float =
             last = f"HTTP {error.code}"
         except URLError:
             last = "server is unreachable"
+        except OSError:   # a read that timed out, a connection reset halfway: the same as an unreachable server (it used to end the run with a traceback)
+            last = "the server did not answer in time"
         if attempt + 1 < attempts:
             time.sleep(pause_s)
     raise DeliveryError(f"{last} after {attempts} attempts")

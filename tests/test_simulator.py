@@ -183,6 +183,23 @@ class DeliveryTests(unittest.TestCase):
         with self.assertRaises(DeliveryError):
             post("http://127.0.0.1:1", "tok", "telemetry", {}, timeout=0.5, attempts=1)
 
+    def test_a_server_that_goes_silent_is_a_delivery_error_not_a_traceback(self):
+        import socket
+        import threading
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        held = []
+        threading.Thread(target=lambda: held.append(listener.accept()[0]), daemon=True).start()   # accepts the connection and never answers
+        try:
+            with self.assertRaises(DeliveryError) as raised:
+                post(f"http://127.0.0.1:{listener.getsockname()[1]}", "tok", "telemetry", {}, timeout=0.4, attempts=2, pause_s=0)
+            self.assertIn("did not answer", str(raised.exception))
+        finally:
+            for connection in held:
+                connection.close()
+            listener.close()
+
     def test_the_cli_delivers_every_message_it_emits(self):
         code, out, _ = run("--count", "3", "--health-every", "1", "--server-url", self.url, "--ingest-token", "tok")
         self.assertEqual(code, 0)
