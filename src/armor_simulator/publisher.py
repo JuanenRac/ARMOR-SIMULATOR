@@ -18,6 +18,21 @@ class DeliveryError(RuntimeError):
     """The server refused or could not be reached."""
 
 
+def explain_refusal(code: int) -> str:
+    """What a 4xx answer means for the person running the simulator: it is the settings that are wrong, not the network."""
+    if code in (401, 403):
+        return "the ingest token is wrong or missing (check --token against ARMOR_INGEST_TOKEN of the server)"
+    if code == 404:
+        return "the server has no such route (check that --server-url is the ARMOR-SERVER of this version)"
+    if code in (400, 422):
+        return "the server found the message invalid (the simulator and the server disagree on the contract)"
+    if code == 413:
+        return "the message is larger than the server accepts"
+    if code == 429:
+        return "the server is rate limiting this sender: slow the simulation down"
+    return "a settings problem, not a network one: retrying cannot help"
+
+
 def check_server_url(server_url: str) -> str:
     """Only a plain http(s) origin is accepted: no credentials, path or query in the URL."""
     parsed = urlparse(server_url)
@@ -48,7 +63,7 @@ def post(server_url: str, token: str, kind: str, payload: dict, timeout: float =
         except HTTPError as error:
             error.close()
             if error.code < 500:
-                raise DeliveryError(f"server rejected the {kind}: HTTP {error.code}") from error
+                raise DeliveryError(f"server rejected the {kind}: HTTP {error.code}: {explain_refusal(error.code)}") from error
             last = f"HTTP {error.code}"
         except URLError:
             last = "server is unreachable"

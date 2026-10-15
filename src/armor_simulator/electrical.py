@@ -13,17 +13,11 @@ import math
 import random
 from collections.abc import Iterator
 
+from .cycle import DAY_SAMPLES, outage, phase  # noqa: F401 - DAY_SAMPLES is part of this module's surface
 from .faults import Message
 
-DAY_SAMPLES = 240
-
-
-def _phase(sample: int) -> float:
-    return (sample % DAY_SAMPLES) / DAY_SAMPLES
-
-
-def _outage(sample: int) -> bool:
-    return 0.80 <= _phase(sample) < 0.85          # the same outage as the solar readings
+_phase = phase
+_outage = outage          # the same outage as the solar readings: both come from cycle.py
 
 
 def _high_voltage(sample: int) -> bool:

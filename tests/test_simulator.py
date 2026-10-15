@@ -244,3 +244,25 @@ class ElectricalTests(unittest.TestCase):
         self.assertEqual(run("--count", "5", "--electrical", "--seed", "3"), run("--count", "5", "--electrical", "--seed", "3"))
         self.assertNotIn("armor/electrical/", run("--count", "5")[1])
         self.assertNotIn("armor/electrical/", run("--count", "5", "--solar")[1])
+
+
+class OutageAndRefusalTests(unittest.TestCase):
+    def test_the_solar_and_the_electrical_readings_lose_the_mains_at_the_same_samples(self):
+        from armor_simulator import electrical, solar
+        from armor_simulator.cycle import DAY_SAMPLES, outage
+        for sample in range(3 * DAY_SAMPLES):
+            self.assertEqual(solar._outage(sample), electrical._outage(sample), sample)
+            self.assertEqual(solar._outage(sample), outage(sample))
+        # the outage is a single window of a day, and it comes back every day
+        window = [s for s in range(DAY_SAMPLES) if outage(s)]
+        self.assertEqual(window, list(range(window[0], window[-1] + 1)))
+        self.assertEqual([outage(s) for s in range(DAY_SAMPLES)], [outage(s + DAY_SAMPLES) for s in range(DAY_SAMPLES)])
+
+    def test_a_refusal_says_what_to_check(self):
+        from armor_simulator.publisher import explain_refusal
+        self.assertIn("token", explain_refusal(401))
+        self.assertIn("token", explain_refusal(403))
+        self.assertIn("--server-url", explain_refusal(404))
+        self.assertIn("contract", explain_refusal(422))
+        self.assertIn("rate limiting", explain_refusal(429))
+        self.assertIn("settings", explain_refusal(418))

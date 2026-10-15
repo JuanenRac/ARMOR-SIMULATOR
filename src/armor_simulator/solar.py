@@ -13,21 +13,16 @@ import math
 import random
 from collections.abc import Iterator
 
+from .cycle import DAY_SAMPLES, outage, phase
 from .faults import Message
-
-DAY_SAMPLES = 240
 MODULES = 2
 CELLS = 15
 MODULE_FULL_AH = 74.0
 MODULE_NOMINAL_V = 48.0
 
 
-def _phase(sample: int) -> float:
-    return (sample % DAY_SAMPLES) / DAY_SAMPLES
-
-
-def _outage(sample: int) -> bool:
-    return 0.80 <= _phase(sample) < 0.85
+_phase = phase
+_outage = outage          # the same outage as the electrical readings: both come from cycle.py
 
 
 def _pv_watts(sample: int, rng: random.Random) -> float:

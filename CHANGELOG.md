@@ -5,6 +5,8 @@ All notable changes to this project are documented here.
 ## [0.2.3]
 
 - A GitHub Actions CI baseline (`.github/workflows/ci.yml`): validates the manifest, the version, CHANGELOG.md's heading, the seven README translations' structure and its own local Markdown links, then runs this project's real build/test through `tools/armor_project_tool.py build-test .` (vendored from ARMOR-COMMON, alongside `tools/armor_ci_validate.py` and `tools/_armor_readme_parity.py`, which do the manifest/docs checking).
+- **One day for every simulated source** (`cycle.py`): the solar and the electrical readings take the phase of a sample and the window of the mains outage from the same place, so they can never disagree about when the mains fail; a test compares them over three days.
+- **A refusal says what to check:** a 401 or 403 names the ingest token, a 404 the server address, a 422 the contract, a 429 the rate limit; a 4xx is a settings problem and is still final, never retried.
 
 ## [0.2.2] - An electrical node
 
