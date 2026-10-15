@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [0.2.4] - Audit round two: publisher fix
+## [0.2.4] - Publisher fix
 
 - Fix in the publisher, with a test.
 
