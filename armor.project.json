@@ -10,7 +10,7 @@
     "MQTT-compatible JSON"
   ],
   "deployment_target": "Developer workstation and CI",
-  "maturity": "functional",
+  "maturity": "established",
   "family": "Testing",
   "parent": "ARMOR-COMMON",
   "native_version": "0.2.4",

@@ -21,14 +21,26 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Maturity-functional-00E5FF.svg" alt="Maturity">
+  <img src="https://img.shields.io/badge/Tests-31%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.2.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器投递以及 28 个测试都是真实的。几何模型只是**示意性的**，并非真实 LD2450 雷达的模型，且没有任何内容与真实硬件对照过。
+**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器的投递和 31 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
+
+## 📋 速览
+
+| | |
+|---|---|
+| 版本 | `0.2.4` |
+| 成熟度 | 成熟 |
+| 测试 | 31 (`python -m unittest discover -s tests`) |
+| 技术栈 | Python 3.11+ |
+| 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
 
 ## 🎯 概述
 
@@ -40,21 +52,27 @@
 * **电气节点：** `--electrical` 会在加速的一天里加入电气节点的三个通道（电网入口、热水器和直流母线），其中包含一次停电、一段高电压和一次电表告警。
 * **太阳能设备：** `--solar` 会在 240 个样本的快进一天中加入一台逆变器和一个两模块的电池组（每个模块十五个电芯，含容量），并在傍晚出现一次市电中断；消息会对照 ARMOR-COMMON 的太阳能契约检查，并投递到 `/api/v1/solar`。
 
+## 🧩 在 A.R.M.O.R. 中的角色
+
+ARMOR-SIMULATOR 让家族的其他部分无需硬件就能试用：它扮演雷达节点、太阳能网关或电气节点，把它们的消息发给 [ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER)，故障可重复，这样就能看到 [ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO) 和手机应用在一个并不存在的住宅上运行。它生成的每条消息都对照 [ARMOR-COMMON](https://github.com/JuanenRac/ARMOR-COMMON) 的契约检查。
+
 ## 📂 仓库结构
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 28 tests, including a local HTTP server
+├── tests/                 31 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
 ## 🛠️ 开发环境
 
+**环境要求:** Python 3.11+ (standard library only)
+
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 28 tests
+python -m unittest discover -s tests   # 31 tests
 ```
 
 完整的选项、场景和故障：[用法](docs/USAGE.md)。
@@ -67,12 +85,14 @@ python -m unittest discover -s tests   # 28 tests
 * **[ARMOR-RADAR](https://github.com/JuanenRac/ARMOR-RADAR)** - 适用于 ESP32-S3 的现场节点固件，带三个雷达和自带网页面板
 * **[ARMOR-SOLAR](https://github.com/JuanenRac/ARMOR-SOLAR)** - 太阳能逆变器与电池的协议，以及网关节点的消息
 * **[ARMOR-ELECTRICAL](https://github.com/JuanenRac/ARMOR-ELECTRICAL)** - 电气节点：电表、电网读数消息和开关规则
+* **[ARMOR-ALARM](https://github.com/JuanenRac/ARMOR-ALARM)** - 报警节点与报警主机：防区、布防、延时、警笛和 PIN，有无服务器均可
 * **[ARMOR-HMI](https://github.com/JuanenRac/ARMOR-HMI)** - 触摸面板：墙面屏幕上的系统状态、布防与确认，以及语音助手的所在
 * **[ARMOR-NETWORK](https://github.com/JuanenRac/ARMOR-NETWORK)** - 本地网络：其设备、互联网以及变化
 * **[ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER)** - 中央协调器：遥测、报警、设备、太阳能读数和摄像头
 * **[ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO)** - 网页控制台：摄像头、雷达、报警、太阳能和 2D/3D 场地设计器
 * **[ARMOR-ANDROID-CONTROL](https://github.com/JuanenRac/ARMOR-ANDROID-CONTROL)** - 带实时 2D/3D 雷达的 Android 操作员客户端
 * **[ARMOR-SERVER-AI](https://github.com/JuanenRac/ARMOR-SERVER-AI)** - 会解释决策且从不执行动作的视觉推理策略
+* **[ARMOR-VISION](https://github.com/JuanenRac/ARMOR-VISION)** - Jetson Orin NX 上的摄像头区域、遮罩与检测规则
 * **[ARMOR-VOICE-AI](https://github.com/JuanenRac/ARMOR-VOICE-AI)** - 带无法伪造确认的离线语音意图
 * **[ARMOR-HARDWARE](https://github.com/JuanenRac/ARMOR-HARDWARE)** - 外壳、电子器件和台架验收矩阵
 * **[ARMOR-DEVOPS](https://github.com/JuanenRac/ARMOR-DEVOPS)** - 部署、CM5 测试台、备份与 TLS

@@ -21,14 +21,26 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Maturity-functional-00E5FF.svg" alt="Maturity">
+  <img src="https://img.shields.io/badge/Tests-31%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.2.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne aujourd'hui:** Les scénarios, les pannes, l'envoi vers un serveur et les 28 tests sont réels. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel.
+**Vérification d'honnêteté - ce qui fonctionne aujourd'hui:** Les scénarios, les pannes, la livraison à un serveur et les 31 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
 
 ---
+
+## 📋 En un coup d'œil
+
+| | |
+|---|---|
+| Version | `0.2.4` |
+| Maturité | Établi |
+| Tests | 31 (`python -m unittest discover -s tests`) |
+| Technologie | Python 3.11+ |
+| Sur matériel réel | Sans objet : c'est le substitut du matériel, utilisé sur un ordinateur |
 
 ## 🎯 Présentation
 
@@ -40,21 +52,27 @@
 * **Nœud électrique :** `--electrical` ajoute les trois canaux d'un nœud électrique (l'entrée du réseau, un chauffe-eau et un bus continu) sur une journée accélérée, avec une coupure du secteur, une période de tension élevée et une alarme de compteur.
 * **Équipement solaire :** `--solar` ajoute un onduleur et une pile de batteries de deux modules (quinze cellules chacun, capacités comprises) sur une journée accélérée de 240 échantillons, avec une coupure du réseau en fin de journée ; les messages sont vérifiés contre le contrat solaire d'ARMOR-COMMON et envoyés à `/api/v1/solar`.
 
+## 🧩 Rôle dans A.R.M.O.R.
+
+ARMOR-SIMULATOR est la façon d'essayer le reste de la famille sans matériel : il joue le rôle d'un nœud radar, d'une passerelle solaire ou d'un nœud électrique et envoie leurs messages à un [ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER), avec des pannes répétables, pour que [ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO) et l'application mobile se voient fonctionner avec une maison qui n'existe pas. Chaque message qu'il fait est vérifié contre les contrats d'[ARMOR-COMMON](https://github.com/JuanenRac/ARMOR-COMMON).
+
 ## 📂 Structure du dépôt
 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 28 tests, including a local HTTP server
+├── tests/                 31 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
 ## 🛠️ Environnement de développement
 
+**Prérequis:** Python 3.11+ (standard library only)
+
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 28 tests
+python -m unittest discover -s tests   # 31 tests
 ```
 
 Toutes les options, scénarios et pannes : [utilisation](docs/USAGE.md).
@@ -67,12 +85,14 @@ Toutes les options, scénarios et pannes : [utilisation](docs/USAGE.md).
 * **[ARMOR-RADAR](https://github.com/JuanenRac/ARMOR-RADAR)** - Firmware du nœud de terrain pour ESP32-S3 avec trois radars et son propre panneau web
 * **[ARMOR-SOLAR](https://github.com/JuanenRac/ARMOR-SOLAR)** - Protocoles des onduleurs et batteries solaires et messages d'un nœud passerelle
 * **[ARMOR-ELECTRICAL](https://github.com/JuanenRac/ARMOR-ELECTRICAL)** - Nœud électrique : compteurs, le message des mesures du réseau et les règles de commutation
+* **[ARMOR-ALARM](https://github.com/JuanenRac/ARMOR-ALARM)** - Nœud et centrale d'alarme : zones, armement, temporisations, sirène et PIN, avec ou sans le serveur
 * **[ARMOR-HMI](https://github.com/JuanenRac/ARMOR-HMI)** - Panneau tactile : l'état du système sur un écran mural, armer et acquitter, et la maison de l'assistant vocal
 * **[ARMOR-NETWORK](https://github.com/JuanenRac/ARMOR-NETWORK)** - Le réseau local : ses appareils, internet et ce qui change
 * **[ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER)** - Coordinateur central : télémétrie, alarmes, appareils, relevés solaires et caméras
 * **[ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO)** - Console web : caméras, radar, alarmes, énergie solaire et concepteur de site 2D/3D
 * **[ARMOR-ANDROID-CONTROL](https://github.com/JuanenRac/ARMOR-ANDROID-CONTROL)** - Client Android de l'opérateur avec radar 2D/3D en direct
 * **[ARMOR-SERVER-AI](https://github.com/JuanenRac/ARMOR-SERVER-AI)** - Politique d'inférence visuelle qui explique ses décisions et n'agit jamais
+* **[ARMOR-VISION](https://github.com/JuanenRac/ARMOR-VISION)** - Zones de caméra, masques et règles de détection pour la Jetson Orin NX
 * **[ARMOR-VOICE-AI](https://github.com/JuanenRac/ARMOR-VOICE-AI)** - Intentions vocales hors ligne avec une confirmation impossible à falsifier
 * **[ARMOR-HARDWARE](https://github.com/JuanenRac/ARMOR-HARDWARE)** - Boîtiers, électronique et matrice d'acceptation sur banc
 * **[ARMOR-DEVOPS](https://github.com/JuanenRac/ARMOR-DEVOPS)** - Déploiement, banc d'essai CM5, sauvegarde et TLS
