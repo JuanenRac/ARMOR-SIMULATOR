@@ -5,6 +5,8 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import time
 from urllib.error import HTTPError, URLError
@@ -21,7 +23,7 @@ class DeliveryError(RuntimeError):
 def explain_refusal(code: int) -> str:
     """What a 4xx answer means for the person running the simulator: it is the settings that are wrong, not the network."""
     if code in (401, 403):
-        return "the ingest token is wrong or missing (check --token against ARMOR_INGEST_TOKEN of the server)"
+        return "the ingest token is wrong or missing (check --ingest-token against ARMOR_INGEST_TOKEN of the server; with ARMOR_INGEST_STRICT=1 on the server add --per-node-token)"
     if code == 404:
         return "the server has no such route (check that --server-url is the ARMOR-SERVER of this version)"
     if code in (400, 422):
@@ -36,13 +38,19 @@ def explain_refusal(code: int) -> str:
 def check_server_url(server_url: str) -> str:
     """Only a plain http(s) origin is accepted: no credentials, path or query in the URL."""
     parsed = urlparse(server_url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.path not in ("", "/") or parsed.query:
+    if (parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.password is not None or "@" in parsed.netloc
+            or parsed.path not in ("", "/") or parsed.query or parsed.fragment or parsed.params):
         raise ValueError("--server-url must be a plain http(s) origin such as http://127.0.0.1:8080")
     return f"{parsed.scheme}://{parsed.netloc}"
 
 
-def post(server_url: str, token: str, kind: str, payload: dict, timeout: float = 5.0, attempts: int = 3, pause_s: float = 0.5) -> int:
-    """POST one message with the ingest token. Returns the HTTP status.
+def node_token(ingest_token: str, node_id: str) -> str:
+    """The token of one node, derived from the ingest token as ARMOR-SERVER does (HMAC-SHA256 of "armor-node:<id>"): the only one accepted when the server is strict."""
+    return hmac.new(ingest_token.encode(), f"armor-node:{node_id}".encode(), hashlib.sha256).hexdigest()
+
+
+def post(server_url: str, token: str, kind: str, payload: dict, timeout: float = 5.0, attempts: int = 3, pause_s: float = 0.5, per_node: bool = False) -> int:
+    """POST one message with the ingest token (or, with `per_node`, the token derived for the node of the message). Returns the HTTP status.
 
     A 4xx answer is final (the message or token is wrong, retrying cannot help).
     A network error or 5xx is retried a few times with a short pause.
@@ -51,7 +59,7 @@ def post(server_url: str, token: str, kind: str, payload: dict, timeout: float =
         raise ValueError(f"unknown message kind {kind!r}")
     request = Request(
         f"{server_url.rstrip('/')}{ROUTES[kind]}", data=json.dumps(payload).encode(), method="POST",
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"},
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {node_token(token, str(payload.get('node_id', ''))) if per_node else token}"},
     )
     last = "no attempt was made"
     for attempt in range(attempts):

@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-31%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.2.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-36%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.2.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、31 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、36 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -36,9 +36,9 @@
 
 | | |
 |---|---|
-| バージョン | `0.2.4` |
+| バージョン | `0.2.5` |
 | 成熟度 | 確立 |
-| テスト | 31 (`python -m unittest discover -s tests`) |
+| テスト | 36 (`python -m unittest discover -s tests`) |
 | 技術 | Python 3.11+ |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
 
@@ -61,7 +61,7 @@ ARMOR-SIMULATOR は、ハードウェアなしでファミリーの他の部分�
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 31 tests, including a local HTTP server
+├── tests/                 36 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +72,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 31 tests
+python -m unittest discover -s tests   # 36 tests
 ```
 
 全オプション、シナリオ、故障：[使い方](docs/USAGE.md)。

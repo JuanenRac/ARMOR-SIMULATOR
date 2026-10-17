@@ -40,7 +40,7 @@ def inverter(node_id: str, sample: int, seed: int = 0, device: str = "axpert-1")
     """One reading of the inverter."""
     rng = random.Random(seed * 1_000_003 + sample)
     pv_w, load_w, soc = _pv_watts(sample, rng), 700 + 250 * math.sin(sample / 9) + rng.uniform(-40, 40), _soc(sample)
-    battery_v = round(MODULE_NOMINAL_V + 6 * soc / 100 + rng.uniform(-0.05, 0.05), 2)
+    battery_v = round(CELLS * (3.2 + soc / 100 * 0.2) + rng.uniform(-0.05, 0.05), 2)   # the same voltage the battery stack adds up from its cells
     outage = _outage(sample)
     battery_a = round(-load_w / battery_v, 1) if outage else round((pv_w - load_w) / battery_v, 1)
     pv_v = round(150 + pv_w / 40, 1) if pv_w else 0.0

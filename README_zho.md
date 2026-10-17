@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-31%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.2.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-36%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.2.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器的投递和 31 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器的投递和 36 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -36,9 +36,9 @@
 
 | | |
 |---|---|
-| 版本 | `0.2.4` |
+| 版本 | `0.2.5` |
 | 成熟度 | 成熟 |
-| 测试 | 31 (`python -m unittest discover -s tests`) |
+| 测试 | 36 (`python -m unittest discover -s tests`) |
 | 技术栈 | Python 3.11+ |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
 
@@ -61,7 +61,7 @@ ARMOR-SIMULATOR 让家族的其他部分无需硬件就能试用：它扮演雷�
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 31 tests, including a local HTTP server
+├── tests/                 36 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +72,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 31 tests
+python -m unittest discover -s tests   # 36 tests
 ```
 
 完整的选项、场景和故障：[用法](docs/USAGE.md)。

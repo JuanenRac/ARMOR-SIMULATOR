@@ -64,7 +64,41 @@ class ScenarioTests(unittest.TestCase):
 
     def test_the_night_light_profile_is_fixed_and_dark(self):
         self.assertEqual({telemetry("n", s, light="night")["lux"] for s in range(5)}, {0.3})
-        self.assertGreater(telemetry("n", 6, light="cycle")["lux"], 4000)
+
+    def test_the_light_cycle_has_a_real_night_and_the_same_day_as_the_solar_source(self):
+        noon, midnight = telemetry("n", 60, light="cycle")["lux"], telemetry("n", 180, light="cycle")["lux"]
+        self.assertGreater(noon, 30_000)
+        self.assertLess(midnight, 1.0)
+        self.assertEqual(telemetry("n", 60 + 240, light="cycle")["lux"], noon, "a day is 240 samples, like the solar and electrical sources")
+
+    def test_the_tracks_are_whole_numbers_and_keep_their_id_while_their_object_stays(self):
+        for scenario in SCENARIOS:
+            for sample in range(24):
+                for track in telemetry("n", sample, scenario)["targets"]:
+                    self.assertTrue(all(isinstance(track[key], int) for key in ("x_mm", "y_mm", "speed_mm_s")), track)
+        ids = [{t["track_id"] for t in telemetry("n", s, "two-intruders")["targets"]} for s in range(10)]
+        self.assertTrue(all(len(step) <= 2 and step <= {1, 2} for step in ids))
+
+    def test_start_ms_dates_the_messages_and_a_late_one_is_late(self):
+        from armor_simulator.cli import _stamp
+        stream = list(FAULTS["out-of-order"](_stamp(messages("n", 8, "empty", "cycle", 0, 0), 1_800_000_000_000), 3))
+        stamps = [payload["timestamp_ms"] for _, payload in stream]
+        self.assertTrue(all(stamp >= 1_800_000_000_000 - 60_000 for stamp in stamps))
+        self.assertLess(stamps[3], stamps[2], "the third message is 60 s older than the one before it")
+
+    def test_the_per_node_token_is_the_one_the_server_derives_and_a_url_cannot_hide_a_secret(self):
+        import hashlib, hmac
+        from armor_simulator.publisher import node_token
+        self.assertEqual(node_token("secret", "n1"), hmac.new(b"secret", b"armor-node:n1", hashlib.sha256).hexdigest())
+        for bad in ("http://:secret@host:8080", "http://u:p@host", "http://host/#frag", "http://host/;x"):
+            with self.assertRaises(ValueError):
+                check_server_url(bad)
+
+    def test_combinations_that_do_nothing_are_refused(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            for args in (("--fault", "flapping", "--health-every", "0"), ("--fault", "node-silent", "--fault-every", "0")):
+                with self.assertRaises(SystemExit):
+                    main(list(args))
 
     def test_health_payload(self):
         self.assertEqual(health("n", 3), {"node_id": "n", "timestamp_ms": 3000, "online": True})

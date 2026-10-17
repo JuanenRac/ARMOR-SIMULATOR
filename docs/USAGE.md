@@ -17,7 +17,8 @@ built in, so a test can never reach a production broker by accident.
 | `--node-id` | Node identifier (lowercase letters, digits, `-`, `_`; up to 64) |
 | `--count` | Samples to generate, 1 to 10 000; one sample is one second of simulated time |
 | `--scenario` | `patrol`, `crossing`, `two-intruders` or `empty` |
-| `--light` | `cycle` (day and night) or `night` (fixed 0.3 lux, for the low-light vision profile) |
+| `--light` | `cycle` (the 240-sample day shared with the solar and electrical sources: from 0.3 lux at night to about 50 000 at noon) or `night` (fixed 0.3 lux, for the low-light vision profile) |
+| `--start-ms` | Date of the first sample: `0` (default: identical runs, but the server replaces such old dates by its own clock), a number of milliseconds, or `now` (dates the server takes as they are, so an out-of-order message really is late) |
 | `--seed` | Same seed, same output |
 | `--health-every` | One health message every N samples (0 disables) |
 | `--solar` | Also emit an inverter and a two-module battery stack (fifteen cells each, with capacities) over a fast day of 240 samples, with a mains outage late in the day |
@@ -26,7 +27,8 @@ built in, so a test can never reach a production broker by accident.
 | `--allow-invalid` | Required for faults that break the contract on purpose |
 | `--validate` | Check every message against ARMOR-COMMON before it is emitted |
 | `--interval-ms` | Real pause between messages |
-| `--server-url`, `--ingest-token` | Deliver to an ARMOR-SERVER (both are needed; the token is never written anywhere) |
+| `--server-url`, `--ingest-token` | Deliver to an ARMOR-SERVER. The token is better given as `ARMOR_INGEST_TOKEN` or `--ingest-token-file` (a command-line argument shows in the process list); nothing writes it anywhere |
+| `--per-node-token` | Send each message with the token derived for its node, the only one a server with `ARMOR_INGEST_STRICT=1` accepts |
 
 ## Scenarios
 
@@ -45,7 +47,7 @@ outside every field of view is simply not reported.
 | Fault | Effect | Valid messages? |
 |---|---|---|
 | `node-silent` | The node stops after N messages: the server must show it stale, then offline | yes |
-| `out-of-order` | Every Nth message carries an older timestamp: it must be ignored | yes |
+| `out-of-order` | Every Nth message carries a timestamp 60 s older (use `--start-ms now` with a server: it replaces dates before 2020 by its own clock) | yes |
 | `duplicates` | Every Nth message is delivered twice (what MQTT QoS 1 does) | yes |
 | `flapping` | Some health messages report the node offline | yes |
 | `corrupt-lux` | Lux above the sensor limit | **no** |
@@ -54,7 +56,7 @@ outside every field of view is simply not reported.
 
 Faults that produce invalid messages need `--allow-invalid` and cannot be combined
 with `--validate`. When delivering to a server, a refusal of such a message is
-expected and is reported without stopping the run.
+expected and is reported without stopping the run, and at the end the simulator says how many were refused and how many were accepted: the server accepts unknown fields in solar, electrical and MQTT messages on purpose, so `unknown-field` is not always refused.
 
 ## Delivering to a server
 

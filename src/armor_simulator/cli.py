@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -35,6 +36,15 @@ def messages(node_id: str, count: int, scenario: str, light: str, seed: int, hea
             yield from electrical_messages(node_id, sample, seed)
 
 
+def _stamp(stream: Iterator[Message], start_ms: int) -> Iterator[Message]:
+    """Dates the messages from `start_ms` on (0: from the epoch, which is what keeps a run identical to another; the server replaces such dates by its own clock - give `--start-ms now`
+    when it must take the dates as they are, to see a late message as late)."""
+    for topic, payload in stream:
+        if start_ms and isinstance(payload.get("timestamp_ms"), int):
+            payload = {**payload, "timestamp_ms": payload["timestamp_ms"] + start_ms}
+        yield topic, payload
+
+
 def _common_validators():
     """The ARMOR-COMMON validators (node, solar and electrical messages), found next to this repository when it is not installed."""
     try:
@@ -43,10 +53,13 @@ def _common_validators():
     except ImportError:
         sibling = Path(__file__).resolve().parents[3] / "ARMOR-COMMON" / "src"
         if not sibling.is_dir():
-            raise SystemExit("--validate needs armor_common: install ARMOR-COMMON or keep it next to this repository")
+            raise SystemExit("--validate needs armor_common: install ARMOR-COMMON or keep it next to this repository") from None
         sys.path.insert(0, str(sibling))
-        from armor_common import validate_topic_and_payload
-        from armor_common.contracts import validate_electrical_message, validate_solar_message
+        try:
+            from armor_common import validate_topic_and_payload
+            from armor_common.contracts import validate_electrical_message, validate_solar_message
+        except ImportError as error:
+            raise SystemExit(f"--validate: the ARMOR-COMMON found does not have the validators this simulator needs ({error})") from None
     return validate_topic_and_payload, validate_solar_message, validate_electrical_message
 
 
@@ -66,8 +79,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--validate", action="store_true", help="check every message against ARMOR-COMMON before it is emitted")
     parser.add_argument("--interval-ms", type=int, default=0, help="real pause between messages (0 = as fast as possible)")
     parser.add_argument("--server-url", help="deliver to this ARMOR-SERVER origin (http or https, no path)")
-    parser.add_argument("--ingest-token", help="required with --server-url; never write it to a file")
+    parser.add_argument("--ingest-token", help="the server's ingest token (visible to other users of the machine in the process list: prefer ARMOR_INGEST_TOKEN or --ingest-token-file)")
+    parser.add_argument("--ingest-token-file", type=Path, help="a file with a line ARMOR_INGEST_TOKEN=... (or only the token)")
+    parser.add_argument("--per-node-token", action="store_true", help="send each message with the token derived for its node (needed when the server runs with ARMOR_INGEST_STRICT=1)")
+    parser.add_argument("--start-ms", default="0", help="date of the first sample: 0 (the default, identical runs), a number of milliseconds, or 'now' (the date the server takes as it is)")
     return parser
+
+
+def _token(args: argparse.Namespace) -> str:
+    if args.ingest_token:
+        return args.ingest_token
+    if args.ingest_token_file:
+        text = Path(args.ingest_token_file).read_text(encoding="utf-8").strip()
+        for line in text.splitlines():
+            if line.startswith("ARMOR_INGEST_TOKEN="):
+                return line.split("=", 1)[1].strip()
+        return text.splitlines()[0].strip() if text else ""
+    return os.environ.get("ARMOR_INGEST_TOKEN", "").strip()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -79,8 +107,22 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"--count must be between 1 and {MAX_COUNT}")
     if args.interval_ms < 0 or args.fault_every < 0 or args.health_every < 0:
         parser.error("--interval-ms, --fault-every and --health-every must not be negative")
-    if bool(args.server_url) != bool(args.ingest_token):
-        parser.error("--server-url and --ingest-token must be supplied together")
+    token = _token(args)
+    if bool(args.server_url) != bool(token):
+        parser.error("--server-url needs a token (--ingest-token, --ingest-token-file or ARMOR_INGEST_TOKEN), and a token needs --server-url")
+    if args.start_ms == "now":
+        start_ms = int(time.time() * 1000)
+    else:
+        try:
+            start_ms = int(args.start_ms)
+        except ValueError:
+            parser.error("--start-ms must be a number of milliseconds or 'now'")
+        if start_ms < 0:
+            parser.error("--start-ms must not be negative")
+    if args.fault == "flapping" and not args.health_every:
+        parser.error("--fault flapping needs health messages: --health-every must not be 0")
+    if args.fault in ("node-silent", "out-of-order", "duplicates", "corrupt-lux", "unknown-field", "oversized-targets") and not args.fault_every:
+        parser.error(f"--fault {args.fault} needs --fault-every of at least 1")
     if args.fault in INVALID_FAULTS and not args.allow_invalid:
         parser.error(f"--fault {args.fault} produces invalid messages on purpose; add --allow-invalid")
     if args.fault in INVALID_FAULTS and args.validate:
@@ -88,23 +130,42 @@ def main(argv: list[str] | None = None) -> int:
     server = check_server_url(args.server_url) if args.server_url else None
     validate, validate_solar, validate_electrical = _common_validators() if args.validate else (None, None, None)
 
-    stream = FAULTS[args.fault](messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical), args.fault_every)
-    for topic, payload in stream:
+    stream = FAULTS[args.fault](_stamp(messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical), start_ms), args.fault_every)
+    accepted_invalid = refused = 0
+    for number, (topic, payload) in enumerate(stream, start=1):
         if validate:
-            (validate_solar if topic.startswith("armor/solar/") else validate_electrical if topic.startswith("armor/electrical/") else validate)(topic, payload)
+            try:
+                (validate_solar if topic.startswith("armor/solar/") else validate_electrical if topic.startswith("armor/electrical/") else validate)(topic, payload)
+            except (ValueError, KeyError, TypeError) as error:
+                print(f"armor-simulator: message {number} on {topic} is not valid for ARMOR-COMMON: {error}", file=sys.stderr)
+                return 1
         if server:
             try:
-                post(server, args.ingest_token, "solar" if topic.startswith("armor/solar/") else "electrical" if topic.startswith("armor/electrical/") else topic.rsplit("/", 1)[1], payload)
+                post(server, token, "solar" if topic.startswith("armor/solar/") else "electrical" if topic.startswith("armor/electrical/") else topic.rsplit("/", 1)[1], payload, per_node=args.per_node_token)
+                if args.fault in INVALID_FAULTS and _is_invalid(args.fault, topic, payload):
+                    accepted_invalid += 1
             except DeliveryError as error:
                 # A deliberately invalid message is expected to be refused: report it and go on.
                 if args.fault not in INVALID_FAULTS:
                     print(f"armor-simulator: {error}", file=sys.stderr)
                     return 1
+                refused += 1
                 print(f"armor-simulator: refused as expected ({error})", file=sys.stderr)
         print(json.dumps({"topic": topic, "payload": payload}, separators=(",", ":"), sort_keys=True), flush=True)
         if args.interval_ms:
             time.sleep(args.interval_ms / 1000)
+    if server and args.fault in INVALID_FAULTS:
+        print(f"armor-simulator: of the invalid messages, {refused} were refused and {accepted_invalid} were accepted by the server (it accepts unknown fields in solar, electrical and MQTT messages on purpose)", file=sys.stderr)
     return 0
+
+
+def _is_invalid(fault: str, topic: str, payload: dict) -> bool:
+    """Whether this message is one the fault spoiled (so that an accepted one can be counted)."""
+    if fault == "corrupt-lux":
+        return topic.endswith("/telemetry") and payload.get("lux", 0) > 200_000
+    if fault == "unknown-field":
+        return "firmware_debug" in payload
+    return topic.endswith("/telemetry") and len(payload.get("targets", [])) > 15
 
 
 if __name__ == "__main__":

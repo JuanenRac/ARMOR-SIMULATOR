@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-31%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.2.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-36%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.2.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 31 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
+**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 36 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
 
 ---
 
@@ -36,9 +36,9 @@
 
 | | |
 |---|---|
-| Versión | `0.2.4` |
+| Versión | `0.2.5` |
 | Madurez | Establecido |
-| Tests | 31 (`python -m unittest discover -s tests`) |
+| Tests | 36 (`python -m unittest discover -s tests`) |
 | Tecnología | Python 3.11+ |
 | En hardware real | No aplica: es el sustituto del hardware, usado en un ordenador |
 
@@ -61,7 +61,7 @@ ARMOR-SIMULATOR es cómo se prueba el resto de la familia sin hardware: hace de 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 31 tests, including a local HTTP server
+├── tests/                 36 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +72,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 31 tests
+python -m unittest discover -s tests   # 36 tests
 ```
 
 Opciones, escenarios y fallos completos: [uso](docs/USAGE.md).

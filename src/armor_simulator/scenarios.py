@@ -3,10 +3,12 @@
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
 The geometry is illustrative, not a model of the real hardware: a node covers a
-90 degree corner with three sensors whose boresights are 0, 45 and 90 degrees
-(x to the right, y forward, millimetres). It exists so that consumers can be
-exercised with plausible, repeatable tracks; it is not evidence of how the real
-LD2450 modules will behave.
+90 degree corner with three sensors whose boresights are -45, 0 and +45 degrees
+(x to the right, y forward, millimetres); the real radar node (ARMOR-RADAR) is a node
+of 270 degrees with LD2450 or LD2461 modules and is not reproduced here. It exists so
+that consumers can be exercised with plausible, repeatable tracks; it is not evidence of
+how the real modules will behave. Positions and speeds are whole numbers, as the
+firmware sends them, and a track keeps its id for as long as its object is in the scene.
 """
 
 from __future__ import annotations
@@ -14,6 +16,8 @@ from __future__ import annotations
 import math
 import random
 from collections.abc import Callable
+
+from .cycle import phase
 
 # Sensor boresight (degrees from the +y axis) and the half field of view.
 SENSOR_BORESIGHT = {1: -45.0, 2: 0.0, 3: 45.0}
@@ -66,25 +70,25 @@ SCENARIOS: dict[str, Scenario] = {"patrol": patrol, "crossing": crossing, "two-i
 
 
 def lux_for(sample: int, mode: str) -> float:
-    """Ambient light: a day/night cycle, or a fixed night for the low-light profile."""
+    """Ambient light: the day of the simulation (the same day as the solar and electrical sources: 240 samples), with a real night, or a fixed night for the low-light profile."""
     if mode == "night":
         return 0.3
-    angle = sample * math.pi / 12
-    return round(4000 + 3000 * max(0.0, math.sin(angle)), 2)
+    sun = max(0.0, math.sin(2 * math.pi * phase(sample)))
+    return round(0.3 + 50_000 * sun ** 1.5, 2)
 
 
 def tracks_for(scenario: str, sample: int, rng: random.Random) -> list[Track]:
     """The tracks the three sensors would report at this sample, at most five per sensor."""
     per_sensor: dict[int, int] = {}
     tracks: list[Track] = []
-    for x_mm, y_mm, speed in SCENARIOS[scenario](sample, rng):
+    for slot, (x_mm, y_mm, speed) in enumerate(SCENARIOS[scenario](sample, rng), start=1):
         sensor = _sensor_for(x_mm, y_mm)
         if sensor is None:
             continue
         per_sensor[sensor] = per_sensor.get(sensor, 0) + 1
         if per_sensor[sensor] > 5:  # the radar tracks at most five targets
             continue
-        tracks.append({"sensor_id": sensor, "track_id": len(tracks) + 1, "x_mm": round(x_mm, 1), "y_mm": round(y_mm, 1), "speed_mm_s": speed})
+        tracks.append({"sensor_id": sensor, "track_id": slot, "x_mm": round(x_mm), "y_mm": round(y_mm), "speed_mm_s": round(speed)})
     return tracks
 
 

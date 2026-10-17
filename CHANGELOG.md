@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## [0.2.5] - A night that is dark, dates the server believes, and tracks like the firmware sends them
+
+- **`--light cycle` has a real night** and the same day as the solar and electrical sources (240 samples), from 0.3 lux to about 50 000 at noon; before the "night" was 4 000 lux and the sun rose ten times a day, so the day/night profile was never exercised.
+- **`--start-ms`** dates the samples (`now` or a number); with the default `0` runs stay identical, but the server replaces such dates by its own clock, so `out-of-order` only means something with a real date. `--per-node-token` sends the token the strict server derives for each node; `--ingest-token-file` and `ARMOR_INGEST_TOKEN` keep the token out of the process list.
+- **Tracks as the firmware sends them:** positions and speed are whole numbers, and a track keeps its id for as long as its object is in the scene (it was renumbered when another one left). The docstring says the angles are -45, 0 and +45 and that the real node is a 270 degree one.
+- **One battery voltage:** the inverter and the battery stack agree (the inverter used to read up to 3 V above the sum of the cells).
+- After delivering invalid messages the simulator says how many the server refused and how many it accepted; a URL with a hidden password or a fragment is refused; the 401 message names the right option; `--validate` says which message failed instead of a traceback; combinations that do nothing (`flapping` with no health messages, a fault every 0) are refused.
+- Tests: 36 (before 31).
+
 ## [0.2.4] - Publisher fix
 
 - Fix in the publisher, with a test.
