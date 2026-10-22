@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
 - **`--fault-topic`** limits a fault to the radar node's telemetry, its health, the solar readings or the electrical node's, so one node can fall silent while the others go on talking; the count of `--fault-every` is of that kind, and a kind with nothing to spoil is refused.
 
 ## [0.2.5] - A night that is dark, dates the server believes, and tracks like the firmware sends them
