@@ -44,7 +44,7 @@
 
 ## 🎯 Overview
 
-* **Scenarios:** `patrol`, `crossing`, `two-intruders` and `empty`, on a three-sensor corner geometry, plus a day/night light cycle or a fixed night.
+* **Scenarios:** `patrol`, `crossing`, `two-intruders` and `empty`, on a 270 degree geometry with three sensors, plus a day/night light cycle or a fixed night.
 * **Repeatable faults:** a silent node, out-of-order and duplicated messages, a flapping node, and deliberately invalid messages (lux over the limit, unknown field, too many tracks) for negative tests.
 * **Deterministic:** the same seed always prints the same lines; nothing is sent unless you give `--server-url` and `--ingest-token`.
 * **Checked against the contract:** `--validate` runs every message through ARMOR-COMMON before it is emitted.

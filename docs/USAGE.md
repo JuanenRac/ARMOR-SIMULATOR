@@ -33,10 +33,12 @@ built in, so a test can never reach a production broker by accident.
 
 ## Scenarios
 
-The geometry is illustrative, not a model of the real hardware: a node covers a
-90 degree corner with three sensors facing -45, 0 and +45 degrees, each seeing
-about ±60 degrees out to 6 m, and at most five targets per sensor. A person
-outside every field of view is simply not reported.
+The geometry is illustrative, not a model of the real hardware: a node covers
+270 degrees with three sensors facing -75, 0 and +75 degrees, each seeing
+about ±60 degrees out to 6 m (neighbours overlap by 45 degrees, the 90 degrees behind the
+node are blind), and at most five targets per sensor. A person outside every field of view
+is simply not reported. `speed_mm_s` is the speed along the line from the sensor: negative
+when the object comes closer, positive when it goes away.
 
 * `patrol`: one target circling at 3 m; it leaves and re-enters the field of view.
 * `crossing`: a person crossing left to right at about 1.2 m/s, handed from sensor 1 to sensor 3.

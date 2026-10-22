@@ -44,7 +44,7 @@
 
 ## 🎯 Descripción general
 
-* **Escenarios:** `patrol`, `crossing`, `two-intruders` y `empty`, con una geometría de esquina de tres sensores, más un ciclo de luz día/noche o una noche fija.
+* **Escenarios:** `patrol`, `crossing`, `two-intruders` y `empty`, con una geometría de 270 grados de tres sensores, más un ciclo de luz día/noche o una noche fija.
 * **Fallos repetibles:** nodo en silencio, mensajes desordenados y duplicados, nodo intermitente y mensajes inválidos a propósito (lux por encima del límite, campo desconocido, demasiadas pistas) para pruebas negativas.
 * **Determinista:** la misma semilla imprime siempre las mismas líneas; no se envía nada salvo que indiques `--server-url` y `--ingest-token`.
 * **Comprobado contra el contrato:** `--validate` pasa cada mensaje por ARMOR-COMMON antes de emitirlo.

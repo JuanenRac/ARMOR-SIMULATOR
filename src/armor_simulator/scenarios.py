@@ -2,13 +2,15 @@
 
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
-The geometry is illustrative, not a model of the real hardware: a node covers a
-90 degree corner with three sensors whose boresights are -45, 0 and +45 degrees
-(x to the right, y forward, millimetres); the real radar node (ARMOR-RADAR) is a node
-of 270 degrees with LD2450 or LD2461 modules and is not reproduced here. It exists so
+The geometry is illustrative, not a model of the real hardware: a node covers 270 degrees
+with three sensors whose boresights are -75, 0 and +75 degrees, each seeing 60 degrees to
+either side (x to the right, y forward, millimetres), so neighbours overlap by 45 degrees and
+the 90 degrees behind the node are blind, like the 270 degree node of ARMOR-RADAR. It exists so
 that consumers can be exercised with plausible, repeatable tracks; it is not evidence of
 how the real modules will behave. Positions and speeds are whole numbers, as the
-firmware sends them, and a track keeps its id for as long as its object is in the scene.
+firmware sends them, a track keeps its id for as long as its object is in the scene, and the
+speed is the radial one as seen by the sensor: negative when the object comes closer, positive
+when it goes away (the sign convention is illustrative too).
 """
 
 from __future__ import annotations
@@ -20,10 +22,11 @@ from collections.abc import Callable
 from .cycle import phase
 
 # Sensor boresight (degrees from the +y axis) and the half field of view.
-SENSOR_BORESIGHT = {1: -45.0, 2: 0.0, 3: 45.0}
+SENSOR_BORESIGHT = {1: -75.0, 2: 0.0, 3: 75.0}
 HALF_FOV_DEG = 60.0
 MAX_RANGE_MM = 6000.0
 SAMPLE_PERIOD_S = 1.0
+MAX_STEP_MM = 3000.0  # nothing in the scenarios moves farther than this in one sample
 
 Track = dict[str, float | int]
 Scenario = Callable[[int, random.Random], list[tuple[float, float, float]]]
@@ -31,11 +34,19 @@ Scenario = Callable[[int, random.Random], list[tuple[float, float, float]]]
 
 def _sensor_for(x_mm: float, y_mm: float) -> int | None:
     """The sensor that sees a point, or None when it is outside every field of view."""
-    if y_mm <= 0 or math.hypot(x_mm, y_mm) > MAX_RANGE_MM:
+    distance = math.hypot(x_mm, y_mm)
+    if distance == 0 or distance > MAX_RANGE_MM:
         return None
     azimuth = math.degrees(math.atan2(x_mm, y_mm))
     best = min(SENSOR_BORESIGHT, key=lambda sensor: abs(azimuth - SENSOR_BORESIGHT[sensor]))
     return best if abs(azimuth - SENSOR_BORESIGHT[best]) <= HALF_FOV_DEG else None
+
+
+def _radial_speed(sensor: int, before: tuple[float, float], after: tuple[float, float]) -> float:
+    """Millimetres per second along the line from the sensor to the object: negative when it comes closer. The sensors sit at the node's origin."""
+    del sensor  # every sensor is at the origin; the argument keeps the call site explicit about whose view this is
+    d0, d1 = math.hypot(*before), math.hypot(*after)
+    return (d1 - d0) / SAMPLE_PERIOD_S
 
 
 def patrol(sample: int, _rng: random.Random) -> list[tuple[float, float, float]]:
@@ -81,14 +92,26 @@ def tracks_for(scenario: str, sample: int, rng: random.Random) -> list[Track]:
     """The tracks the three sensors would report at this sample, at most five per sensor."""
     per_sensor: dict[int, int] = {}
     tracks: list[Track] = []
-    for slot, (x_mm, y_mm, speed) in enumerate(SCENARIOS[scenario](sample, rng), start=1):
+    state = rng.getstate()
+
+    def at(index: int) -> list[tuple[float, float, float]]:
+        generator = random.Random()
+        generator.setstate(state)  # the same jitter at every instant, so the speed is the motion and not the noise
+        return SCENARIOS[scenario](index, generator)
+
+    now = SCENARIOS[scenario](sample, rng)
+    ahead = at(sample + 1)
+    # A scenario repeats after a few samples; across that jump the motion is measured backwards instead.
+    if any(math.hypot(a[0] - n[0], a[1] - n[1]) > MAX_STEP_MM for a, n in zip(ahead, now)):
+        ahead = [(2 * n[0] - b[0], 2 * n[1] - b[1], 0.0) for b, n in zip(at(sample - 1), now)]
+    for slot, (x_mm, y_mm, _speed) in enumerate(now, start=1):
         sensor = _sensor_for(x_mm, y_mm)
         if sensor is None:
             continue
         per_sensor[sensor] = per_sensor.get(sensor, 0) + 1
         if per_sensor[sensor] > 5:  # the radar tracks at most five targets
             continue
-        tracks.append({"sensor_id": sensor, "track_id": slot, "x_mm": round(x_mm), "y_mm": round(y_mm), "speed_mm_s": round(speed)})
+        tracks.append({"sensor_id": sensor, "track_id": slot, "x_mm": round(x_mm), "y_mm": round(y_mm), "speed_mm_s": round(_radial_speed(sensor, (x_mm, y_mm), ahead[slot - 1][:2]))})
     return tracks
 
 

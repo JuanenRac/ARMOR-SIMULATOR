@@ -41,9 +41,18 @@ class ScenarioTests(unittest.TestCase):
         self.assertNotEqual(telemetry("n", 3, "crossing", seed=1), telemetry("n", 3, "crossing", seed=2))
         self.assertEqual(telemetry("n", 3, "patrol", seed=1), telemetry("n", 3, "patrol", seed=2))
 
-    def test_patrol_is_visible_only_in_front_of_the_node(self):
-        self.assertEqual(telemetry("n", 0, "patrol")["targets"], [])          # at 3 m to the right, level with the node
-        self.assertEqual(len(telemetry("n", 6, "patrol")["targets"]), 1)      # straight ahead
+    def test_patrol_is_seen_over_270_degrees_and_lost_only_behind_the_node(self):
+        self.assertEqual([t["sensor_id"] for t in telemetry("n", 0, "patrol")["targets"]], [3])   # at 3 m to the right
+        self.assertEqual(len(telemetry("n", 6, "patrol")["targets"]), 1)                          # straight ahead
+        self.assertEqual(len(telemetry("n", 12, "patrol")["targets"]), 1)                         # to the left
+        self.assertEqual(telemetry("n", 18, "patrol")["targets"], [])                             # straight behind: the blind 90 degrees
+        behind_right = [t for s in range(24) for t in telemetry("n", s, "patrol")["targets"] if t["y_mm"] < 0]
+        self.assertTrue(behind_right, "targets behind the node's line are seen by the side sensors")
+
+    def test_the_speed_is_radial_and_negative_when_the_object_comes_closer(self):
+        approaching = [t["speed_mm_s"] for s in range(10) for t in telemetry("n", s, "two-intruders")["targets"]]
+        self.assertTrue(approaching and all(speed < 0 for speed in approaching), approaching)
+        self.assertEqual(telemetry("n", 0, "patrol")["targets"][0]["speed_mm_s"], 0, "circling at a constant distance is not radial motion")
 
     def test_every_target_is_seen_by_the_sensor_facing_it(self):
         rng = random.Random(0)

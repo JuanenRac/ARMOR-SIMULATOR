@@ -44,7 +44,7 @@
 
 ## 🎯 Présentation
 
-* **Scénarios :** `patrol`, `crossing`, `two-intruders` et `empty`, sur une géométrie d'angle à trois capteurs, avec un cycle de lumière jour/nuit ou une nuit fixe.
+* **Scénarios :** `patrol`, `crossing`, `two-intruders` et `empty`, sur une géométrie de 270 degrés à trois capteurs, avec un cycle de lumière jour/nuit ou une nuit fixe.
 * **Pannes reproductibles :** un nœud muet, des messages désordonnés ou dupliqués, un nœud instable et des messages volontairement invalides (lux hors limite, champ inconnu, trop de pistes) pour les tests négatifs.
 * **Déterministe :** la même graine imprime toujours les mêmes lignes ; rien n'est envoyé sans `--server-url` et `--ingest-token`.
 * **Vérifié contre le contrat :** `--validate` fait passer chaque message par ARMOR-COMMON avant de l'émettre.

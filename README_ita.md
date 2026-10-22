@@ -44,7 +44,7 @@
 
 ## 🎯 Panoramica
 
-* **Scenari:** `patrol`, `crossing`, `two-intruders` ed `empty`, su una geometria d'angolo a tre sensori, con un ciclo di luce giorno/notte o una notte fissa.
+* **Scenari:** `patrol`, `crossing`, `two-intruders` ed `empty`, su una geometria di 270 gradi a tre sensori, con un ciclo di luce giorno/notte o una notte fissa.
 * **Guasti ripetibili:** un nodo muto, messaggi fuori ordine o duplicati, un nodo instabile e messaggi volutamente non validi (lux oltre il limite, campo sconosciuto, troppe tracce) per i test negativi.
 * **Deterministico:** lo stesso seme stampa sempre le stesse righe; non viene inviato nulla senza `--server-url` e `--ingest-token`.
 * **Verificato contro il contratto:** `--validate` fa passare ogni messaggio per ARMOR-COMMON prima di emetterlo.

@@ -44,7 +44,7 @@
 
 ## 🎯 Visão geral
 
-* **Cenários:** `patrol`, `crossing`, `two-intruders` e `empty`, numa geometria de canto com três sensores, mais um ciclo de luz dia/noite ou uma noite fixa.
+* **Cenários:** `patrol`, `crossing`, `two-intruders` e `empty`, numa geometria de 270 graus com três sensores, mais um ciclo de luz dia/noite ou uma noite fixa.
 * **Falhas repetíveis:** um nó silencioso, mensagens fora de ordem e duplicadas, um nó que oscila, e mensagens deliberadamente inválidas (lux acima do limite, campo desconhecido, demasiados rastos) para testes negativos.
 * **Determinista:** a mesma semente imprime sempre as mesmas linhas; nada se envia a menos que indique `--server-url` e `--ingest-token`.
 * **Verificado contra o contrato:** `--validate` passa cada mensagem pelo ARMOR-COMMON antes de a emitir.
