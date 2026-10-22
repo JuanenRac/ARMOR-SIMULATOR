@@ -246,3 +246,48 @@ class InvalidFaultReportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FaultTopicTests(unittest.TestCase):
+    """--fault-topic limits a fault to one kind of message; the others go through untouched."""
+
+    def lines(self, *args):
+        code, out, err = run(*args)
+        self.assertEqual(code, 0, err)
+        return [json.loads(line) for line in out.splitlines()]
+
+    def test_node_silent_on_the_telemetry_leaves_the_other_nodes_talking(self):
+        got = self.lines("--count", "6", "--solar", "--electrical", "--fault", "node-silent", "--fault-every", "2", "--fault-topic", "telemetry")
+        telemetry = [m for m in got if m["topic"].endswith("/telemetry")]
+        solar = [m for m in got if m["topic"].startswith("armor/solar/")]
+        electrical = [m for m in got if m["topic"].startswith("armor/electrical/")]
+        self.assertEqual(len(telemetry), 2)
+        self.assertEqual(len(solar), 12)        # an inverter and a battery stack per sample, none lost
+        self.assertEqual(len(electrical), 6)
+
+    def test_all_is_the_old_behaviour(self):
+        old = self.lines("--count", "6", "--solar", "--fault", "node-silent", "--fault-every", "5")
+        same = self.lines("--count", "6", "--solar", "--fault", "node-silent", "--fault-every", "5", "--fault-topic", "all")
+        self.assertEqual(old, same)
+        self.assertEqual(len(old), 5)
+
+    def test_flapping_on_health_only(self):
+        got = self.lines("--count", "10", "--health-every", "2", "--fault", "flapping", "--fault-every", "2", "--fault-topic", "health")
+        health = [m["payload"]["online"] for m in got if m["topic"].endswith("/health")]
+        self.assertIn(False, health)
+        self.assertTrue(all("online" not in m["payload"] or m["topic"].endswith("/health") for m in got))
+
+    def test_a_topic_with_nothing_to_spoil_is_refused(self):
+        code, _out, err = run("--count", "2", "--fault", "node-silent", "--fault-topic", "solar")
+        self.assertEqual(code, 2)
+        self.assertIn("--solar", err)
+        code, _out, err = run("--count", "2", "--health-every", "0", "--fault", "node-silent", "--fault-topic", "health")
+        self.assertEqual(code, 2)
+        self.assertIn("health", err)
+
+    def test_duplicates_count_only_the_chosen_kind(self):
+        got = self.lines("--count", "4", "--solar", "--fault", "duplicates", "--fault-every", "2", "--fault-topic", "electrical", "--electrical")
+        electrical = [m for m in got if m["topic"].startswith("armor/electrical/")]
+        solar = [m for m in got if m["topic"].startswith("armor/solar/")]
+        self.assertEqual(len(electrical), 6)    # 4 samples, samples 0 and 2 twice
+        self.assertEqual(len(solar), 8)

@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **`--fault-topic`** limits a fault to the radar node's telemetry, its health, the solar readings or the electrical node's, so one node can fall silent while the others go on talking; the count of `--fault-every` is of that kind, and a kind with nothing to spoil is refused.
+
 ## [0.2.5] - A night that is dark, dates the server believes, and tracks like the firmware sends them
 
 - **`--light cycle` has a real night** and the same day as the solar and electrical sources (240 samples), from 0.3 lux to about 50 000 at noon; before the "night" was 4 000 lux and the sun rose ten times a day, so the day/night profile was never exercised.

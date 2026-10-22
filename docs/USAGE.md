@@ -24,6 +24,7 @@ built in, so a test can never reach a production broker by accident.
 | `--solar` | Also emit an inverter and a two-module battery stack (fifteen cells each, with capacities) over a fast day of 240 samples, with a mains outage late in the day |
 | `--electrical` | Also emit the three channels of an electrical node (the grid input, a water heater and a DC bus) over the same fast day, with the mains outage, a spell of high voltage and a meter alarm |
 | `--fault`, `--fault-every` | Inject a repeatable fault (below) |
+| `--fault-topic` | Limit the fault to one kind of message: `telemetry`, `health`, `solar` or `electrical` (default `all`). The count of `--fault-every` is of that kind, and the other messages go through untouched, so `--fault node-silent --fault-topic telemetry` silences the radar node while the inverter and the electrical node go on talking. A kind with nothing to spoil (`solar` without `--solar`, `health` with `--health-every 0`) is refused |
 | `--allow-invalid` | Required for faults that break the contract on purpose |
 | `--validate` | Check every message against ARMOR-COMMON before it is emitted |
 | `--interval-ms` | Real pause between messages |

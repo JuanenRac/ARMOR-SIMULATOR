@@ -14,7 +14,7 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 
-from .faults import FAULTS, INVALID_FAULTS, Message
+from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
 from .publisher import DeliveryError, check_server_url, post
 from .scenarios import SCENARIOS, health, telemetry
 from .electrical import electrical_messages
@@ -74,7 +74,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--solar", action="store_true", help="also emit an inverter and a battery stack (armor/solar/<node>/<device>/state) every sample")
     parser.add_argument("--electrical", action="store_true", help="also emit an electrical node's three channels (armor/electrical/<node>/state) every sample")
     parser.add_argument("--fault", choices=sorted(FAULTS), default="none", help="inject a repeatable fault")
-    parser.add_argument("--fault-every", type=int, default=3, help="how often the fault strikes (or after how many messages, for node-silent)")
+    parser.add_argument("--fault-every", type=int, default=3, help="how often the fault strikes, counted in the messages of --fault-topic (or after how many of them the node goes silent, for node-silent)")
+    parser.add_argument("--fault-topic", choices=sorted(TOPIC_KINDS), default="all", help="the messages the fault looks at: the radar node's telemetry or health, the solar readings or the electrical node's; the others go through untouched (default: all of them)")
     parser.add_argument("--allow-invalid", action="store_true", help="required for faults that violate the contract on purpose")
     parser.add_argument("--validate", action="store_true", help="check every message against ARMOR-COMMON before it is emitted")
     parser.add_argument("--interval-ms", type=int, default=0, help="real pause between messages (0 = as fast as possible)")
@@ -123,6 +124,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--fault flapping needs health messages: --health-every must not be 0")
     if args.fault in ("node-silent", "out-of-order", "duplicates", "corrupt-lux", "unknown-field", "oversized-targets") and not args.fault_every:
         parser.error(f"--fault {args.fault} needs --fault-every of at least 1")
+    if args.fault != "none" and args.fault_topic == "health" and not args.health_every:
+        parser.error("--fault-topic health needs health messages: --health-every must not be 0")
+    if args.fault != "none" and (args.fault_topic == "solar" and not args.solar or args.fault_topic == "electrical" and not args.electrical):
+        parser.error(f"--fault-topic {args.fault_topic} needs --{args.fault_topic} (there are no such messages to spoil)")
     if args.fault in INVALID_FAULTS and not args.allow_invalid:
         parser.error(f"--fault {args.fault} produces invalid messages on purpose; add --allow-invalid")
     if args.fault in INVALID_FAULTS and args.validate:
@@ -130,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     server = check_server_url(args.server_url) if args.server_url else None
     validate, validate_solar, validate_electrical = _common_validators() if args.validate else (None, None, None)
 
-    stream = FAULTS[args.fault](_stamp(messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical), start_ms), args.fault_every)
+    stream = FAULTS[args.fault](_stamp(messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical), start_ms), args.fault_every, TOPIC_KINDS[args.fault_topic])
     accepted_invalid = refused = 0
     for number, (topic, payload) in enumerate(stream, start=1):
         if validate:
