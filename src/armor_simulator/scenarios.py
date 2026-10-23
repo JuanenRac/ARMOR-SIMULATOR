@@ -5,7 +5,7 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 The geometry is illustrative, not a model of the real hardware: a node covers 270 degrees
 with three sensors whose boresights are -75, 0 and +75 degrees, each seeing 60 degrees to
 either side (x to the right, y forward, millimetres), so neighbours overlap by 45 degrees and
-the 90 degrees behind the node are blind, like the 270 degree node of ARMOR-RADAR. It exists so
+the 90 degrees behind the node are blind, like the 270 degree node of ARMOR-NODE-RADAR. It exists so
 that consumers can be exercised with plausible, repeatable tracks; it is not evidence of
 how the real modules will behave. Positions and speeds are whole numbers, as the
 firmware sends them, a track keeps its id for as long as its object is in the scene, and the
