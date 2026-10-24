@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-57%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器的投递和 57 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分:** 场景、故障、向服务器的投递和 63 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -38,9 +38,23 @@
 |---|---|
 | 版本 | `0.2.6` |
 | 成熟度 | 成熟 |
-| 测试 | 57 (`python -m unittest discover -s tests`) |
+| 测试 | 63 (`python -m unittest discover -s tests`) |
 | 技术栈 | Python 3.11+ |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
+
+## 🚦 项目状态
+
+每一行是本仓库的一个部分，灯号表示它今天做到了哪一步。内容依据仓库能够展示的证据（测试、构建、运行），而不是计划。
+
+🟢 已完成并验证 · 🟡 可用，有已知限制 · 🟠 部分完成或尚未验证 · 🔴 未完成或不可用
+
+| 领域 | 状态 | 在这里的含义 |
+|---|---|---|
+| 软件 | 🟢 | 场景、故障和向服务器的投递都能工作；没有接入节点时，它为电脑上的服务器提供数据。 |
+| 测试 | 🟢 | 63 项测试通过（`python -m unittest discover -s tests`）。 |
+| 协议与数据 | 🟠 | 几何模型仅作示意，并不是真实 LD2450 雷达的模型，也没有与真实硬件对比过。 |
+| 集成 | 🟢 | 测试中它会把消息投递到服务器，CM5 测试台的服务器也可以由它提供数据。 |
+| 文档 | 🟢 | 八种语言和更新日志均为最新。 |
 
 ## 🎯 概述
 
@@ -61,7 +75,7 @@ ARMOR-SIMULATOR 让家族的其他部分无需硬件就能试用：它扮演雷�
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 57 tests, including a local HTTP server
+├── tests/                 63 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +86,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 57 tests
+python -m unittest discover -s tests   # 63 tests
 ```
 
 完整的选项、场景和故障：[用法](docs/USAGE.md)。

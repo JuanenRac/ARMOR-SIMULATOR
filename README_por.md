@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-57%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 57 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 63 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -38,9 +38,23 @@
 |---|---|
 | Versão | `0.2.6` |
 | Maturidade | Estabelecido |
-| Testes | 57 (`python -m unittest discover -s tests`) |
+| Testes | 63 (`python -m unittest discover -s tests`) |
 | Tecnologia | Python 3.11+ |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
+
+## 🚦 Estado do projeto
+
+Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É escrita com o que o repositório consegue demonstrar (testes, compilações, execuções), não com o que está previsto.
+
+🟢 Feito e verificado · 🟡 Funciona, com limites conhecidos · 🟠 Feito a meio ou ainda por verificar · 🔴 Por fazer ou a não funcionar
+
+| Área | Estado | O que significa aqui |
+|---|---|---|
+| Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
+| Testes | 🟢 | Passam 63 testes (`python -m unittest discover -s tests`). |
+| Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
+| Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
+| Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
 
 ## 🎯 Visão geral
 
@@ -61,7 +75,7 @@ O ARMOR-SIMULATOR é a forma de experimentar o resto da família sem hardware: f
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 57 tests, including a local HTTP server
+├── tests/                 63 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +86,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 57 tests
+python -m unittest discover -s tests   # 63 tests
 ```
 
 Opções, cenários e falhas completos: [utilização](docs/USAGE.md).

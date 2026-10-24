@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-57%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、57 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、63 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -38,9 +38,23 @@
 |---|---|
 | バージョン | `0.2.6` |
 | 成熟度 | 確立 |
-| テスト | 57 (`python -m unittest discover -s tests`) |
+| テスト | 63 (`python -m unittest discover -s tests`) |
 | 技術 | Python 3.11+ |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
+
+## 🚦 プロジェクトの状況
+
+各行はこのリポジトリの一部分で、信号は今日どこまで進んでいるかを示します。計画ではなく、リポジトリが示せるもの（テスト、ビルド、実行）に基づいて書かれています。
+
+🟢 完了・検証済み · 🟡 動作する（既知の制限あり） · 🟠 一部のみ、または未検証 · 🔴 未実装または動作しない
+
+| 領域 | 状態 | ここでの意味 |
+|---|---|---|
+| ソフトウェア | 🟢 | シナリオ、故障、サーバーへの配信は動作します。ノードを接続していないとき、コンピューター上のサーバーにデータを送るのがこれです。 |
+| テスト | 🟢 | 63 件のテストが通ります（`python -m unittest discover -s tests`）。 |
+| プロトコルとデータ | 🟠 | 幾何は例示用で、実際の LD2450 レーダーのモデルではありません。実機との比較もしていません。 |
+| 連携 | 🟢 | テストではメッセージをサーバーに配信しており、CM5 テストベンチのサーバーにもこれでデータを送れます。 |
+| ドキュメント | 🟢 | 8 言語と変更履歴は最新です。 |
 
 ## 🎯 概要
 
@@ -61,7 +75,7 @@ ARMOR-SIMULATOR は、ハードウェアなしでファミリーの他の部分�
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 57 tests, including a local HTTP server
+├── tests/                 63 tests, including a local HTTP server
 └── docs/USAGE.md
 ```
 
@@ -72,7 +86,7 @@ ARMOR-SIMULATOR/
 ```powershell
 $env:PYTHONPATH="src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 57 tests
+python -m unittest discover -s tests   # 63 tests
 ```
 
 全オプション、シナリオ、故障：[使い方](docs/USAGE.md)。
