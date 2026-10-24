@@ -76,6 +76,7 @@ ARMOR-SIMULATOR è il modo per provare il resto della famiglia senza hardware: f
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
 ├── tests/                 63 tests, including a local HTTP server
+├── tools/                 the shared CI checks (armor_ci_validate.py, armor_project_tool.py, _armor_readme_parity.py)
 └── docs/USAGE.md
 ```
 

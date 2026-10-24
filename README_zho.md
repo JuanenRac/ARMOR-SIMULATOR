@@ -76,6 +76,7 @@ ARMOR-SIMULATOR 让家族的其他部分无需硬件就能试用：它扮演雷�
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
 ├── tests/                 63 tests, including a local HTTP server
+├── tools/                 the shared CI checks (armor_ci_validate.py, armor_project_tool.py, _armor_readme_parity.py)
 └── docs/USAGE.md
 ```
 
