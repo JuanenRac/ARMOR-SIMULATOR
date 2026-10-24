@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.2.6] - A node of 270 degrees and `--fault-topic`
 
 - **A node of 270 degrees:** the three sensors face -75, 0 and +75 degrees (neighbours overlap by 45 degrees; only the 90 degrees behind the node are blind), like the radar node, instead of a 90 degree corner. `speed_mm_s` is now the radial speed seen by the sensor, negative when the object comes closer, instead of a constant per scenario.
 - The repository has a security policy, a code of conduct, a contributing guide and a support file.
