@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The pictures of the README come from shared tools:** `tools/make_architecture.py` draws `images/architecture.svg` from `docs/architecture.json` and `tools/make_structure.py` draws the Repository Structure (the text tree and the animated picture) from `docs/structure.json`; both measure every text, and `--check` fails when a picture, its description or the code it points to disagree. They are vendored from ARMOR-COMMON like the shared CI checks.
+
 ## [0.2.6] - A node of 270 degrees and `--fault-topic`
 
 - **A node of 270 degrees:** the three sensors face -75, 0 and +75 degrees (neighbours overlap by 45 degrees; only the 90 degrees behind the node are blind), like the radar node, instead of a 90 degree corner. `speed_mm_s` is now the radial speed seen by the sensor, negative when the object comes closer, instead of a constant per scenario.
