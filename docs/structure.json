@@ -1,0 +1,392 @@
+{
+  "repo": "ARMOR-SIMULATOR",
+  "ecosystem": "armor",
+  "svg": "en",
+  "cards": [
+    {
+      "name": "src/armor_simulator/",
+      "sub": {
+        "en": "the simulator",
+        "es": "el simulador",
+        "de": "der Simulator",
+        "fr": "le simulateur",
+        "it": "il simulatore",
+        "ja": "シミュレーター",
+        "zh": "模拟器",
+        "pt": "o simulador"
+      },
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "cli.py",
+          "desc": {
+            "en": "the options and the run",
+            "es": "las opciones y la ejecución",
+            "de": "die Optionen und der Ablauf",
+            "fr": "les options et l'exécution",
+            "it": "le opzioni e l'esecuzione",
+            "ja": "オプションと実行",
+            "zh": "选项与运行",
+            "pt": "as opções e a execução"
+          }
+        },
+        {
+          "name": "scenarios.py cycle.py",
+          "tree_name": "scenarios.py cycle.py",
+          "desc": {
+            "en": "the four scenarios, the 270 degree geometry and the day of light",
+            "es": "los cuatro escenarios, la geometría de 270 grados y el día de luz",
+            "de": "die vier Szenarien, die 270-Grad-Geometrie und der Lichttag",
+            "fr": "les quatre scénarios, la géométrie de 270 degrés et le jour de lumière",
+            "it": "i quattro scenari, la geometria a 270 gradi e il giorno di luce",
+            "ja": "4 つのシナリオ、270 度の配置、1 日の光",
+            "zh": "四种场景、270 度几何和一天的光照",
+            "pt": "os quatro cenários, a geometria de 270 graus e o dia de luz"
+          }
+        },
+        {
+          "name": "solar.py",
+          "desc": {
+            "en": "an inverter and a two-module battery stack",
+            "es": "un inversor y una pila de dos módulos",
+            "de": "ein Wechselrichter und ein Batteriestapel aus zwei Modulen",
+            "fr": "un onduleur et une pile de deux modules",
+            "it": "un inverter e una pila di due moduli",
+            "ja": "インバーターと 2 モジュールのバッテリー",
+            "zh": "逆变器和两模块电池组",
+            "pt": "um inversor e uma pilha de dois módulos"
+          }
+        },
+        {
+          "name": "electrical.py",
+          "desc": {
+            "en": "the three channels of an electrical node",
+            "es": "los tres canales de un nodo eléctrico",
+            "de": "die drei Kanäle eines Elektroknotens",
+            "fr": "les trois canaux d'un nœud électrique",
+            "it": "i tre canali di un nodo elettrico",
+            "ja": "電気ノードの 3 チャンネル",
+            "zh": "电气节点的三个通道",
+            "pt": "os três canais de um nó elétrico"
+          }
+        },
+        {
+          "name": "faults.py",
+          "desc": {
+            "en": "the seven repeatable faults",
+            "es": "las siete averías repetibles",
+            "de": "die sieben wiederholbaren Fehler",
+            "fr": "les sept pannes répétables",
+            "it": "i sette guasti ripetibili",
+            "ja": "再現可能な 7 つの障害",
+            "zh": "七种可重复的故障",
+            "pt": "as sete falhas repetíveis"
+          }
+        },
+        {
+          "name": "publisher.py",
+          "desc": {
+            "en": "delivery to a server with retries",
+            "es": "entrega a un servidor con reintentos",
+            "de": "Zustellung an einen Server mit Wiederholungen",
+            "fr": "livraison à un serveur avec nouvelles tentatives",
+            "it": "consegna a un server con nuovi tentativi",
+            "ja": "再試行つきのサーバーへの配信",
+            "zh": "带重试的服务器投递",
+            "pt": "entrega a um servidor com novas tentativas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tests/",
+      "span": 1,
+      "tree": {
+        "en": "the tests",
+        "es": "las pruebas",
+        "de": "die Tests",
+        "fr": "les tests",
+        "it": "i test",
+        "ja": "テスト",
+        "zh": "测试",
+        "pt": "os testes"
+      },
+      "rows": [
+        {
+          "name": "test_simulator.py",
+          "desc": {
+            "en": "37 tests",
+            "es": "37 pruebas",
+            "de": "37 Tests",
+            "fr": "37 tests",
+            "it": "37 test",
+            "ja": "37 件",
+            "zh": "37 个",
+            "pt": "37 testes"
+          }
+        },
+        {
+          "name": "test_cli_options.py",
+          "desc": {
+            "en": "26 tests",
+            "es": "26 pruebas",
+            "de": "26 Tests",
+            "fr": "26 tests",
+            "it": "26 test",
+            "ja": "26 件",
+            "zh": "26 个",
+            "pt": "26 testes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "docs/",
+      "span": 1,
+      "tree": {
+        "en": "the guides of this repository",
+        "es": "las guías de este repositorio",
+        "de": "die Anleitungen dieses Repositorys",
+        "fr": "les guides de ce dépôt",
+        "it": "le guide di questo repository",
+        "ja": "このリポジトリのガイド",
+        "zh": "本仓库的指南",
+        "pt": "os guias deste repositório"
+      },
+      "rows": [
+        {
+          "name": "USAGE.md",
+          "desc": {
+            "en": "every option, scenario and fault",
+            "es": "todas las opciones, escenarios y averías",
+            "de": "alle Optionen, Szenarien und Fehler",
+            "fr": "toutes les options, scénarios et pannes",
+            "it": "tutte le opzioni, gli scenari e i guasti",
+            "ja": "すべてのオプション、シナリオ、障害",
+            "zh": "所有选项、场景和故障",
+            "pt": "todas as opções, cenários e falhas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tools/",
+      "span": 1,
+      "tree": {
+        "en": "the shared CI checks and project tooling",
+        "es": "las comprobaciones de CI compartidas y las herramientas del proyecto",
+        "de": "die gemeinsamen CI-Prüfungen und Projektwerkzeuge",
+        "fr": "les contrôles CI partagés et les outils du projet",
+        "it": "i controlli CI condivisi e gli strumenti del progetto",
+        "ja": "共通の CI チェックとプロジェクトツール",
+        "zh": "共享的 CI 检查和项目工具",
+        "pt": "as verificações de CI partilhadas e as ferramentas do projeto"
+      },
+      "rows": [
+        {
+          "name": "armor_ci_validate.py",
+          "desc": {
+            "en": "the CI validation",
+            "es": "la validación de CI",
+            "de": "die CI-Prüfung",
+            "fr": "la validation CI",
+            "it": "la validazione CI",
+            "ja": "CI 検証",
+            "zh": "CI 验证",
+            "pt": "a validação de CI"
+          }
+        }
+      ]
+    },
+    {
+      "name": ".github/ images/",
+      "tree_name": ".github/ images/",
+      "kind": "group",
+      "span": 3,
+      "columns": 2,
+      "rows": [
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow, issue and pull-request templates",
+            "es": "flujo de CI y plantillas de issues y pull requests",
+            "de": "CI-Workflow sowie Vorlagen für Issues und Pull Requests",
+            "fr": "workflow CI et modèles d'issues et de pull requests",
+            "it": "workflow CI e modelli per issue e pull request",
+            "ja": "CI ワークフローと Issue・Pull Request のテンプレート",
+            "zh": "CI 工作流以及 Issue 和 Pull Request 模板",
+            "pt": "fluxo de CI e modelos de issues e pull requests"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "banner, icon and the two pictures of this README",
+            "es": "banner, icono y las dos imágenes de este README",
+            "de": "Banner, Symbol und die zwei Bilder dieses READMEs",
+            "fr": "bannière, icône et les deux images de ce README",
+            "it": "banner, icona e le due immagini di questo README",
+            "ja": "バナー、アイコン、この README の 2 つの図",
+            "zh": "横幅、图标和本 README 的两幅图",
+            "pt": "faixa, ícone e as duas imagens deste README"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Files at the root",
+        "es": "Ficheros en la raíz",
+        "de": "Dateien im Wurzelverzeichnis",
+        "fr": "Fichiers à la racine",
+        "it": "File nella radice",
+        "ja": "ルートのファイル",
+        "zh": "根目录的文件",
+        "pt": "Ficheiros na raiz"
+      },
+      "kind": "group",
+      "span": 3,
+      "columns": 2,
+      "rows": [
+        {
+          "name": "build.sh  build.bat",
+          "tree_name": "build.sh build.bat",
+          "desc": {
+            "en": "build through the shared project workflow",
+            "es": "compilar con el flujo de proyecto compartido",
+            "de": "Build über den gemeinsamen Projekt-Workflow",
+            "fr": "build par le flux de projet partagé",
+            "it": "build tramite il flusso di progetto condiviso",
+            "ja": "共通のプロジェクトワークフローでビルド",
+            "zh": "通过共享的项目工作流构建",
+            "pt": "compilar pelo fluxo de projeto partilhado"
+          }
+        },
+        {
+          "name": "test.sh  test.bat",
+          "tree_name": "test.sh test.bat",
+          "desc": {
+            "en": "run the tests through the shared workflow",
+            "es": "ejecutar las pruebas con el flujo compartido",
+            "de": "Tests über den gemeinsamen Workflow ausführen",
+            "fr": "lancer les tests par le flux partagé",
+            "it": "eseguire i test tramite il flusso condiviso",
+            "ja": "共通のワークフローでテストを実行",
+            "zh": "通过共享工作流运行测试",
+            "pt": "executar os testes pelo fluxo partilhado"
+          }
+        },
+        {
+          "name": "run.sh  run.bat",
+          "tree_name": "run.sh run.bat",
+          "desc": {
+            "en": "start through the shared project workflow",
+            "es": "arrancar con el flujo de proyecto compartido",
+            "de": "Start über den gemeinsamen Projekt-Workflow",
+            "fr": "démarrer par le flux de projet partagé",
+            "it": "avvio tramite il flusso di progetto condiviso",
+            "ja": "共通のプロジェクトワークフローで起動",
+            "zh": "通过共享的项目工作流启动",
+            "pt": "arrancar pelo fluxo de projeto partilhado"
+          }
+        },
+        {
+          "name": "armor.project.json",
+          "desc": {
+            "en": "manifest: version, role, maturity, build command",
+            "es": "manifiesto: versión, rol, madurez, comando de build",
+            "de": "Manifest: Version, Rolle, Reifegrad, Build-Befehl",
+            "fr": "manifeste : version, rôle, maturité, commande de build",
+            "it": "manifesto: versione, ruolo, maturità, comando di build",
+            "ja": "マニフェスト：バージョン、役割、成熟度、ビルドコマンド",
+            "zh": "清单：版本、角色、成熟度、构建命令",
+            "pt": "manifesto: versão, função, maturidade, comando de build"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变化",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "SECURITY.md  SUPPORT.md  LICENSE",
+          "tree_name": "SECURITY.md SUPPORT.md LICENSE",
+          "desc": {
+            "en": "security policy, support and license",
+            "es": "política de seguridad, soporte y licencia",
+            "de": "Sicherheitsrichtlinie, Support und Lizenz",
+            "fr": "politique de sécurité, support et licence",
+            "it": "politica di sicurezza, supporto e licenza",
+            "ja": "セキュリティポリシー、サポート、ライセンス",
+            "zh": "安全策略、支持和许可证",
+            "pt": "política de segurança, apoio e licença"
+          }
+        },
+        {
+          "name": "CONTRIBUTING.md  CODE_OF_CONDUCT.md",
+          "tree_name": "CONTRIBUTING.md CODE_OF_CONDUCT.md",
+          "desc": {
+            "en": "how to contribute and the code of conduct",
+            "es": "cómo contribuir y el código de conducta",
+            "de": "Mitwirkung und Verhaltenskodex",
+            "fr": "comment contribuer et le code de conduite",
+            "it": "come contribuire e il codice di condotta",
+            "ja": "貢献方法と行動規範",
+            "zh": "如何贡献与行为准则",
+            "pt": "como contribuir e o código de conduta"
+          }
+        },
+        {
+          "name": "build-test.sh  build-test.bat",
+          "tree_name": "build-test.sh build-test.bat",
+          "desc": {
+            "en": "run the tests through the shared workflow",
+            "es": "ejecutar las pruebas con el flujo compartido",
+            "de": "Tests über den gemeinsamen Workflow ausführen",
+            "fr": "lancer les tests par le flux partagé",
+            "it": "eseguire i test tramite il flusso condiviso",
+            "ja": "共通のワークフローでテストを実行",
+            "zh": "通过共享工作流运行测试",
+            "pt": "executar os testes pelo fluxo partilhado"
+          }
+        },
+        {
+          "name": "pyproject.toml",
+          "desc": {
+            "en": "package metadata",
+            "es": "metadatos del paquete",
+            "de": "Paketmetadaten",
+            "fr": "métadonnées du paquet",
+            "it": "metadati del pacchetto",
+            "ja": "パッケージのメタデータ",
+            "zh": "包元数据",
+            "pt": "metadados do pacote"
+          }
+        },
+        {
+          "name": ".gitattributes  .gitignore",
+          "tree_name": ".gitattributes .gitignore",
+          "desc": {
+            "en": "Git settings",
+            "es": "ajustes de Git",
+            "de": "Git-Einstellungen",
+            "fr": "réglages Git",
+            "it": "impostazioni di Git",
+            "ja": "Git の設定",
+            "zh": "Git 设置",
+            "pt": "definições do Git"
+          }
+        }
+      ]
+    }
+  ]
+}

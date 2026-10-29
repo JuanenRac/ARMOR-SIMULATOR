@@ -18,7 +18,7 @@
 ### Simulador de telemetria offline com falhas repetíveis
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
   <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
@@ -38,9 +38,15 @@
 |---|---|
 | Versão | `0.2.6` |
 | Maturidade | Estabelecido |
+| Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
+| Tecnologia | Python 3.11+, só biblioteca padrão |
 | Testes | 63 (`python -m unittest discover -s tests`) |
-| Tecnologia | Python 3.11+ |
+| Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
+| Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
+| Licença | GPL-3.0-or-later |
+
+**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Segurança](#-segurança-e-proteção) · [Interfaces](#-interfaces) · [Configuração](#-configuração) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Problemas](#-resolução-de-problemas) · [Estrutura](#-estrutura-do-repositório) · [Relacionados](#-projetos-relacionados)
 
 ## 🚦 Estado do projeto
 
@@ -70,27 +76,146 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 
 O ARMOR-SIMULATOR é a forma de experimentar o resto da família sem hardware: faz de nó radar, de porta de ligação solar ou de nó elétrico e envia as suas mensagens para um [ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER), com falhas repetíveis, para que o [ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO) e a aplicação móvel se vejam a funcionar com uma casa que não existe. Cada mensagem que faz é verificada contra os contratos do [ARMOR-COMMON](https://github.com/JuanenRac/ARMOR-COMMON).
 
+| Nome | Como | Para quê |
+|---|---|---|
+| ARMOR-SERVER | `POST /api/v1/telemetry`, `/health`, `/solar`, `/electrical/readings` | Recebe as mensagens simuladas |
+| ARMOR-COMMON | `--validate` | Os contratos contra os quais cada mensagem é verificada |
+| ARMOR-STUDIO, ARMOR-ANDROID-CONTROL | através do servidor | Mostram a casa simulada |
+
+## 🏛️ Arquitetura
+
+<p align="center">
+  <img src="images/architecture.svg" alt="Arquitetura de ARMOR-SIMULATOR: quem o chama, o que contém e de que depende" width="100%">
+</p>
+
+## 🔒 Segurança e proteção
+
+| Ameaça | Defesa |
+|---|---|
+| Enviar para um destino estranho | Só se aceita uma origem http(s) simples (sem caminho nem credenciais); um 4xx pára a execução, um 5xx ou um erro de rede é repetido três vezes |
+| O token aparece na lista de processos | `--ingest-token` é desaconselhado; use `ARMOR_INGEST_TOKEN` ou `--ingest-token-file`; nada escreve o token em lado nenhum |
+| Um teste chega por engano a um servidor real | Nada é enviado sem `--server-url` e um token; não há nenhum cliente de broker |
+| Mensagens que violam o contrato de propósito | `corrupt-lux`, `unknown-field` e `oversized-targets` exigem `--allow-invalid` e não se combinam com `--validate` |
+| Entrada hostil na linha de comandos | O id do nó tem de cumprir `^[a-z0-9][a-z0-9_-]{0,63}$` e `--count` vai de 1 a 10 000 |
+
+É uma ferramenta de teste: não é uma função de segurança e a sua geometria não é um modelo do radar real.
+
+## 🔌 Interfaces
+
+| Opção | Predefinição | O que define |
+|---|---|---|
+| `--scenario` | `patrol` | `patrol`, `crossing`, `two-intruders`, `empty` |
+| `--count` | `1` | Amostras (1 a 10 000); uma amostra é um segundo |
+| `--seed` | `0` | A mesma semente imprime as mesmas linhas |
+| `--light` | `cycle` | `cycle` (dia e noite) ou `night` (0,3 lux fixos) |
+| `--solar`, `--electrical` | off | Emite também um inversor com baterias / um nó elétrico |
+| `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Injeta uma falha repetível em algumas mensagens |
+| `--validate`, `--allow-invalid` | off | Verifica cada mensagem com o ARMOR-COMMON / permite as falhas que o violam |
+| `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Entrega ao ARMOR-SERVER; o token de cada nó se o servidor for estrito |
+
+Todas as opções, cenários e falhas estão em [docs/USAGE.md](docs/USAGE.md). Mensagens: `armor/node/<id>/telemetry` e `health`, `armor/solar/<nó>/<dispositivo>/state`, `armor/electrical/<nó>/state`; a entrega vai para `/api/v1/telemetry`, `/api/v1/health`, `/api/v1/solar` e `/api/v1/electrical/readings`.
+
+## ⚙️ Configuração
+
+| Variável | Necessária | O que define |
+|---|---|---|
+| `ARMOR_INGEST_TOKEN` | com `--server-url` | O token de ingestão do servidor (ou uma linha `ARMOR_INGEST_TOKEN=...` no ficheiro de `--ingest-token-file`) |
+| `PYTHONPATH=src` | a partir do repositório | Onde o pacote é encontrado |
+
+| Limite | Valor |
+|---|---|
+| Amostras por execução | 1 - 10 000 |
+| Sensores e campo de visão | 3 (-75, 0, +75°) × ±60°, 6000 mm |
+| Um dia de luz, solar e elétrico | 240 amostras |
+| Tentativas de entrega / limite de tempo | 3 / 5 s |
+
+## 🚀 Início rápido
+
+**Requisitos:** Python 3.11+ (só biblioteca padrão).
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
+python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:8080 --ingest-token-file token.env
+```
+
+## 🧪 Testes
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m unittest discover -s tests
+python -I tools/armor_ci_validate.py
+```
+
+| Ficheiro de testes | Testes | O que cobre |
+|---|---|---|
+| `test_simulator.py` | 37 | Cenários, falhas, solar, elétrico, validação, entrega a um servidor HTTP local |
+| `test_cli_options.py` | 26 | As opções, os seus limites e as recusas |
+
+## 🏗️ Compilação e publicação
+
+É Python puro: nada a compilar. A versão está em `pyproject.toml` e `armor.project.json`.
+
+## 🩺 Resolução de problemas
+
+| Vê | Porque | Faça |
+|---|---|---|
+| `--server-url needs a token ...` | Um URL sem token, ou um token sem URL | Indique os dois |
+| HTTP 401 / 403 | O token está errado; um servidor estrito quer um token por nó | `--per-node-token` |
+| `--allow-invalid` | A falha viola o contrato de propósito | Acrescente-o e não use `--validate` |
+| O servidor vê as mensagens como antigas | A data de início predefinida é 0 e o servidor substitui-a | `--start-ms now` |
+
 ## 📂 Estrutura do repositório
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Estrutura do repositório de ARMOR-SIMULATOR" width="100%">
+</p>
+
+<details>
+<summary>Versão em texto da árvore</summary>
 
 ```text
 ARMOR-SIMULATOR/
-├── src/armor_simulator/   scenarios, faults, solar (inverter and battery messages), electrical (an electrical node), publisher, cli
-├── tests/                 63 tests, including a local HTTP server
-├── tools/                 the shared CI checks (armor_ci_validate.py, armor_project_tool.py, _armor_readme_parity.py)
-└── docs/USAGE.md
+├── src/armor_simulator/
+│   ├── cli.py                           as opções e a execução
+│   ├── scenarios.py cycle.py            os quatro cenários, a geometria de 270 graus e o dia de luz
+│   ├── solar.py                         um inversor e uma pilha de dois módulos
+│   ├── electrical.py                    os três canais de um nó elétrico
+│   ├── faults.py                        as sete falhas repetíveis
+│   └── publisher.py                     entrega a um servidor com novas tentativas
+├── tests/                               os testes
+├── docs/                                os guias deste repositório
+├── tools/                               as verificações de CI partilhadas e as ferramentas do projeto
+├── .github/                             fluxo de CI e modelos de issues e pull requests
+├── images/                              faixa, ícone e as duas imagens deste README
+├── build.sh build.bat                   compilar pelo fluxo de projeto partilhado
+├── test.sh test.bat                     executar os testes pelo fluxo partilhado
+├── run.sh run.bat                       arrancar pelo fluxo de projeto partilhado
+├── armor.project.json                   manifesto: versão, função, maturidade, comando de build
+├── CHANGELOG.md                         o que mudou em cada versão
+├── SECURITY.md SUPPORT.md LICENSE       política de segurança, apoio e licença
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md   como contribuir e o código de conduta
+├── build-test.sh build-test.bat         executar os testes pelo fluxo partilhado
+├── pyproject.toml                       metadados do pacote
+└── .gitattributes .gitignore            definições do Git
 ```
 
-## 🛠️ Ambiente de desenvolvimento
+</details>
 
-**Requisitos:** Python 3.11+ (apenas a biblioteca padrão)
+## 🗺️ Roteiro e limites conhecidos
 
-```powershell
-$env:PYTHONPATH="src"
-python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m unittest discover -s tests   # 63 tests
-```
+**Limites conhecidos hoje**
 
-Opções, cenários e falhas completos: [utilização](docs/USAGE.md).
+* A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real.
+* Só fala HTTP com um servidor; publicar num broker MQTT não está incluído de propósito.
+
+**A seguir**
+
+* Comparar os cenários com gravações do radar real quando houver nós instalados.
+
+## 🌍 Idiomas
+
+O README e os textos existem em inglês, espanhol, francês, italiano, alemão, chinês, japonês e português europeu.
 
 ## 🔗 Projetos relacionados
 
@@ -98,33 +223,38 @@ O **A.R.M.O.R.** (Autonomous Radar & Multimodal Observation Range) é um sistema
 
 * **[ARMOR-COMMON](https://github.com/JuanenRac/ARMOR-COMMON)** - Contratos de mensagens, validadores, vetores de conformidade e tipos gerados
 * **[ARMOR-NODE-RADAR](https://github.com/JuanenRac/ARMOR-NODE-RADAR)** - Firmware de nó de campo para ESP32-S3 com três radares e o seu próprio painel web
-* **[ARMOR-NODE-SOLAR](https://github.com/JuanenRac/ARMOR-NODE-SOLAR)** - Protocolos de inversores e baterias solares e as mensagens de um nó de ligação
+* **[ARMOR-NODE-SOLAR](https://github.com/JuanenRac/ARMOR-NODE-SOLAR)** - Protocolos de inversores e baterias solares e as mensagens de um nó porta de ligação
 * **[ARMOR-NODE-ELECTRICAL](https://github.com/JuanenRac/ARMOR-NODE-ELECTRICAL)** - Nó elétrico: contadores, a mensagem das leituras da rede e as regras de comutação
-* **[ARMOR-NODE-ALARM](https://github.com/JuanenRac/ARMOR-NODE-ALARM)** - Nó e central de alarme: zonas, armar, atrasos, sirene e PIN, com o servidor ou sem ele
+* **[ARMOR-NODE-ALARM](https://github.com/JuanenRac/ARMOR-NODE-ALARM)** - Nó e painel de alarme: zonas, armar, atrasos, sirene e PIN, com o servidor ou sem ele
 * **[ARMOR-NODE-HMI](https://github.com/JuanenRac/ARMOR-NODE-HMI)** - Painel tátil: o estado do sistema num ecrã de parede, armar e reconhecer, e a casa do assistente de voz
 * **[ARMOR-NETWORK](https://github.com/JuanenRac/ARMOR-NETWORK)** - A rede local: os seus dispositivos, a internet e o que muda
 * **[ARMOR-SERVER](https://github.com/JuanenRac/ARMOR-SERVER)** - Coordenador central: telemetria, alarmes, dispositivos, leituras solares e câmaras
-* **[ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO)** - Consola web: câmaras, radar, alarmes, energia solar e o desenhador de local 2D/3D
-* **[ARMOR-ANDROID-CONTROL](https://github.com/JuanenRac/ARMOR-ANDROID-CONTROL)** - Cliente Android de operador com um radar 2D/3D em direto
+* **[ARMOR-STUDIO](https://github.com/JuanenRac/ARMOR-STUDIO)** - Consola web: câmaras, radar, alarmes, energia solar e o desenhador 2D/3D do local
+* **[ARMOR-ANDROID-CONTROL](https://github.com/JuanenRac/ARMOR-ANDROID-CONTROL)** - Cliente de operador Android com radar 2D/3D em direto
 * **[ARMOR-IOS-CONTROL](https://github.com/JuanenRac/ARMOR-IOS-CONTROL)** - Cliente de operador para iPhone
 * **[ARMOR-SERVER-AI](https://github.com/JuanenRac/ARMOR-SERVER-AI)** - Política de inferência visual que explica as suas decisões e nunca atua
 * **[ARMOR-VISION](https://github.com/JuanenRac/ARMOR-VISION)** - Zonas de câmara, máscaras e regras de deteção para o Jetson Orin NX
-* **[ARMOR-VOICE-AI](https://github.com/JuanenRac/ARMOR-VOICE-AI)** - Intenções de voz offline com uma confirmação que não se pode falsificar
-* **[ARMOR-HARDWARE](https://github.com/JuanenRac/ARMOR-HARDWARE)** - Caixas, eletrónica e a matriz de aceitação de bancada
-* **[ARMOR-DEVOPS](https://github.com/JuanenRac/ARMOR-DEVOPS)** - Implementação, a bancada de testes CM5, cópias de segurança e TLS
+* **[ARMOR-VOICE-AI](https://github.com/JuanenRac/ARMOR-VOICE-AI)** - Intenções de voz offline com uma confirmação que não pode ser falsificada
+* **[ARMOR-HARDWARE](https://github.com/JuanenRac/ARMOR-HARDWARE)** - Caixas, eletrónica e a matriz de aceitação em bancada
+* **[ARMOR-DEVOPS](https://github.com/JuanenRac/ARMOR-DEVOPS)** - Implantação, a bancada de testes do CM5, cópias de segurança e TLS
 * **ARMOR-SIMULATOR** (este repositório) - Simulador de telemetria offline com falhas repetíveis
-* **[ARMOR-UPDATER](https://github.com/JuanenRac/ARMOR-UPDATER)** - Deteta, instala e atualiza os próprios repositórios do ecossistema
-* **[ARMOR-DOCS](https://github.com/JuanenRac/ARMOR-DOCS)** - Arquitetura, linha de base de segurança e a matriz de capacidades
+* **[ARMOR-UPDATER](https://github.com/JuanenRac/ARMOR-UPDATER)** - Deteta, instala e atualiza os repositórios do próprio ecossistema
+* **[ARMOR-DOCS](https://github.com/JuanenRac/ARMOR-DOCS)** - Arquitetura, base de segurança e a matriz de capacidades
 
-## 📚 Documentação e comunidade
+## 📚 Documentação
 
-Onde ler mais:
-
-* [Matriz de capacidades: o que está provado e o que não](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
+* [Utilização](docs/USAGE.md): todas as opções, cenários e falhas
+* [Matriz de capacidades: o que está demonstrado e o que não está](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Catálogo de projetos: versões e como os repositórios dependem uns dos outros](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [Registo de alterações deste repositório](CHANGELOG.md)
-* [Licença (GPL-3.0-or-later)](LICENSE)
-* Perguntas, ideias e relatórios: electrohobby3d@gmail.com
+
+## 🤝 Contribuir e comunidade
+
+* Antes de um pull request, execute `python -m unittest discover -s tests` and `python -I tools/armor_ci_validate.py`: tem de passar. Consulte [CONTRIBUTING.md](CONTRIBUTING.md) e o [código de conduta](CODE_OF_CONDUCT.md).
+* O README existe em oito idiomas e é gerado a partir das fontes do ARMOR-DOCS: uma alteração ao texto faz-se lá.
+* Uma alteração a uma mensagem entre componentes começa no ARMOR-COMMON.
+* Não descreva como a funcionar numa placa aquilo que só foi compilado.
+* Comunique uma vulnerabilidade em privado: [SECURITY.md](SECURITY.md). Perguntas, ideias e relatórios: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
 
 ## 👤 AUTOR
 
@@ -132,4 +262,4 @@ Onde ler mais:
 
 ## 📜 LICENÇA
 
-GPL-3.0-or-later - veja [LICENSE](LICENSE).
+GPL-3.0-or-later - consulte [LICENSE](LICENSE).

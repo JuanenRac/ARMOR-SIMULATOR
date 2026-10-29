@@ -1,0 +1,122 @@
+{
+  "repo": "ARMOR-SIMULATOR",
+  "ecosystem": "armor",
+  "tagline": "Plays a radar node, a solar gateway and an electrical node, with faults you can repeat, so the rest of the family works without hardware.",
+  "description": "ARMOR-SIMULATOR makes the messages of a radar node, an inverter with its batteries and an electrical node, checks them against ARMOR-COMMON when asked, and prints them or delivers them to ARMOR-SERVER, which ARMOR-STUDIO and the phone app then show.",
+  "columns": [
+    "WHO RUNS IT",
+    "THIS REPOSITORY",
+    "WHERE THE MESSAGES GO"
+  ],
+  "nodes": [
+    {
+      "id": "dev",
+      "column": 0,
+      "level": "external",
+      "title": "Developer or CI",
+      "lines": [
+        "runs the command line;",
+        "the same seed prints the",
+        "same lines"
+      ]
+    },
+    {
+      "id": "scen",
+      "column": 1,
+      "level": "tested",
+      "title": "scenarios, solar, electrical",
+      "lines": [
+        "4 scenarios on 3 sensors over 270 degrees,",
+        "an inverter with a two-module battery stack,",
+        "three electrical channels, a fast day of light"
+      ],
+      "code": [
+        "src/armor_simulator/scenarios.py",
+        "src/armor_simulator/cycle.py",
+        "src/armor_simulator/solar.py",
+        "src/armor_simulator/electrical.py"
+      ]
+    },
+    {
+      "id": "faults",
+      "column": 1,
+      "level": "tested",
+      "title": "faults.py",
+      "lines": [
+        "7 repeatable faults: 4 keep the",
+        "messages valid, 3 break the",
+        "contract on purpose"
+      ],
+      "code": [
+        "src/armor_simulator/faults.py"
+      ]
+    },
+    {
+      "id": "pub",
+      "column": 1,
+      "level": "contract",
+      "title": "publisher.py",
+      "lines": [
+        "plain http(s) origin only; a 4xx",
+        "stops the run, a 5xx is retried",
+        "three times"
+      ],
+      "code": [
+        "src/armor_simulator/publisher.py"
+      ]
+    },
+    {
+      "id": "common",
+      "column": 2,
+      "level": "external",
+      "title": "ARMOR-COMMON",
+      "lines": [
+        "--validate checks every message",
+        "against the contracts"
+      ]
+    },
+    {
+      "id": "server",
+      "column": 2,
+      "level": "external",
+      "title": "ARMOR-SERVER",
+      "lines": [
+        "/api/v1/telemetry, health,",
+        "solar and electrical;",
+        "stdout when no server is given"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "dev",
+      "to": "scen",
+      "label": "cli",
+      "level": "tested"
+    },
+    {
+      "from": "scen",
+      "to": "faults",
+      "label": "",
+      "level": "tested"
+    },
+    {
+      "from": "faults",
+      "to": "pub",
+      "label": "",
+      "level": "tested"
+    },
+    {
+      "from": "pub",
+      "to": "common",
+      "label": "validate",
+      "level": "contract"
+    },
+    {
+      "from": "pub",
+      "to": "server",
+      "label": "HTTP",
+      "level": "contract"
+    }
+  ]
+}
