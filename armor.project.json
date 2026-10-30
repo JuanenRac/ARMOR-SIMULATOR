@@ -11,6 +11,8 @@
   ],
   "deployment_target": "Developer workstation and CI",
   "maturity": "established",
+  "evidence": "simulator",
+  "hardware_bound": false,
   "family": "Testing",
   "parent": "ARMOR-COMMON",
   "native_version": "0.2.6",
