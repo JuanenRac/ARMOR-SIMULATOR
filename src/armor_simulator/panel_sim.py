@@ -11,8 +11,8 @@ contract (state on `armor/alarm/<node>/state`, command on `.../command`, answer 
 * `silent`: the command is received and never answered.
 
 `verify_panel_sync` plays that against the server through Studio's own routes: for each behaviour and each mode it disarms, chooses the mode, waits for the report and compares it with
-what must be true: the server defends the mode whatever the panel does; the panel was asked for the profile of the mode and nothing else (no disarm travels); and the report says `confirmed`
-only when the panel accepted (`failed` for a refusal or silence, never confirmed).
+what must be true: the server defends the mode whatever the panel does; the panel was asked for the profile of the mode and nothing else (no disarm travels); the report says `confirmed`
+only when the panel accepted (`failed` for a refusal or silence, never confirmed); and a failed report is exactly one open alarm `mode_panel_sync_failed` in the alarm centre (none for a confirmed one).
 
 Honest limits: this is a model of the panel's answer, not its firmware; the server needs a broker both share (the panel talks MQTT) and `ARMOR_ALARM_COMMANDS=1`; paho-mqtt is needed only for
 the link (`pip install paho-mqtt`), not for the panel model or the check.
@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 BEHAVIORS = ("accept", "refuse", "silent")
 MODE_PROFILE = {"away": "away", "home": "stay", "night": "night"}
 MODE_BASE = {"away": "away", "home": "stay", "night": "stay"}
+ALARM_CODE = "mode_panel_sync_failed"
 REFUSALS = ("not_disarmed", "zones_open", "not_armed", "bad_pin", "locked_out")
 
 
@@ -243,6 +244,14 @@ def verify_panel_sync(
                         problems.append(f"{where}: a PIN travels to the panel")
                 if panel.others_received():
                     problems.append(f"{where}: the panel received a command that is not an arm")
+                # a report that says failed is one alarm in the alarm centre, and a confirmed one leaves none open
+                listed: dict[str, Any] = session.call("GET", "/api/v1/alarms") or {}
+                active = listed.get("active")
+                open_alarms = [alarm for alarm in (active if isinstance(active, list) else []) if isinstance(alarm, dict) and alarm.get("code") == ALARM_CODE and not alarm.get("cleared_at")]
+                if len(open_alarms) != (0 if behavior == "accept" else 1):
+                    problems.append(f"{where}: {len(open_alarms)} open alarm(s) {ALARM_CODE!r}, it must be {0 if behavior == 'accept' else 1}")
+                elif open_alarms and (open_alarms[0].get("severity") != "high" or open_alarms[0].get("silent")):
+                    problems.append(f"{where}: the alarm {ALARM_CODE!r} must be high and not silent")
                 log.append(f"{where}: the report says {sync.get('status')}, the panel received {len(arms)} arm(s)")
         # a restored state: the server disarmed, the panel as it was
         disarm_last: dict[str, Any] = {"mode": "disarmed"}

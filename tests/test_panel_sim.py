@@ -19,9 +19,11 @@ from armor_simulator.panel_sim import BEHAVIORS, MODE_BASE, MODE_PROFILE, PanelL
 class ModelServer:
     """Stands in for the server: `session.call(method, path, body)`."""
 
-    def __init__(self, panel: SimulatedPanel, *, sync_enabled: bool = True, wrong_profile: bool = False, silent_server: bool = False, confirm_everything: bool = False, hold_back: bool = False) -> None:
+    def __init__(self, panel: SimulatedPanel, *, sync_enabled: bool = True, wrong_profile: bool = False, silent_server: bool = False, confirm_everything: bool = False, hold_back: bool = False, no_alarm: bool = False, alarm_when_confirmed: bool = False) -> None:
         self.panel, self.sync_enabled = panel, sync_enabled
         self.wrong_profile, self.silent_server, self.confirm_everything, self.hold_back = wrong_profile, silent_server, confirm_everything, hold_back
+        self.no_alarm, self.alarm_when_confirmed = no_alarm, alarm_when_confirmed
+        self.alarm_open = False
         self.mode = "disarmed"
         self.sync: dict[str, Any] | None = None
         self.counter = 0
@@ -36,9 +38,13 @@ class ModelServer:
             if self.sync:
                 state["panel_sync"] = self.sync
             return state
+        if path == "/api/v1/alarms":
+            alarm = {"id": "alm-00001", "key": "mode_panel_sync", "code": "mode_panel_sync_failed", "severity": "high", "source": {"type": "alarm", "id": "mode_panel"}, "raised_at": "x"}
+            return {"active": [alarm] if self.alarm_open else [{**alarm, "cleared_at": "y"}], "recent": []}
         assert path == "/api/v1/mode" and body is not None
         mode = str(body["mode"])
         self.mode = mode
+        self.alarm_open = False
         if mode == "disarmed":
             self.sync = None
             return {}
@@ -53,6 +59,7 @@ class ModelServer:
         if self.confirm_everything:
             status = "confirmed"
         self.sync = {"mode": mode, "profile": profile_id, "status": status, "nodes": [{"node_id": self.panel.node_id, "status": "confirmed" if status == "confirmed" else "refused"}]}
+        self.alarm_open = (status == "failed" and not self.no_alarm) or self.alarm_when_confirmed
         return {}
 
 
@@ -137,6 +144,16 @@ class VerifyPanelSyncTests(unittest.TestCase):
     def test_it_notices_a_server_that_holds_its_own_defence_back_for_a_panel(self) -> None:
         problems, _ = run(hold_back=True)
         self.assertTrue(any("never hold the server back" in item for item in problems), problems)
+
+    def test_it_notices_a_server_that_does_not_raise_the_alarm_of_a_failed_panel(self) -> None:
+        problems, _ = run(no_alarm=True)
+        self.assertTrue(any("refuse/home" in item and "0 open alarm(s)" in item for item in problems), problems)
+        self.assertTrue(any("silent/night" in item for item in problems), problems)
+        self.assertFalse(any(item.startswith("accept/") for item in problems), problems)
+
+    def test_it_notices_an_alarm_for_a_panel_that_did_confirm(self) -> None:
+        problems, _ = run(alarm_when_confirmed=True)
+        self.assertTrue(any("accept/away" in item and "1 open alarm(s)" in item for item in problems), problems)
 
     def test_it_stops_with_the_reason_when_the_server_is_not_ready(self) -> None:
         panel = SimulatedPanel()
