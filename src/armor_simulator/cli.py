@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
     for number, (topic, payload) in enumerate(stream, start=1):
         if validate:
             try:
-                (validate_solar if topic.startswith("armor/solar/") else validate_electrical if topic.startswith("armor/electrical/") else validate)(topic, payload)
+                (validate_solar if topic.startswith("armor/solar/") else validate_electrical if topic.startswith("armor/electrical/") else validate)(topic, payload)  # type: ignore[misc]
             except (ValueError, KeyError, TypeError) as error:
                 print(f"armor-simulator: message {number} on {topic} is not valid for ARMOR-COMMON: {error}", file=sys.stderr)
                 return 1

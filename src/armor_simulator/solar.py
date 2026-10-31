@@ -13,7 +13,7 @@ import math
 import random
 from collections.abc import Iterator
 
-from .cycle import DAY_SAMPLES, outage, phase
+from .cycle import outage, phase
 from .faults import Message
 MODULES = 2
 CELLS = 15
