@@ -19,6 +19,6 @@ python_version = "3.11"
 files = ["src"]
 
 [[tool.mypy.overrides]]
-# The shared contract package lives in a sibling checkout and is imported only when present.
-module = ["armor_common", "armor_common.*"]
+# The shared contract package lives in a sibling checkout and is imported only when present; paho-mqtt is imported only by the link of the simulated panel and is optional.
+module = ["armor_common", "armor_common.*", "paho", "paho.*"]
 ignore_missing_imports = true
