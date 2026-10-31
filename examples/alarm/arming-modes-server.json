@@ -1,0 +1,30 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Home and night modes on a real server",
+  "description": "Meant for --drive-server. Home defends the garden radar only, night defends the garden and the hall: the same walk through the hall is ignored at home and raises an intrusion at night.",
+  "nodes": ["radar-garden", "radar-hall"],
+  "duration_s": 100,
+  "seed": 7,
+  "zones": [
+    {"id": "garden", "node": "radar-garden", "sensor_id": 2, "armed_in": ["home", "away", "night"]},
+    {"id": "hall", "node": "radar-hall", "sensor_id": 2, "armed_in": ["away", "night"]}
+  ],
+  "server_modes": {
+    "home": {"defends": ["node:radar-garden"]},
+    "night": {"defends": ["node:radar-garden", "node:radar-hall"]}
+  },
+  "events": [
+    {"type": "mode", "at_s": 2, "mode": "home"},
+    {"type": "intrusion", "at_s": 8, "path": [{"zone": "hall", "dwell_s": 12}]},
+    {"type": "intrusion", "at_s": 34, "path": [{"zone": "garden", "dwell_s": 12}]},
+    {"type": "mode", "at_s": 58, "mode": "night"},
+    {"type": "intrusion", "at_s": 66, "path": [{"zone": "hall", "dwell_s": 12}]}
+  ],
+  "expect": {
+    "alarms": [
+      {"code": "intrusion", "node": "radar-garden", "at_s": [35, 55]},
+      {"code": "intrusion", "node": "radar-hall", "at_s": [67, 90]}
+    ],
+    "forbidden": [{"code": "intrusion", "node": "radar-hall", "from_s": 0, "to_s": 57}]
+  }
+}

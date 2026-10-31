@@ -13,12 +13,14 @@ import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
 from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
 from .publisher import DeliveryError, check_server_url, post
 from .scenarios import SCENARIOS, health, telemetry
+from .server_driver import DriverError, Session, drive
 from .electrical import electrical_messages
 from .solar import solar_messages
 
@@ -89,6 +91,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--alarm-scenario", type=Path, metavar="FILE", help="play an alarm scenario described in a JSON file (see docs/ALARM_SCENARIOS.md) instead of --scenario/--count")
     parser.add_argument("--check-alarm-scenario", action="store_true", help="only validate the file of --alarm-scenario and print what it contains")
     parser.add_argument("--verify-alarms", type=Path, metavar="FILE", help="compare the alarms a server raised (a JSON list or JSON lines) with what the file of --alarm-scenario expects; exit 1 when they differ")
+    parser.add_argument("--drive-server", action="store_true", help="play the file of --alarm-scenario against the real ARMOR-SERVER of --server-url (the mode events become orders to the server, in real time) and check the alarms it raised; needs --studio-user")
+    parser.add_argument("--studio-user", help="the account of Studio that arms the server for --drive-server (an operator; an administrator with --apply-modes); the password comes from ARMOR_STUDIO_PASSWORD or --studio-password-file")
+    parser.add_argument("--studio-password-file", type=Path, metavar="FILE", help="a file whose first line is the password of --studio-user (never on the command line)")
+    parser.add_argument("--studio-pin-file", type=Path, metavar="FILE", help="a file whose first line is the PIN of --studio-user, for a mode change that defends less (or ARMOR_STUDIO_PIN)")
+    parser.add_argument("--apply-modes", action="store_true", help="with --drive-server, define in the server what home and night defend, from the scenario (an administrator account)")
+    parser.add_argument("--settle-s", type=float, default=3.0, help="with --drive-server, seconds to wait after the scenario before reading the alarms (default 3)")
+    parser.add_argument("--save-observed", type=Path, metavar="FILE", help="with --drive-server, write the alarms the server raised as JSON, to repeat the check with --verify-alarms")
     parser.add_argument("--energy", action="store_true", help="emit realistic solar and electrical data (sun with clouds, house by the hour, tariff, battery, noisy meter) instead of the fast day of --solar/--electrical")
     parser.add_argument("--energy-config", type=Path, metavar="FILE", help="a JSON file with the settings of --energy (see docs/ENERGY_MODEL.md); the defaults apply to what it does not say")
     parser.add_argument("--energy-days", type=float, default=1.0, help="days of data of --energy (default 1)")
@@ -106,6 +115,46 @@ def _token(args: argparse.Namespace) -> str:
                 return line.split("=", 1)[1].strip()
         return text.splitlines()[0].strip() if text else ""
     return os.environ.get("ARMOR_INGEST_TOKEN", "").strip()
+
+
+def _first_line(parser: argparse.ArgumentParser, path: Path | None, variable: str) -> str:
+    if path:
+        try:
+            text = Path(path).read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeDecodeError) as error:
+            parser.error(f"cannot read {path}: {getattr(error, 'strerror', None) or error}")
+        return text.splitlines()[0].strip() if text else ""
+    return os.environ.get(variable, "").strip()
+
+
+def _drive(parser: argparse.ArgumentParser, args: argparse.Namespace, scenario: Any, token: str) -> int:
+    """--drive-server: the scenario played against a real server, the alarms it raised compared with the expectation."""
+    if not args.server_url or not token or not args.studio_user:
+        parser.error("--drive-server needs --server-url, the ingest token and --studio-user (the password in ARMOR_STUDIO_PASSWORD or --studio-password-file)")
+    if args.fault != "none" or args.validate or args.interval_ms:
+        parser.error("--drive-server plays in real time with no faults: it cannot be combined with --fault, --validate or --interval-ms")
+    if not 0 <= args.settle_s <= 300:
+        parser.error("--settle-s must be between 0 and 300")
+    password = _first_line(parser, args.studio_password_file, "ARMOR_STUDIO_PASSWORD")
+    if not password:
+        parser.error("--drive-server needs the password of --studio-user in ARMOR_STUDIO_PASSWORD or in --studio-password-file")
+    pin = _first_line(parser, args.studio_pin_file, "ARMOR_STUDIO_PIN") or None
+    server = check_server_url(args.server_url)
+    session = Session(server)
+    try:
+        session.login(args.studio_user, password)
+        result = drive(scenario, session, ingest_url=server, ingest_token=token, per_node=args.per_node_token, apply_modes=args.apply_modes, pin=pin, health_every=args.health_every, settle_s=args.settle_s)
+    except DriverError as error:
+        print(f"armor-simulator: {error}", file=sys.stderr)
+        return 2
+    for line in result.log:
+        print(f"armor-simulator: {line}", file=sys.stderr)
+    if args.save_observed:
+        Path(args.save_observed).write_text(json.dumps(result.observed, indent=1) + "\n", encoding="utf-8")
+    for problem in result.problems:
+        print(f"armor-simulator: {problem}", file=sys.stderr)
+    print(f"armor-simulator: {scenario.name}: the server raised {len(result.observed)} alarm(s); " + ("it answered as expected" if not result.problems else f"{len(result.problems)} difference(s) with what was expected"))
+    return 1 if result.problems else 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -139,8 +188,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"armor-simulator: {problem}", file=sys.stderr)
             print(f"armor-simulator: {scenario.name}: " + ("the system answered as expected" if not problems else f"{len(problems)} difference(s) with what was expected"))
             return 1 if problems else 0
-    elif args.check_alarm_scenario or args.verify_alarms:
-        parser.error("--check-alarm-scenario and --verify-alarms need --alarm-scenario")
+    elif args.check_alarm_scenario or args.verify_alarms or args.drive_server:
+        parser.error("--check-alarm-scenario, --verify-alarms and --drive-server need --alarm-scenario")
     energy_config = None
     energy_steps = 0
     if args.energy:
@@ -163,6 +212,8 @@ def main(argv: list[str] | None = None) -> int:
     token = _token(args)
     if bool(args.server_url) != bool(token):
         parser.error("--server-url needs a token (--ingest-token, --ingest-token-file or ARMOR_INGEST_TOKEN), and a token needs --server-url")
+    if args.drive_server:
+        return _drive(parser, args, scenario, token)
     if args.start_ms == "now":
         start_ms = int(time.time() * 1000)
     else:

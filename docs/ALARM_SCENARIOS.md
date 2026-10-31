@@ -11,6 +11,7 @@ python -m armor_simulator --alarm-scenario examples/alarm/sequential-intrusion.j
 
 * `--check-alarm-scenario` only validates the file and prints what it holds.
 * Without it the scenario is played: JSON lines `{"topic", "payload"}` like every other run, one second of telemetry per node per second of scenario (a health beat every `--health-every` seconds), so `--validate`, `--server-url`, `--fault`, `--start-ms` and the rest work as usual. The scenario brings its own nodes, light, length and seed (`--seed` is ignored): it cannot be combined with `--count`, `--scenario`, `--light`, `--node-id`, `--solar`, `--electrical` or `--energy`.
+* `--drive-server` plays the scenario against a **real ARMOR-SERVER**, mode orders included (see "Against a real server" below).
 * `--verify-alarms FILE` compares the alarms a server raised with the expectation. Exit 0 when the system answered as expected, 1 when not (every difference is listed on stderr), 2 when a file is not valid. Nothing is played.
 
 Nothing is read loosely: the first thing that is not understood (a key that is not in the schema, a number of the wrong type or range, a repeated key, `NaN`, a time outside the scenario, a zone that does not exist, a file larger than 1 MB, an expectation that cannot hold) refuses the whole file with a message that says where.
@@ -91,13 +92,28 @@ A scenario is also refused when an expectation contradicts it: a code that only 
 
 `--verify-alarms` reads a JSON list or JSON lines of the alarms the server raised, with the seconds counted from the start of the scenario: `{"t_s": 31.5, "code": "intrusion", "node": "radar-1", "severity": "high"}` (`zone` too when the server says it). Keys are checked like those of a scenario.
 
+## Against a real server
+
+```powershell
+$env:ARMOR_STUDIO_PASSWORD = "..."          # or --studio-password-file; never on the command line
+$env:ARMOR_INGEST_TOKEN = "..."
+python -m armor_simulator --alarm-scenario examples/alarm/arming-modes-server.json --drive-server --server-url http://127.0.0.1:8080 --studio-user admin --apply-modes
+```
+
+`--drive-server` signs in as `--studio-user`, sends the telemetry of the scenario to the ingest routes **in real time** (one second of scenario per second of the clock, because the delays of the server are real), turns each `mode` event (and each change of the calendar) into `POST /api/v1/mode` at its second, waits `--settle-s` seconds (3 by default) and reads `GET /api/v1/alarms`. The alarms that the server raised are compared with `expect` by the same check as `--verify-alarms` (exit 0 as expected, 1 different, 2 could not be played). `--save-observed FILE` writes them down.
+
+* **The server must have the arming modes on** (`alarm.arming_modes`, Studio > Configuration > Security): the simulator never changes a security setting and stops with exit 2 if they are off.
+* **What home and night defend** comes from the `server_modes` key of the scenario (`{"home": {"defends": ["node:radar-1"]}, "night": {...}}`, with the references of the contract: `zone:`, `device:`, `node:`, `camera:`; `entry` and the two delays are allowed too) or, without it, from the `armed_in` of the zones: a radar node is defended in a mode when any zone of that node is armed in it. Without `--apply-modes` the definitions already in the server must be the ones the scenario needs (else exit 2); with it they are replaced (an administrator account) and the revision is respected.
+* **A PIN** is needed by the server when a change defends less than the mode before it (away to home, for instance): `--studio-pin-file FILE` or `ARMOR_STUDIO_PIN`. Without it the run stops at that second and says so.
+* **Limits:** a radar node is defended as a whole, so the zones of one node cannot be told apart (an expectation with `zone` will not match, because the server's alarm names the node); the clock of the server is compared with this machine's through the `Date` header of one answer, so times are exact to about a second; an account with a second factor (TOTP) cannot be used; the scenario is not interrupted at an error of the server after the first order (the run stops with exit 2). The expectations of `arming-modes-server.json` were played against the real ARMOR-SERVER of this version and held; the other examples are still reference expectations.
+
 ## The examples
 
-`examples/alarm/` has eight files: a sequential intrusion, two people on two nodes, a sensor that is stuck and one that is dead, noise and drift, a node that loses its link, a pet and wind, the night mode of the calendar, and a mains outage.
+`examples/alarm/` has nine files: a sequential intrusion, two people on two nodes, a sensor that is stuck and one that is dead, noise and drift, a node that loses its link, a pet and wind, the night mode of the calendar, a mains outage, and home and night modes on a real server (`arming-modes-server.json`, written for `--drive-server`).
 
 ## What this is and is not
 
 * The expectations of the examples are **reference expectations** written from how ARMOR-SERVER is documented to behave (a track while armed is a high intrusion, a silent node is called down after the stale time, a lost grid is an alarm). They have not been run against a live server here: a difference found with `--verify-alarms` may be a wrong expectation as well as a wrong server, and that is for a person to judge.
-* The system modes `home` and `night` are labels of the scenario. The radar side of a server is armed or disarmed; what the other modes change (which zones are defended) is for the server under test to implement, and the scenario only says what is expected of it.
+* Played as a file (`--verify-alarms` or the plain stream), the system modes `home` and `night` are labels of the scenario and the scenario only says what is expected of the server. Played with `--drive-server` they are real orders to a server that has the arming modes, and what the server raised is what is checked.
 * The false-alarm examples (a pet, the wind) only make sense for a server tuned against them (a minimum number of targets, a dwell time or an ignore zone).
 * The geometry is illustrative: nothing says how a real radar sees a person, a pet or the wind.

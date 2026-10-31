@@ -84,6 +84,8 @@ class Scenario:
     expect_order: str = "any"
     expect_forbidden: tuple[dict[str, Any], ...] = ()
     allow_extra: bool = True
+    # What a real server must defend in each mode when the scenario is played against it (--drive-server): {"home": {"defends": ["node:radar-1"], ...}}; None derives it from the zones.
+    server_modes: dict[str, dict[str, Any]] | None = None
 
 
 # ---------------------------------------------------------------- strict reading of a JSON document
@@ -178,7 +180,7 @@ def _window(value: Any, where: str, duration: int) -> tuple[float, float]:
 
 def parse_scenario(data: Any) -> Scenario:
     """Validates a scenario already read from JSON and returns it normalised; raises ScenarioError at the first thing that is wrong."""
-    top = _object(data, "the scenario", ("schema", "name", "duration_s", "zones", "events"), ("description", "nodes", "seed", "light", "power", "start_clock", "schedule", "expect"))
+    top = _object(data, "the scenario", ("schema", "name", "duration_s", "zones", "events"), ("description", "nodes", "seed", "light", "power", "start_clock", "schedule", "expect", "server_modes"))
     if top["schema"] != SCHEMA:
         raise ScenarioError(f"schema must be {SCHEMA!r}")
     name = _text(top["name"], "name", 80)
@@ -248,15 +250,47 @@ def parse_scenario(data: Any) -> Scenario:
         if not isinstance(allow_extra, bool):
             raise ScenarioError("expect.allow_extra must be true or false")
         expect_alarms = tuple(_parse_expected(item, f"expect.alarms[{i}]", duration, nodes, zones) for i, item in enumerate(_list(expect.get("alarms", []), "expect.alarms", 200)))
-        expect_forbidden = tuple(_parse_forbidden(item, f"expect.forbidden[{i}]", duration, zones) for i, item in enumerate(_list(expect.get("forbidden", []), "expect.forbidden", 200)))
+        expect_forbidden = tuple(_parse_forbidden(item, f"expect.forbidden[{i}]", duration, nodes, zones) for i, item in enumerate(_list(expect.get("forbidden", []), "expect.forbidden", 200)))
+    server_modes = _parse_server_modes(top["server_modes"], nodes) if "server_modes" in top else None
     scenario = Scenario(
         name=name, description=_text(top["description"], "description", 400) if "description" in top else "", nodes=nodes, duration_s=duration,
         seed=_int(top.get("seed", 0), "seed", 0, 2**31 - 1), light=light, power=power or any(e["type"] == "mains_outage" for e in events), start_minute=start_minute,
-        schedule=tuple(schedule), zones=zones, events=tuple(events), expect_alarms=expect_alarms, expect_order=expect_order, expect_forbidden=expect_forbidden, allow_extra=allow_extra,
+        schedule=tuple(schedule), zones=zones, events=tuple(events), expect_alarms=expect_alarms, expect_order=expect_order, expect_forbidden=expect_forbidden, allow_extra=allow_extra, server_modes=server_modes,
     )
     for item in scenario.expect_alarms:
         _check_possible(scenario, item)
     return scenario
+
+
+SERVER_REF = re.compile(r"^(zone|device|node|camera):(.{1,64})$")
+
+
+def _parse_server_modes(raw: Any, nodes: tuple[str, ...]) -> dict[str, dict[str, Any]]:
+    """What a real server must defend in each mode (the references of the contract of ARMOR-COMMON: zone:, device:, node:, camera:). Home and night defend only what they list."""
+    modes = _object(raw, "server_modes", (), ("away", "home", "night"))
+    result: dict[str, dict[str, Any]] = {}
+    for mode, item in modes.items():
+        where = f"server_modes.{mode}"
+        definition = _object(item, where, (), ("entry", "exit_delay_s", "entry_delay_s") if mode == "away" else ("defends", "entry", "exit_delay_s", "entry_delay_s"))
+        parsed: dict[str, Any] = {}
+        for key in ("defends", "entry"):
+            if key in definition:
+                refs = _list(definition[key], f"{where}.{key}", 64)
+                names = []
+                for i, ref in enumerate(refs):
+                    if not isinstance(ref, str) or not SERVER_REF.match(ref):
+                        raise ScenarioError(f"{where}.{key}[{i}] must be zone:, device:, node: or camera: followed by a name of at most 64 characters")
+                    if ref.startswith("node:") and ref[5:] not in nodes:
+                        raise ScenarioError(f"{where}.{key}[{i}] names the node {ref[5:]!r}, which is not in nodes")
+                    names.append(ref)
+                if len({name.lower() for name in names}) != len(names):
+                    raise ScenarioError(f"{where}.{key} names something twice")
+                parsed[key] = names
+        for key in ("exit_delay_s", "entry_delay_s"):
+            if key in definition:
+                parsed[key] = _int(definition[key], f"{where}.{key}", 0, 300)
+        result[mode] = parsed
+    return result
 
 
 def _list(value: Any, where: str, maximum: int) -> list[Any]:
@@ -339,14 +373,16 @@ def _parse_expected(item: Any, where: str, duration: int, nodes: tuple[str, ...]
     return parsed
 
 
-def _parse_forbidden(item: Any, where: str, duration: int, zones: dict[str, Zone]) -> dict[str, Any]:
-    entry = _object(item, where, ("code",), ("zone", "from_s", "to_s"))
+def _parse_forbidden(item: Any, where: str, duration: int, nodes: tuple[str, ...], zones: dict[str, Zone]) -> dict[str, Any]:
+    entry = _object(item, where, ("code",), ("zone", "node", "from_s", "to_s"))
     parsed: dict[str, Any] = {"code": _choice(entry["code"], f"{where}.code", ALARM_CODES), "from_s": _number(entry.get("from_s", 0), f"{where}.from_s", 0, duration),
                               "to_s": _number(entry.get("to_s", duration), f"{where}.to_s", 0, duration)}
     if parsed["from_s"] > parsed["to_s"]:
         raise ScenarioError(f"{where}: from_s is after to_s")
     if "zone" in entry:
         parsed["zone"] = _zone_ref(entry["zone"], f"{where}.zone", zones)
+    if "node" in entry:
+        parsed["node"] = _choice(entry["node"], f"{where}.node", nodes)
     return parsed
 
 
