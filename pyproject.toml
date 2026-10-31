@@ -13,3 +13,12 @@ armor-simulator = "armor_simulator.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+
+[[tool.mypy.overrides]]
+# The shared contract package lives in a sibling checkout and is imported only when present.
+module = ["armor_common", "armor_common.*"]
+ignore_missing_imports = true

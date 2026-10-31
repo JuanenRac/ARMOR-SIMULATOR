@@ -102,8 +102,8 @@ def tracks_for(scenario: str, sample: int, rng: random.Random) -> list[Track]:
     now = SCENARIOS[scenario](sample, rng)
     ahead = at(sample + 1)
     # A scenario repeats after a few samples; across that jump the motion is measured backwards instead.
-    if any(math.hypot(a[0] - n[0], a[1] - n[1]) > MAX_STEP_MM for a, n in zip(ahead, now)):
-        ahead = [(2 * n[0] - b[0], 2 * n[1] - b[1], 0.0) for b, n in zip(at(sample - 1), now)]
+    if any(math.hypot(a[0] - n[0], a[1] - n[1]) > MAX_STEP_MM for a, n in zip(ahead, now, strict=False)):
+        ahead = [(2 * n[0] - b[0], 2 * n[1] - b[1], 0.0) for b, n in zip(at(sample - 1), now, strict=False)]
     for slot, (x_mm, y_mm, _speed) in enumerate(now, start=1):
         sensor = _sensor_for(x_mm, y_mm)
         if sensor is None:
