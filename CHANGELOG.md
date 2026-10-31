@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A simulated alarm panel and a check of the panel sync of a real server:** `--verify-panel-sync` connects a simulated ARMOR-NODE-ALARM panel to the broker of the server (`--mqtt-url`) and, for each behaviour of the panel (accepts, refuses, never answers) and each mode (away, home, night), chooses the mode through Studio's own routes and compares the report of the server (`panel_sync`) with what must be true: the server defends the mode whatever the panel does, the panel is asked for the profile of the mode (away, stay, night) and for nothing else, and the report says confirmed only when the panel accepted. The panel model, the check and a model of the server that is broken on purpose in several ways are covered by `tests/test_panel_sim.py`.
+
 ## [0.2.9] - Alarm scenarios checked against a real server, with the arming modes and expectations that name a zone
 
 - **Expectations that name a zone can be checked against a real server:** the alarm of the server for a radar track names the node and not the zone, so with `--drive-server` an expectation with `zone` is now checked at the node that sees that zone (the log says so) instead of never matching; a scenario that expects an alarm in one zone and forbids it in another zone of the same node in overlapping seconds is refused with exit 2, because the server cannot tell them apart.

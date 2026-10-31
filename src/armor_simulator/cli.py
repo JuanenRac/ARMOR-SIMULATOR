@@ -18,6 +18,7 @@ from typing import Any
 from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
 from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
+from .panel_sim import BEHAVIORS, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_sync
 from .publisher import DeliveryError, check_server_url, post
 from .scenarios import SCENARIOS, health, telemetry
 from .server_driver import DriverError, Session, drive
@@ -97,6 +98,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--studio-pin-file", type=Path, metavar="FILE", help="a file whose first line is the PIN of --studio-user, for a mode change that defends less (or ARMOR_STUDIO_PIN)")
     parser.add_argument("--apply-modes", action="store_true", help="with --drive-server, define in the server what home and night defend, from the scenario (an administrator account)")
     parser.add_argument("--settle-s", type=float, default=3.0, help="with --drive-server, seconds to wait after the scenario before reading the alarms (default 3)")
+    parser.add_argument("--verify-panel-sync", action="store_true", help="check a real ARMOR-SERVER with alarm.mode_panel_sync on: a simulated alarm panel on the broker of the server answers (accept, refuse, silent) while every mode is chosen, and the report of the server is compared with what must be true; needs --server-url, --studio-user and --mqtt-url")
+    parser.add_argument("--mqtt-url", help="with --verify-panel-sync, the broker the server uses (mqtt://host[:port]); the simulated panel connects to it")
+    parser.add_argument("--mqtt-user", help="with --verify-panel-sync, the user of the broker (the password in ARMOR_MQTT_PASSWORD or --mqtt-password-file)")
+    parser.add_argument("--mqtt-password-file", type=Path, metavar="FILE", help="a file whose first line is the password of the broker (never on the command line)")
+    parser.add_argument("--panel-id", default="sim-panel", help="with --verify-panel-sync, the node id of the simulated panel (default sim-panel)")
+    parser.add_argument("--panel-behavior", choices=BEHAVIORS, action="append", help="with --verify-panel-sync, play only this behaviour of the panel (repeat for several; default all)")
     parser.add_argument("--save-observed", type=Path, metavar="FILE", help="with --drive-server, write the alarms the server raised as JSON, to repeat the check with --verify-alarms")
     parser.add_argument("--energy", action="store_true", help="emit realistic solar and electrical data (sun with clouds, house by the hour, tariff, battery, noisy meter) instead of the fast day of --solar/--electrical")
     parser.add_argument("--energy-config", type=Path, metavar="FILE", help="a JSON file with the settings of --energy (see docs/ENERGY_MODEL.md); the defaults apply to what it does not say")
@@ -157,6 +164,39 @@ def _drive(parser: argparse.ArgumentParser, args: argparse.Namespace, scenario: 
     return 1 if result.problems else 0
 
 
+def _verify_panel_sync(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """--verify-panel-sync: a simulated alarm panel and every mode chosen on a real server, the report compared with what must be true."""
+    if not args.server_url or not args.studio_user or not args.mqtt_url:
+        parser.error("--verify-panel-sync needs --server-url, --studio-user (the password in ARMOR_STUDIO_PASSWORD or --studio-password-file) and --mqtt-url")
+    password = _first_line(parser, args.studio_password_file, "ARMOR_STUDIO_PASSWORD")
+    if not password:
+        parser.error("--verify-panel-sync needs the password of --studio-user in ARMOR_STUDIO_PASSWORD or in --studio-password-file")
+    pin = _first_line(parser, args.studio_pin_file, "ARMOR_STUDIO_PIN") or None
+    broker_password = _first_line(parser, args.mqtt_password_file, "ARMOR_MQTT_PASSWORD") or None
+    if not NODE_ID.match(args.panel_id):
+        parser.error("--panel-id must be 1-64 characters: lowercase letters, digits, '-' or '_'")
+    server = check_server_url(args.server_url)
+    panel = SimulatedPanel(node_id=args.panel_id)
+    link = PanelLink(panel, args.mqtt_url, username=args.mqtt_user, password=broker_password)
+    session = Session(server)
+    try:
+        session.login(args.studio_user, password)
+        link.start()
+        time.sleep(3)   # the server must have seen the first state of the panel
+        problems, log = verify_panel_sync(session, panel, pin=pin, behaviors=tuple(args.panel_behavior or BEHAVIORS))
+    except (DriverError, PanelLinkError) as error:
+        print(f"armor-simulator: {error}", file=sys.stderr)
+        return 2
+    finally:
+        link.stop()
+    for line in log:
+        print(f"armor-simulator: {line}", file=sys.stderr)
+    for problem in problems:
+        print(f"armor-simulator: {problem}", file=sys.stderr)
+    print("armor-simulator: panel sync: " + ("the server asked the panel for the profile of each mode and reported what the panel answered" if not problems else f"{len(problems)} difference(s) with what must be true"))
+    return 1 if problems else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -209,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     elif args.energy_config:
         parser.error("--energy-config needs --energy")
+    if args.verify_panel_sync:
+        return _verify_panel_sync(parser, args)
     token = _token(args)
     if bool(args.server_url) != bool(token):
         parser.error("--server-url needs a token (--ingest-token, --ingest-token-file or ARMOR_INGEST_TOKEN), and a token needs --server-url")

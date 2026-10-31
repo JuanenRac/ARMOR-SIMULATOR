@@ -73,3 +73,14 @@ python -m armor_simulator --count 60 --scenario two-intruders --server-url http:
 Only a plain `http(s)://host[:port]` origin is accepted. A 4xx answer stops the
 run at once (the message or the token is wrong); a network error or a 5xx is
 retried three times.
+
+## Checking the panel sync of a server
+
+With the server settings `alarm.arming_modes` and `alarm.mode_panel_sync` on and `ARMOR_ALARM_COMMANDS=1`, choosing a mode on the server also asks the alarm panels to arm with the profile of the mode (away arms `away`, home arms `stay`, night arms `night`) and the server reports what they answered (`panel_sync`). A simulated panel checks that without a real one:
+
+```powershell
+$env:ARMOR_STUDIO_PASSWORD = "<password>"
+python -m armor_simulator --verify-panel-sync --server-url http://127.0.0.1:8080 --studio-user ana --mqtt-url mqtt://127.0.0.1:1883 --mqtt-user armor --mqtt-password-file broker.txt
+```
+
+The panel (`--panel-id`, default `sim-panel`) connects to the same broker as the server (needs `pip install paho-mqtt`), publishes its state and answers each command as it is told to: accepts, refuses with `zones_open`, or stays silent (`--panel-behavior` plays only some of them). For every behaviour and every mode the check disarms, chooses the mode and waits for the report, then compares: the server defends the mode whatever the panel did, exactly one arm command with the right profile reached the panel and no other command (a disarm never travels), no PIN reaches the panel, and the report says `confirmed` only when the panel accepted and `failed` for a refusal or silence. It changes no security setting and leaves the system disarmed; it needs an account that may arm and disarm (the PIN with `--studio-pin-file`). A silent panel makes the run last about five seconds per mode. The check is a model of the panel's answer, not its firmware: what a real panel does with the command is still to be seen on hardware.
