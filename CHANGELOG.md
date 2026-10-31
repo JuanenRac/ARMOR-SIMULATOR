@@ -4,8 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- **Expectations that name a zone can be checked against a real server:** the alarm of the server for a radar track names the node and not the zone, so with `--drive-server` an expectation with `zone` is now checked at the node that sees that zone (the log says so) instead of never matching; a scenario that expects an alarm in one zone and forbids it in another zone of the same node in overlapping seconds is refused with exit 2, because the server cannot tell them apart.
+## [0.2.9] - Alarm scenarios checked against a real server, with the arming modes and expectations that name a zone
 
+- **Expectations that name a zone can be checked against a real server:** the alarm of the server for a radar track names the node and not the zone, so with `--drive-server` an expectation with `zone` is now checked at the node that sees that zone (the log says so) instead of never matching; a scenario that expects an alarm in one zone and forbids it in another zone of the same node in overlapping seconds is refused with exit 2, because the server cannot tell them apart.
 - **The scenarios with modes are checked against a real server:** `--drive-server` plays an alarm scenario against an ARMOR-SERVER that has the arming modes on: the `mode` events (and the changes of the calendar) become orders to `POST /api/v1/mode`, the telemetry goes to the ingest routes in real time, and the alarms the server raised are compared with the expectation of the file. A scenario can say what home and night defend in a real server (`server_modes`) and, with `--apply-modes`, the simulator defines it there; the account's password comes only from the environment or a file, and a PIN for a change that defends less is given the same way. A forbidden alarm can now name a node. A ninth example, `arming-modes-server.json`, was played against the real server and held. A scenario file played without `--drive-server` behaves as before.
 
 ## [0.2.8] - Alarm scenarios in files with their expected answers and realistic solar and electrical data
