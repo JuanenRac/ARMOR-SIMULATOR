@@ -17,7 +17,7 @@ from typing import Any
 
 from armor_simulator.alarm_scenarios import ScenarioError, load_scenario, parse_scenario
 from armor_simulator.cli import main
-from armor_simulator.server_driver import DriverError, Session, drive, mode_changes, modes_document
+from armor_simulator.server_driver import DriverError, Session, drive, mode_changes, modes_document, zone_expectations_at_node
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "alarm" / "arming-modes-server.json"
 T0 = 1_000_000.0
@@ -145,6 +145,40 @@ class ScenarioKeyTests(unittest.TestCase):
             parse_scenario(short({"expect": {"forbidden": [{"code": "intrusion", "node": "ghost"}]}}))
 
 
+class ZoneExpectationTests(unittest.TestCase):
+    def zoned(self, alarms: list[dict[str, Any]], forbidden: list[dict[str, Any]]) -> Any:
+        return parse_scenario(short({"expect": {"alarms": alarms, "forbidden": forbidden}}))
+
+    def test_an_expectation_that_names_a_zone_is_checked_at_the_node_that_sees_it(self):
+        scenario = self.zoned([{"code": "intrusion", "zone": "a", "at_s": [2, 10]}], [{"code": "intrusion", "zone": "b", "from_s": 0, "to_s": 19}])
+        checked, notes = zone_expectations_at_node(scenario)
+        self.assertEqual(checked.expect_alarms[0]["node"], "n1")
+        self.assertNotIn("zone", checked.expect_alarms[0])
+        self.assertEqual(checked.expect_forbidden[0]["node"], "n2")
+        self.assertEqual(len(notes), 2)
+        self.assertIn("zone a", notes[0])
+        self.assertEqual(scenario.expect_alarms[0]["zone"], "a")   # the scenario itself is not changed
+
+    def test_an_expectation_without_a_zone_is_left_as_it_is(self):
+        scenario = parse_scenario(short())
+        checked, notes = zone_expectations_at_node(scenario)
+        self.assertEqual(checked.expect_alarms, scenario.expect_alarms)
+        self.assertEqual(notes, [])
+
+    def test_two_zones_of_one_node_that_one_expects_and_the_other_forbids_cannot_be_checked(self):
+        data = short({"zones": [{"id": "a", "node": "n1", "sensor_id": 1, "armed_in": ["home", "away", "night"]}, {"id": "b", "node": "n1", "sensor_id": 2, "armed_in": ["home", "away", "night"]}, {"id": "c", "node": "n2", "sensor_id": 2}]})
+        data["expect"] = {"alarms": [{"code": "intrusion", "zone": "a", "at_s": [2, 10]}], "forbidden": [{"code": "intrusion", "zone": "b", "from_s": 0, "to_s": 19}]}
+        with self.assertRaisesRegex(DriverError, "cannot tell the two zones apart"):
+            zone_expectations_at_node(parse_scenario(data))
+        data["expect"]["forbidden"][0].update(from_s=25, to_s=29)   # not at the same time: they can be told apart
+        checked, _ = zone_expectations_at_node(parse_scenario(data))
+        self.assertEqual(checked.expect_forbidden[0]["node"], "n1")
+
+    def test_a_zone_and_a_node_that_disagree_are_refused(self):
+        with self.assertRaisesRegex(DriverError, "cannot both hold"):
+            zone_expectations_at_node(self.zoned([{"code": "intrusion", "zone": "a", "node": "n2", "at_s": [2, 10]}], []))
+
+
 class DriveTests(unittest.TestCase):
     def setUp(self) -> None:
         self.server = FakeServer()
@@ -175,6 +209,18 @@ class DriveTests(unittest.TestCase):
         self.assertEqual(kinds, {"telemetry", "health"})
         self.assertEqual(self.clock.now - T0, 30)   # one second of the clock per second of scenario
         self.assertEqual(result.observed, [{"t_s": 5.0, "code": "intrusion", "node": "n1", "severity": "high"}])
+
+    def test_an_expectation_with_a_zone_is_checked_against_the_alarm_of_its_node(self):
+        scenario = parse_scenario(short({"expect": {"alarms": [{"code": "intrusion", "zone": "a", "at_s": [2, 10]}], "forbidden": [{"code": "intrusion", "zone": "b", "from_s": 0, "to_s": 19}]}}))
+        self.server.alarms = [self.server.alarm("intrusion", "n1", 5)]
+        result = self.run_scenario(scenario, apply_modes=True)
+        self.assertEqual(result.problems, [])
+        self.assertTrue(any("names the node, not the zone" in line for line in result.log))
+
+    def test_an_alarm_of_the_node_of_a_forbidden_zone_is_a_false_alarm(self):
+        scenario = parse_scenario(short({"expect": {"alarms": [{"code": "intrusion", "zone": "a", "at_s": [2, 10]}], "forbidden": [{"code": "intrusion", "zone": "b", "from_s": 0, "to_s": 19}]}}))
+        self.server.alarms = [self.server.alarm("intrusion", "n1", 5), self.server.alarm("intrusion", "n2", 8)]
+        self.assertIn("must not happen", self.run_scenario(scenario, apply_modes=True).problems[0])
 
     def test_an_intrusion_where_the_mode_does_not_defend_is_a_difference(self):
         scenario = parse_scenario(short())

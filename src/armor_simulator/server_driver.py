@@ -12,6 +12,10 @@ account that may arm (an operator) and, to define the modes from the scenario (`
 may carry the definitions in its `server_modes` key, else they are derived from the `armed_in` of its zones (a radar node is defended in a mode when any zone of that node is armed in
 it, because the server defends a radar node as a whole).
 
+The alarm that the server raises for a radar track names the node and never the zone (the server defends a radar node as a whole), so an expectation that names a `zone` is checked at the
+level of the node that sees that zone (`zone_expectations_at_node`); when that would make two zones of the same node indistinguishable (one is expected and the other forbidden in
+overlapping seconds) the run is refused instead of giving an answer it cannot stand behind.
+
 Honest limits: a radar node is defended as a whole, so a scenario run here cannot tell zones of the same node apart; the clock of the server and of this machine are compared with the `Date`
 header of one answer, so they are as close as one second; a second factor (TOTP) at sign-in is not supported.
 """
@@ -21,7 +25,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from http.cookiejar import CookieJar
@@ -119,6 +123,44 @@ def modes_document(scenario: Scenario) -> dict[str, Any]:
     return {"modes": modes, "schedule": []}
 
 
+def _overlap(low_a: float, high_a: float, low_b: float, high_b: float) -> bool:
+    return low_a <= high_b and low_b <= high_a
+
+
+def zone_expectations_at_node(scenario: Scenario) -> tuple[Scenario, list[str]]:
+    """The scenario with every expectation that names a `zone` rewritten to name the node of that zone, and a note for each rewritten one.
+
+    The server raises the alarm of a radar track for the node, so a `zone` can never match what it says. Rewriting is only honest while the zones involved can be told apart by their node: an
+    expected alarm in one zone and a forbidden alarm of the same code in another zone of the same node in overlapping seconds cannot (the server would raise the same alarm for both), and that
+    raises DriverError so that the person splits the zones over nodes or drops the zone from the expectation.
+    """
+    expected = [(entry, entry.get("zone")) for entry in scenario.expect_alarms]
+    forbidden = [(entry, entry.get("zone")) for entry in scenario.expect_forbidden]
+    for want, want_zone in expected:
+        if want_zone is None:
+            continue
+        for ban, ban_zone in forbidden:
+            if ban_zone is None or ban_zone == want_zone or ban["code"] != want["code"]:
+                continue
+            if scenario.zones[ban_zone].node == scenario.zones[want_zone].node and _overlap(*want["window"], ban["from_s"], ban["to_s"]):
+                raise DriverError(
+                    f"the zones {want_zone!r} (expected {want['code']}) and {ban_zone!r} (forbidden) are seen by the same node, {scenario.zones[want_zone].node!r}, and the server raises its alarm for the node: "
+                    "it cannot tell the two zones apart, so this scenario cannot be checked against it; put the zones on different nodes or leave the zone out of the expectation")
+    notes: list[str] = []
+
+    def at_node(entry: dict[str, Any]) -> dict[str, Any]:
+        zone = entry.get("zone")
+        if zone is None:
+            return entry
+        node = scenario.zones[zone].node
+        if "node" in entry and entry["node"] != node:
+            raise DriverError(f"the expectation names the zone {zone!r}, which is seen by {node!r}, and the node {entry['node']!r}: they cannot both hold")
+        notes.append(f"{entry['code']} in the zone {zone} is checked as {entry['code']} of the node {node}")
+        return {key: value for key, value in entry.items() if key != "zone"} | {"node": node}
+
+    return replace(scenario, expect_alarms=tuple(at_node(e) for e in scenario.expect_alarms), expect_forbidden=tuple(at_node(e) for e in scenario.expect_forbidden)), notes
+
+
 def mode_changes(scenario: Scenario) -> list[tuple[int, str]]:
     """The seconds at which the mode of the scenario changes (the calendar and the `mode` events), the first being second 0 when the scenario does not start disarmed."""
     changes: list[tuple[int, str]] = []
@@ -171,6 +213,7 @@ def drive(
 ) -> DriveResult:
     """Plays the scenario against the server and compares what it raised with the expectation. Raises DriverError when the server is not ready or refuses an order."""
     log: list[str] = []
+    checked, zone_notes = zone_expectations_at_node(scenario)
     changes = mode_changes(scenario)
     wants_modes = any(mode in ("home", "night") for _, mode in changes)
     state: dict[str, Any] = session.call("GET", "/api/v1/alarm/modes") or {}
@@ -220,4 +263,6 @@ def drive(
         sleep(end - clock())
     alarms = session.call("GET", "/api/v1/alarms")
     observed = _observed(alarms, t0 * 1000 + session.server_offset_ms)
-    return DriveResult(observed, verify_alarms(scenario, observed), log)
+    if zone_notes:
+        log.append("the server names the node, not the zone, of a radar alarm: " + "; ".join(zone_notes))
+    return DriveResult(observed, verify_alarms(checked, observed), log)
