@@ -142,7 +142,7 @@ def zone_expectations_at_node(scenario: Scenario) -> tuple[Scenario, list[str]]:
         for ban, ban_zone in forbidden:
             if ban_zone is None or ban_zone == want_zone or ban["code"] != want["code"]:
                 continue
-            if scenario.zones[ban_zone].node == scenario.zones[want_zone].node and _overlap(*want["window"], ban["from_s"], ban["to_s"]):
+            if scenario.zones[ban_zone].node == scenario.zones[want_zone].node and _overlap(float(want["window"][0]), float(want["window"][1]), float(ban["from_s"]), float(ban["to_s"])):
                 raise DriverError(
                     f"the zones {want_zone!r} (expected {want['code']}) and {ban_zone!r} (forbidden) are seen by the same node, {scenario.zones[want_zone].node!r}, and the server raises its alarm for the node: "
                     "it cannot tell the two zones apart, so this scenario cannot be checked against it; put the zones on different nodes or leave the zone out of the expectation")
