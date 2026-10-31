@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - A simulated panel and a check of the panel sync and of its alarm against a real server
+
 - **The panel sync check also looks at the alarm centre:** after each step it asks the server for its alarms and requires exactly one open alarm `mode_panel_sync_failed` (high, not silent) when the panel refused or stayed silent, and none when it accepted.
 - **A simulated alarm panel and a check of the panel sync of a real server:** `--verify-panel-sync` connects a simulated ARMOR-NODE-ALARM panel to the broker of the server (`--mqtt-url`) and, for each behaviour of the panel (accepts, refuses, never answers) and each mode (away, home, night), chooses the mode through Studio's own routes and compares the report of the server (`panel_sync`) with what must be true: the server defends the mode whatever the panel does, the panel is asked for the profile of the mode (away, stay, night) and for nothing else, and the report says confirmed only when the panel accepted. The panel model, the check and a model of the server that is broken on purpose in several ways are covered by `tests/test_panel_sim.py`.
 
