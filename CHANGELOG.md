@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.8] - Alarm scenarios in files with their expected answers and realistic solar and electrical data
+
 - **Alarm scenarios in files:** `--alarm-scenario FILE` plays a JSON file (schema `armor-alarm-scenario/1`, documented in `docs/ALARM_SCENARIOS.md`) with a timeline of events: people who cross several zones one after another, a pet, wind, a sensor that is stuck, noisy, drifting or dead, a node that loses its link, a mains outage and the mode of the system, also by the calendar (home, away, night). The file may say what the system is expected to answer (which alarms, in which order, in which window of time, which ones must not happen); `--verify-alarms` compares the alarms a server raised with it and exits 1 when they differ, so the files serve as test cases for the server. `--check-alarm-scenario` only validates. The reading is strict and refuses the whole file at the first thing that is not understood. Eight examples are in `examples/alarm/`.
 - **Realistic solar and electrical data:** `--energy` (with `--energy-config`, `--energy-days`, `--energy-step-s`) emits an inverter, a battery stack and an electrical node from a real-time model: a sun with clouds, a house that eats by the hour, a tariff, a Pylontech-style battery with cycles and a meter with noise and holes. Deterministic for a seed; every setting lives in a JSON file (`docs/ENERGY_MODEL.md`). Tests check that there is no production at night, the state of charge stays between its limits, the energy balances at every step and the counters never go down.
 - Both are opt-in: without the new options the output is byte for byte what it was. Tests: 127 (before 63).
