@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-127%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 63 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 127 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 成熟 |
 | 角色 | 离线遥测与环境模拟器（家族：Testing，上级：ARMOR-COMMON） |
 | 技术栈 | Python 3.11+，仅标准库 |
-| 测试 | 63 (`python -m unittest discover -s tests`) |
+| 测试 | 127 (`python -m unittest discover -s tests`) |
 | 场景与故障 | 4 个场景、7 种故障（其中 3 种故意违反合约） |
 | 运行位置 | 任何计算机或 CI |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
@@ -57,7 +57,7 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 场景、故障和向服务器的投递都能工作；没有接入节点时，它为电脑上的服务器提供数据。 |
-| 测试 | 🟢 | 63 项测试通过（`python -m unittest discover -s tests`）。 |
+| 测试 | 🟢 | 127 项测试通过（`python -m unittest discover -s tests`）。 |
 | 协议与数据 | 🟠 | 几何模型仅作示意，并不是真实 LD2450 雷达的模型，也没有与真实硬件对比过。 |
 | 集成 | 🟢 | 测试中它会把消息投递到服务器，CM5 测试台的服务器也可以由它提供数据。 |
 | 文档 | 🟢 | 八种语言和更新日志均为最新。 |
@@ -71,6 +71,8 @@
 * **谨慎投递：** 只接受简单的 http(s) 源；4xx 会终止运行，5xx 或网络错误会重试。
 * **电气节点：** `--electrical` 会在加速的一天里加入电气节点的三个通道（电网入口、热水器和直流母线），其中包含一次停电、一段高电压和一次电表告警。
 * **太阳能设备：** `--solar` 会在 240 个样本的快进一天中加入一台逆变器和一个两模块的电池组（每个模块十五个电芯，含容量），并在傍晚出现一次市电中断；消息会对照 ARMOR-COMMON 的太阳能契约检查，并投递到 `/api/v1/solar`。
+* **用文件描述的报警场景：** `--alarm-scenario` 播放一个带时间线的 JSON 文件（人依次穿过多个区域、宠物、风、卡死/噪声/漂移/失效的传感器、失去链路的节点、市电中断、模式与日历），还可以写明系统应当如何响应；`--verify-alarms` 把服务器实际发出的报警与之比较，因此这些文件就是 ARMOR-SERVER 的测试用例。读取很严格：遇到第一处无法理解的内容就拒绝整个文件。
+* **真实的能源数据：** `--energy` 根据实时模型（带云的日照、按小时变化的住宅用电、电价、带循环的 Pylontech 式电池、有噪声和缺失的电表）输出逆变器、电池组和电气节点的消息；对同一种子结果确定，并可通过 JSON 文件调整。不使用新选项时，输出与之前完全一致。
 
 ## 🧩 在 A.R.M.O.R. 中的角色
 
@@ -109,6 +111,8 @@ ARMOR-SIMULATOR 让家族的其他部分无需硬件就能试用：它扮演雷�
 | `--seed` | `0` | 相同种子输出相同的行 |
 | `--light` | `cycle` | `cycle`（昼夜）或 `night`（固定 0.3 lux） |
 | `--solar`, `--electrical` | off | 同时输出带电池的逆变器／电气节点 |
+| `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | 播放 JSON 文件中的报警场景 / 仅校验 / 把服务器发出的报警与期望比较（不一致时退出码为 1） |
+| `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | 关, -, `1`, `900` | 用实时的真实太阳能与电力数据取代 `--solar`/`--electrical` 的快速一天 |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | 向部分消息注入可重复的故障 |
 | `--validate`, `--allow-invalid` | off | 用 ARMOR-COMMON 校验每条消息／允许违反合约的故障 |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | 投递到 ARMOR-SERVER；服务器严格时使用每个节点的令牌 |
@@ -151,6 +155,8 @@ python -I tools/armor_ci_validate.py
 |---|---|---|
 | `test_simulator.py` | 37 | 场景、故障、太阳能、电气、校验、向本地 HTTP 服务器投递 |
 | `test_cli_options.py` | 26 | 选项、其限制和拒绝情形 |
+| `test_alarm_scenarios.py` | 32 | 报警场景文件：严格读取、消息流、模式与日历、响应验证、选项 |
+| `test_energy.py` | 32 | 能源模型：多种子下的物理性质、电价、电表、设置、契约、选项 |
 
 ## 🏗️ 构建与发布
 
@@ -179,14 +185,17 @@ ARMOR-SIMULATOR/
 ├── src/armor_simulator/
 │   ├── cli.py                           选项与运行
 │   ├── scenarios.py cycle.py            四种场景、270 度几何和一天的光照
+│   ├── alarm_scenarios.py               来自 JSON 文件的报警场景、其消息以及对响应的检查
 │   ├── solar.py                         逆变器和两模块电池组
 │   ├── electrical.py                    电气节点的三个通道
+│   ├── energy.py                        真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
 │   ├── faults.py                        七种可重复的故障
 │   └── publisher.py                     带重试的服务器投递
 ├── tests/                               测试
 ├── docs/                                本仓库的指南
 ├── tools/                               共享的 CI 检查和项目工具
 ├── .github/                             CI 工作流以及 Issue 和 Pull Request 模板
+├── examples/                            可供起步的报警场景与能源模型设置
 ├── images/                              横幅、图标和本 README 的两幅图
 ├── build.sh build.bat                   通过共享的项目工作流构建
 ├── test.sh test.bat                     通过共享工作流运行测试
@@ -244,6 +253,8 @@ README 和文本提供英语、西班牙语、法语、意大利语、德语、�
 ## 📚 文档
 
 * [用法](docs/USAGE.md)：所有选项、场景和故障
+* [报警场景](docs/ALARM_SCENARIOS.md)：文件格式以及如何验证服务器的响应
+* [能源模型](docs/ENERGY_MODEL.md)：真实的太阳能与电力数据及其设置
 * [能力矩阵：哪些已被证明，哪些没有](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [项目目录：版本以及各仓库之间如何相互依赖](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [本仓库的更新日志](CHANGELOG.md)

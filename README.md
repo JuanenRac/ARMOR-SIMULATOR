@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-127%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 63 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 127 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturity | Established |
 | Role | Offline telemetry and environment simulator (family: Testing, parent: ARMOR-COMMON) |
 | Stack | Python 3.11+, standard library only |
-| Tests | 63 (`python -m unittest discover -s tests`) |
+| Tests | 127 (`python -m unittest discover -s tests`) |
 | Scenarios and faults | 4 scenarios, 7 faults (3 break the contract on purpose) |
 | Runs on | Any computer, or CI |
 | On real hardware | Not applicable: it is the stand-in for hardware, used on a computer |
@@ -57,7 +57,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | The scenarios, the faults and the delivery to a server work; it is what feeds a server on a computer when no node is plugged in. |
-| Tests | 🟢 | 63 tests pass (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 127 tests pass (`python -m unittest discover -s tests`). |
 | Protocols and data | 🟠 | The geometry is illustrative, not a model of the real LD2450 radar, and nothing has been compared with real hardware. |
 | Integration | 🟢 | It delivers its messages to a server in the tests, and the server of the CM5 test bench can be fed by it. |
 | Documentation | 🟢 | Eight languages and the changelog are up to date. |
@@ -71,6 +71,8 @@ Each line is one part of this repository and the light says how far it is today.
 * **Careful delivery:** only a plain http(s) origin is accepted; a 4xx stops the run, a 5xx or a network error is retried.
 * **Electrical node:** `--electrical` adds the three channels of an electrical node (the grid input, a water heater and a DC bus) over a fast day, with a mains outage, a spell of high voltage and a meter alarm.
 * **Solar equipment:** `--solar` adds an inverter and a two-module battery stack (fifteen cells each, capacities included) over a fast day of 240 samples, with a mains outage late in the day; the messages are checked against the solar contract of ARMOR-COMMON and delivered to `/api/v1/solar`.
+* **Alarm scenarios in files:** `--alarm-scenario` plays a JSON file with a timeline (people crossing several zones, a pet, wind, a sensor that is stuck, noisy, drifting or dead, a node that loses its link, a mains outage, the mode and the calendar) and may say what the system is expected to answer; `--verify-alarms` compares the alarms a server raised with it, so the files are test cases for ARMOR-SERVER. The reading is strict: the whole file is refused at the first thing that is not understood.
+* **Realistic energy data:** `--energy` emits an inverter, a battery stack and an electrical node from a real-time model (a sun with clouds, a house by the hour, a tariff, a Pylontech-style battery with cycles, a noisy meter with holes), deterministic for a seed and tuned from a JSON file. Without the new options the output is exactly what it was.
 
 ## 🧩 Role in A.R.M.O.R.
 
@@ -109,6 +111,8 @@ This is a test tool: it is not a safety function and its geometry is not a model
 | `--seed` | `0` | The same seed prints the same lines |
 | `--light` | `cycle` | `cycle` (day and night) or `night` (fixed 0.3 lux) |
 | `--solar`, `--electrical` | off | Also emit an inverter with batteries / an electrical node |
+| `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | Play an alarm scenario from a JSON file / only validate it / compare the alarms a server raised with what it expects (exit 1 when they differ) |
+| `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | off, -, `1`, `900` | Realistic solar and electrical data in real time instead of the fast day of `--solar`/`--electrical` |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Inject a repeatable fault into some messages |
 | `--validate`, `--allow-invalid` | off | Check each message against ARMOR-COMMON / allow the faults that break it |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Deliver to ARMOR-SERVER; the token of each node when the server is strict |
@@ -151,6 +155,8 @@ python -I tools/armor_ci_validate.py
 |---|---|---|
 | `test_simulator.py` | 37 | Scenarios, faults, solar, electrical, validation, delivery to a local HTTP server |
 | `test_cli_options.py` | 26 | The options, their limits and the refusals |
+| `test_alarm_scenarios.py` | 32 | Alarm scenario files: strict reading, the stream, modes and calendar, verification of the answer, the options |
+| `test_energy.py` | 32 | Energy model: physical properties for many seeds, tariff, meter, settings, contracts, the options |
 
 ## 🏗️ Build & Release
 
@@ -179,14 +185,17 @@ ARMOR-SIMULATOR/
 ├── src/armor_simulator/
 │   ├── cli.py                           the options and the run
 │   ├── scenarios.py cycle.py            the four scenarios, the 270 degree geometry and the day of light
+│   ├── alarm_scenarios.py               alarm scenarios from JSON files, their messages and the check of the answer
 │   ├── solar.py                         an inverter and a two-module battery stack
 │   ├── electrical.py                    the three channels of an electrical node
+│   ├── energy.py                        realistic solar and electrical data: sun with clouds, house, tariff, battery, meter
 │   ├── faults.py                        the seven repeatable faults
 │   └── publisher.py                     delivery to a server with retries
 ├── tests/                               the tests
 ├── docs/                                the guides of this repository
 ├── tools/                               the shared CI checks and project tooling
 ├── .github/                             CI workflow, issue and pull-request templates
+├── examples/                            alarm scenarios and settings of the energy model to start from
 ├── images/                              banner, icon and the two pictures of this README
 ├── build.sh build.bat                   build through the shared project workflow
 ├── test.sh test.bat                     run the tests through the shared workflow
@@ -244,6 +253,8 @@ README and texts exist in English, Spanish, French, Italian, German, Chinese, Ja
 ## 📚 Documentation
 
 * [Usage](docs/USAGE.md): every option, scenario and fault
+* [Alarm scenarios](docs/ALARM_SCENARIOS.md): the file format and how to verify a server's answer
+* [Energy model](docs/ENERGY_MODEL.md): the realistic solar and electrical data and its settings
 * [Capability matrix: what is proven and what is not](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Project catalogue: versions and how the repositories depend on each other](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [Changelog of this repository](CHANGELOG.md)

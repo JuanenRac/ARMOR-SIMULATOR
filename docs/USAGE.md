@@ -25,6 +25,8 @@ built in, so a test can never reach a production broker by accident.
 | `--electrical` | Also emit the three channels of an electrical node (the grid input, a water heater and a DC bus) over the same fast day, with the mains outage, a spell of high voltage and a meter alarm |
 | `--fault`, `--fault-every` | Inject a repeatable fault (below) |
 | `--fault-topic` | Limit the fault to one kind of message: `telemetry`, `health`, `solar` or `electrical` (default `all`). The count of `--fault-every` is of that kind, and the other messages go through untouched, so `--fault node-silent --fault-topic telemetry` silences the radar node while the inverter and the electrical node go on talking. A kind with nothing to spoil (`solar` without `--solar`, `health` with `--health-every 0`) is refused |
+| `--alarm-scenario FILE` | Play an alarm scenario described in a JSON file instead of `--scenario`/`--count` ([ALARM_SCENARIOS.md](ALARM_SCENARIOS.md)); with `--check-alarm-scenario` it only validates the file, with `--verify-alarms FILE` it compares the alarms a server raised with what the file expects (exit 1 when they differ) |
+| `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | Emit realistic solar and electrical data in real time (sun with clouds, house by the hour, tariff, battery, noisy meter) instead of the fast day of `--solar`/`--electrical` ([ENERGY_MODEL.md](ENERGY_MODEL.md)) |
 | `--allow-invalid` | Required for faults that break the contract on purpose |
 | `--validate` | Check every message against ARMOR-COMMON before it is emitted |
 | `--interval-ms` | Real pause between messages |

@@ -24,17 +24,19 @@
       "id": "scen",
       "column": 1,
       "level": "tested",
-      "title": "scenarios, solar, electrical",
+      "title": "scenarios, alarms, energy",
       "lines": [
         "4 scenarios on 3 sensors over 270 degrees,",
-        "an inverter with a two-module battery stack,",
-        "three electrical channels, a fast day of light"
+        "alarm scenario files, an inverter with",
+        "batteries, an electrical node, real-time energy"
       ],
       "code": [
         "src/armor_simulator/scenarios.py",
         "src/armor_simulator/cycle.py",
         "src/armor_simulator/solar.py",
-        "src/armor_simulator/electrical.py"
+        "src/armor_simulator/electrical.py",
+        "src/armor_simulator/alarm_scenarios.py",
+        "src/armor_simulator/energy.py"
       ]
     },
     {

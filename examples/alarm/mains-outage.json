@@ -1,0 +1,35 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Mains outage",
+  "description": "The mains fail for a minute: the inverter goes on the battery and the electrical node reads no voltage on the grid input; the server has to say the grid is lost.",
+  "nodes": [
+    "power-1"
+  ],
+  "duration_s": 180,
+  "seed": 8,
+  "power": true,
+  "zones": [
+    {
+      "id": "porch",
+      "sensor_id": 2
+    }
+  ],
+  "events": [
+    {
+      "type": "mains_outage",
+      "at_s": 60,
+      "duration_s": 60
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "electrical_grid_lost",
+        "at_s": [
+          60,
+          75
+        ]
+      }
+    ]
+  }
+}

@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-63%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-127%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 63 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 127 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturidade | Estabelecido |
 | Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, só biblioteca padrão |
-| Testes | 63 (`python -m unittest discover -s tests`) |
+| Testes | 127 (`python -m unittest discover -s tests`) |
 | Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
 | Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
@@ -57,7 +57,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
-| Testes | 🟢 | Passam 63 testes (`python -m unittest discover -s tests`). |
+| Testes | 🟢 | Passam 127 testes (`python -m unittest discover -s tests`). |
 | Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
 | Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
 | Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
@@ -71,6 +71,8 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 * **Envio cuidadoso:** só se aceita uma origem http(s) simples; um 4xx pára a execução, um 5xx ou um erro de rede repete-se.
 * **Nó elétrico:** `--electrical` acrescenta os três canais de um nó elétrico (a entrada da rede, um esquentador e um barramento DC) ao longo de um dia rápido, com um corte de energia, um período de tensão alta e um alarme do contador.
 * **Equipamento solar:** `--solar` acrescenta um inversor e um conjunto de baterias de dois módulos (quinze células cada, capacidades incluídas) ao longo de um dia rápido de 240 amostras, com um corte de energia ao fim do dia; as mensagens verificam-se contra o contrato solar do ARMOR-COMMON e entregam-se em `/api/v1/solar`.
+* **Cenários de alarme em ficheiros:** `--alarm-scenario` reproduz um ficheiro JSON com uma linha de tempo (pessoas que atravessam várias zonas, um animal de estimação, vento, um sensor preso, ruidoso, com deriva ou morto, um nó que perde a ligação, um corte de rede, o modo e o calendário) e pode dizer o que o sistema deve responder; `--verify-alarms` compara os alarmes que um servidor levantou com isso, pelo que os ficheiros são casos de teste para o ARMOR-SERVER. A leitura é estrita: o ficheiro inteiro é recusado à primeira coisa que não se entenda.
+* **Dados de energia realistas:** `--energy` emite um inversor, uma pilha de baterias e um nó elétrico a partir de um modelo em tempo real (um sol com nuvens, uma casa hora a hora, uma tarifa, uma bateria do tipo Pylontech com ciclos, um contador com ruído e falhas), determinista para uma semente e ajustável a partir de um ficheiro JSON. Sem as novas opções, a saída é exatamente a de antes.
 
 ## 🧩 Papel no A.R.M.O.R.
 
@@ -109,6 +111,8 @@ O ARMOR-SIMULATOR é a forma de experimentar o resto da família sem hardware: f
 | `--seed` | `0` | A mesma semente imprime as mesmas linhas |
 | `--light` | `cycle` | `cycle` (dia e noite) ou `night` (0,3 lux fixos) |
 | `--solar`, `--electrical` | off | Emite também um inversor com baterias / um nó elétrico |
+| `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | Reproduzir um cenário de alarme a partir de um ficheiro JSON / só o validar / comparar os alarmes que um servidor levantou com o esperado (sai com 1 se diferirem) |
+| `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | não, -, `1`, `900` | Dados solares e elétricos realistas em tempo real em vez do dia rápido de `--solar`/`--electrical` |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Injeta uma falha repetível em algumas mensagens |
 | `--validate`, `--allow-invalid` | off | Verifica cada mensagem com o ARMOR-COMMON / permite as falhas que o violam |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Entrega ao ARMOR-SERVER; o token de cada nó se o servidor for estrito |
@@ -151,6 +155,8 @@ python -I tools/armor_ci_validate.py
 |---|---|---|
 | `test_simulator.py` | 37 | Cenários, falhas, solar, elétrico, validação, entrega a um servidor HTTP local |
 | `test_cli_options.py` | 26 | As opções, os seus limites e as recusas |
+| `test_alarm_scenarios.py` | 32 | Ficheiros de cenários de alarme: leitura estrita, o fluxo, modos e calendário, verificação da resposta, as opções |
+| `test_energy.py` | 32 | Modelo de energia: propriedades físicas com muitas sementes, tarifa, contador, definições, contratos, as opções |
 
 ## 🏗️ Compilação e publicação
 
@@ -179,14 +185,17 @@ ARMOR-SIMULATOR/
 ├── src/armor_simulator/
 │   ├── cli.py                           as opções e a execução
 │   ├── scenarios.py cycle.py            os quatro cenários, a geometria de 270 graus e o dia de luz
+│   ├── alarm_scenarios.py               cenários de alarme a partir de ficheiros JSON, as suas mensagens e a verificação da resposta
 │   ├── solar.py                         um inversor e uma pilha de dois módulos
 │   ├── electrical.py                    os três canais de um nó elétrico
+│   ├── energy.py                        dados solares e elétricos realistas: sol com nuvens, casa, tarifa, bateria, contador
 │   ├── faults.py                        as sete falhas repetíveis
 │   └── publisher.py                     entrega a um servidor com novas tentativas
 ├── tests/                               os testes
 ├── docs/                                os guias deste repositório
 ├── tools/                               as verificações de CI partilhadas e as ferramentas do projeto
 ├── .github/                             fluxo de CI e modelos de issues e pull requests
+├── examples/                            cenários de alarme e definições do modelo de energia para começar
 ├── images/                              faixa, ícone e as duas imagens deste README
 ├── build.sh build.bat                   compilar pelo fluxo de projeto partilhado
 ├── test.sh test.bat                     executar os testes pelo fluxo partilhado
@@ -244,6 +253,8 @@ O **A.R.M.O.R.** (Autonomous Radar & Multimodal Observation Range) é um sistema
 ## 📚 Documentação
 
 * [Utilização](docs/USAGE.md): todas as opções, cenários e falhas
+* [Cenários de alarme](docs/ALARM_SCENARIOS.md): o formato do ficheiro e como verificar a resposta de um servidor
+* [Modelo de energia](docs/ENERGY_MODEL.md): os dados solares e elétricos realistas e as suas definições
 * [Matriz de capacidades: o que está demonstrado e o que não está](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Catálogo de projetos: versões e como os repositórios dependem uns dos outros](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [Registo de alterações deste repositório](CHANGELOG.md)

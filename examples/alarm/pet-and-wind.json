@@ -1,0 +1,54 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Pet and wind",
+  "description": "A cat crosses the lounge and the wind moves the bushes in the garden while the system is armed at home. A system tuned against false alarms (a minimum of targets, a dwell time or an ignore zone) must raise nothing. Needs such a tuning in the server under test.",
+  "nodes": [
+    "radar-1"
+  ],
+  "duration_s": 200,
+  "seed": 6,
+  "zones": [
+    {
+      "id": "lounge",
+      "sensor_id": 2,
+      "armed_in": [
+        "home"
+      ]
+    },
+    {
+      "id": "garden",
+      "sensor_id": 1,
+      "armed_in": [
+        "home"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "type": "mode",
+      "at_s": 0,
+      "mode": "home"
+    },
+    {
+      "type": "pet",
+      "at_s": 20,
+      "zone": "lounge",
+      "duration_s": 40
+    },
+    {
+      "type": "wind",
+      "at_s": 80,
+      "zone": "garden",
+      "duration_s": 100,
+      "intensity": 0.15
+    }
+  ],
+  "expect": {
+    "forbidden": [
+      {
+        "code": "intrusion"
+      }
+    ],
+    "allow_extra": false
+  }
+}

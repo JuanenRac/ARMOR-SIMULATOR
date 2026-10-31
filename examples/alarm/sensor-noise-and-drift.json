@@ -1,0 +1,72 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Noise and drift",
+  "description": "A noisy sensor makes ghosts around a zone and the position of a real person drifts away from the truth; the real person must still raise exactly the alarm that was expected.",
+  "nodes": [
+    "radar-1"
+  ],
+  "duration_s": 180,
+  "seed": 4,
+  "zones": [
+    {
+      "id": "porch",
+      "sensor_id": 2
+    },
+    {
+      "id": "side",
+      "sensor_id": 1
+    }
+  ],
+  "events": [
+    {
+      "type": "mode",
+      "at_s": 0,
+      "mode": "away"
+    },
+    {
+      "type": "sensor_fault",
+      "at_s": 10,
+      "zone": "side",
+      "fault": "noise",
+      "duration_s": 60,
+      "magnitude": 0.7
+    },
+    {
+      "type": "sensor_fault",
+      "at_s": 100,
+      "zone": "porch",
+      "fault": "drift",
+      "duration_s": 60,
+      "magnitude": 40
+    },
+    {
+      "type": "intrusion",
+      "at_s": 110,
+      "path": [
+        {
+          "zone": "porch",
+          "dwell_s": 30
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "intrusion",
+        "at_s": [
+          10,
+          16
+        ]
+      },
+      {
+        "code": "intrusion",
+        "at_s": [
+          110,
+          116
+        ]
+      }
+    ],
+    "order": "strict"
+  }
+}

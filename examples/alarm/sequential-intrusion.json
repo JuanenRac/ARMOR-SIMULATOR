@@ -1,0 +1,69 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Sequential intrusion",
+  "description": "Someone enters by the garden, crosses the hall and reaches the lounge while the system is armed away. The reference expectation is the intrusion alarm within seconds of the first track and nothing else.",
+  "nodes": [
+    "radar-1"
+  ],
+  "duration_s": 120,
+  "seed": 1,
+  "zones": [
+    {
+      "id": "garden",
+      "sensor_id": 1,
+      "armed_in": [
+        "home",
+        "away",
+        "night"
+      ]
+    },
+    {
+      "id": "hall",
+      "sensor_id": 2
+    },
+    {
+      "id": "lounge",
+      "sensor_id": 3
+    }
+  ],
+  "events": [
+    {
+      "type": "mode",
+      "at_s": 5,
+      "mode": "away"
+    },
+    {
+      "type": "intrusion",
+      "at_s": 30,
+      "path": [
+        {
+          "zone": "garden",
+          "dwell_s": 8
+        },
+        {
+          "zone": "hall",
+          "dwell_s": 10
+        },
+        {
+          "zone": "lounge",
+          "dwell_s": 12
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "intrusion",
+        "node": "radar-1",
+        "severity": "high",
+        "at_s": [
+          30,
+          36
+        ]
+      }
+    ],
+    "order": "strict",
+    "allow_extra": false
+  }
+}

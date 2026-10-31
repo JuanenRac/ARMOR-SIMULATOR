@@ -1,0 +1,55 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "A node loses its link",
+  "description": "The back node falls silent for two minutes while the system is armed: the server has to call it down after the stale time and clear it when the node returns.",
+  "nodes": [
+    "radar-front",
+    "radar-back"
+  ],
+  "duration_s": 300,
+  "seed": 5,
+  "zones": [
+    {
+      "id": "porch",
+      "node": "radar-front",
+      "sensor_id": 2
+    },
+    {
+      "id": "yard",
+      "node": "radar-back",
+      "sensor_id": 2
+    }
+  ],
+  "events": [
+    {
+      "type": "mode",
+      "at_s": 0,
+      "mode": "away"
+    },
+    {
+      "type": "node_comm_loss",
+      "at_s": 60,
+      "duration_s": 120,
+      "node": "radar-back"
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "node_down",
+        "node": "radar-back",
+        "at_s": [
+          90,
+          120
+        ]
+      }
+    ],
+    "forbidden": [
+      {
+        "code": "node_down",
+        "from_s": 0,
+        "to_s": 80
+      }
+    ]
+  }
+}

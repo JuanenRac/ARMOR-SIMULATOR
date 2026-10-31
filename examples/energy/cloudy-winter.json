@@ -1,0 +1,24 @@
+{
+  "schema": "armor-energy-model/1",
+  "sun": {
+    "sunrise_h": 8.2,
+    "sunset_h": 17.8
+  },
+  "pv": {
+    "peak_w": 2600.0,
+    "mean_cloud": 0.7,
+    "cloud_variability": 0.2
+  },
+  "grid": {
+    "export": false,
+    "outages": [
+      {
+        "at_s": 64800,
+        "duration_s": 3600
+      }
+    ]
+  },
+  "meter": {
+    "dropout_probability": 0.08
+  }
+}

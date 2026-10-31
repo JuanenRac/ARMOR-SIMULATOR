@@ -14,6 +14,8 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 
+from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
+from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
 from .publisher import DeliveryError, check_server_url, post
 from .scenarios import SCENARIOS, health, telemetry
@@ -84,6 +86,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ingest-token-file", type=Path, help="a file with a line ARMOR_INGEST_TOKEN=... (or only the token)")
     parser.add_argument("--per-node-token", action="store_true", help="send each message with the token derived for its node (needed when the server runs with ARMOR_INGEST_STRICT=1)")
     parser.add_argument("--start-ms", default="0", help="date of the first sample: 0 (the default, identical runs), a number of milliseconds, or 'now' (the date the server takes as it is)")
+    parser.add_argument("--alarm-scenario", type=Path, metavar="FILE", help="play an alarm scenario described in a JSON file (see docs/ALARM_SCENARIOS.md) instead of --scenario/--count")
+    parser.add_argument("--check-alarm-scenario", action="store_true", help="only validate the file of --alarm-scenario and print what it contains")
+    parser.add_argument("--verify-alarms", type=Path, metavar="FILE", help="compare the alarms a server raised (a JSON list or JSON lines) with what the file of --alarm-scenario expects; exit 1 when they differ")
+    parser.add_argument("--energy", action="store_true", help="emit realistic solar and electrical data (sun with clouds, house by the hour, tariff, battery, noisy meter) instead of the fast day of --solar/--electrical")
+    parser.add_argument("--energy-config", type=Path, metavar="FILE", help="a JSON file with the settings of --energy (see docs/ENERGY_MODEL.md); the defaults apply to what it does not say")
+    parser.add_argument("--energy-days", type=float, default=1.0, help="days of data of --energy (default 1)")
+    parser.add_argument("--energy-step-s", type=int, default=900, help="seconds between the samples of --energy (default 900)")
     return parser
 
 
@@ -108,6 +117,49 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"--count must be between 1 and {MAX_COUNT}")
     if args.interval_ms < 0 or args.fault_every < 0 or args.health_every < 0:
         parser.error("--interval-ms, --fault-every and --health-every must not be negative")
+    scenario = None
+    if args.alarm_scenario:
+        if args.solar or args.electrical or args.energy or args.count != 1 or args.scenario != "patrol" or args.light != "cycle" or args.node_id != "simulator-1":
+            parser.error("--alarm-scenario brings its own nodes, light and length: it cannot be combined with --count, --scenario, --light, --node-id, --solar, --electrical or --energy")
+        try:
+            scenario = load_scenario(args.alarm_scenario)
+        except ScenarioError as error:
+            print(f"armor-simulator: {args.alarm_scenario.name}: {error}", file=sys.stderr)
+            return 2
+        if args.check_alarm_scenario:
+            print(summary(scenario))
+            return 0
+        if args.verify_alarms:
+            try:
+                problems = verify_alarms(scenario, load_observed(args.verify_alarms))
+            except ScenarioError as error:
+                print(f"armor-simulator: {error}", file=sys.stderr)
+                return 2
+            for problem in problems:
+                print(f"armor-simulator: {problem}", file=sys.stderr)
+            print(f"armor-simulator: {scenario.name}: " + ("the system answered as expected" if not problems else f"{len(problems)} difference(s) with what was expected"))
+            return 1 if problems else 0
+    elif args.check_alarm_scenario or args.verify_alarms:
+        parser.error("--check-alarm-scenario and --verify-alarms need --alarm-scenario")
+    energy_config = None
+    energy_steps = 0
+    if args.energy:
+        if args.solar or args.electrical or args.count != 1 or args.alarm_scenario:
+            parser.error("--energy replaces --solar and --electrical and sets its own length (--energy-days): it cannot be combined with them, --count or --alarm-scenario")
+        if not 0 < args.energy_step_s <= 3600:
+            parser.error("--energy-step-s must be between 1 and 3600")
+        if not 0 < args.energy_days <= 366:
+            parser.error("--energy-days must be more than 0 and at most 366")
+        energy_steps = int(args.energy_days * DAY_S // args.energy_step_s)
+        if not 1 <= energy_steps <= MAX_STEPS:
+            parser.error(f"--energy-days and --energy-step-s give {energy_steps} samples: it must be between 1 and {MAX_STEPS}")
+        try:
+            energy_config = load_config(args.energy_config)
+        except ScenarioError as error:
+            print(f"armor-simulator: energy configuration: {error}", file=sys.stderr)
+            return 2
+    elif args.energy_config:
+        parser.error("--energy-config needs --energy")
     token = _token(args)
     if bool(args.server_url) != bool(token):
         parser.error("--server-url needs a token (--ingest-token, --ingest-token-file or ARMOR_INGEST_TOKEN), and a token needs --server-url")
@@ -126,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"--fault {args.fault} needs --fault-every of at least 1")
     if args.fault != "none" and args.fault_topic == "health" and not args.health_every:
         parser.error("--fault-topic health needs health messages: --health-every must not be 0")
-    if args.fault != "none" and (args.fault_topic == "solar" and not args.solar or args.fault_topic == "electrical" and not args.electrical):
+    if args.fault != "none" and (args.fault_topic == "solar" and not (args.solar or args.energy or scenario and scenario.power) or args.fault_topic == "electrical" and not (args.electrical or args.energy or scenario and scenario.power)):
         parser.error(f"--fault-topic {args.fault_topic} needs --{args.fault_topic} (there are no such messages to spoil)")
     if args.fault in INVALID_FAULTS and not args.allow_invalid:
         parser.error(f"--fault {args.fault} produces invalid messages on purpose; add --allow-invalid")
@@ -135,7 +187,13 @@ def main(argv: list[str] | None = None) -> int:
     server = check_server_url(args.server_url) if args.server_url else None
     validate, validate_solar, validate_electrical = _common_validators() if args.validate else (None, None, None)
 
-    stream = FAULTS[args.fault](_stamp(messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical), start_ms), args.fault_every, TOPIC_KINDS[args.fault_topic])
+    if scenario:
+        base = build_stream(scenario, args.health_every)
+    elif energy_config:
+        base = energy_messages(args.node_id, energy_config, args.seed, energy_steps, args.energy_step_s)
+    else:
+        base = messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical)
+    stream = FAULTS[args.fault](_stamp(base, start_ms), args.fault_every, TOPIC_KINDS[args.fault_topic])
     accepted_invalid = refused = 0
     for number, (topic, payload) in enumerate(stream, start=1):
         if validate:

@@ -1,0 +1,72 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "A sensor that lies",
+  "description": "A stuck sensor reports a person that is not there: armed away, it raises an intrusion. Later the sensor of the hall goes dead and a real intruder passes without an alarm from that zone (a blind spot a monitoring rule has to notice).",
+  "nodes": [
+    "radar-1"
+  ],
+  "duration_s": 240,
+  "seed": 3,
+  "zones": [
+    {
+      "id": "garage",
+      "sensor_id": 3,
+      "armed_in": [
+        "away"
+      ]
+    },
+    {
+      "id": "hall",
+      "sensor_id": 2
+    }
+  ],
+  "events": [
+    {
+      "type": "sensor_fault",
+      "at_s": 20,
+      "zone": "garage",
+      "fault": "stuck",
+      "duration_s": 60
+    },
+    {
+      "type": "mode",
+      "at_s": 50,
+      "mode": "away"
+    },
+    {
+      "type": "sensor_fault",
+      "at_s": 150,
+      "zone": "hall",
+      "fault": "dead",
+      "duration_s": 60
+    },
+    {
+      "type": "intrusion",
+      "at_s": 170,
+      "path": [
+        {
+          "zone": "hall",
+          "dwell_s": 20
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "intrusion",
+        "at_s": [
+          50,
+          56
+        ]
+      }
+    ],
+    "forbidden": [
+      {
+        "code": "intrusion",
+        "from_s": 165,
+        "to_s": 200
+      }
+    ]
+  }
+}

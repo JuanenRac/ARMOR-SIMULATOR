@@ -46,6 +46,19 @@
           }
         },
         {
+          "name": "alarm_scenarios.py",
+          "desc": {
+            "en": "alarm scenarios from JSON files, their messages and the check of the answer",
+            "es": "escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta",
+            "de": "Alarmszenarien aus JSON-Dateien, ihre Nachrichten und die Prüfung der Antwort",
+            "fr": "scénarios d'alarme depuis des fichiers JSON, leurs messages et la vérification de la réponse",
+            "it": "scenari d'allarme da file JSON, i loro messaggi e la verifica della risposta",
+            "ja": "JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証",
+            "zh": "来自 JSON 文件的报警场景、其消息以及对响应的检查",
+            "pt": "cenários de alarme a partir de ficheiros JSON, as suas mensagens e a verificação da resposta"
+          }
+        },
+        {
           "name": "solar.py",
           "desc": {
             "en": "an inverter and a two-module battery stack",
@@ -69,6 +82,19 @@
             "ja": "電気ノードの 3 チャンネル",
             "zh": "电气节点的三个通道",
             "pt": "os três canais de um nó elétrico"
+          }
+        },
+        {
+          "name": "energy.py",
+          "desc": {
+            "en": "realistic solar and electrical data: sun with clouds, house, tariff, battery, meter",
+            "es": "datos solares y eléctricos realistas: sol con nubes, casa, tarifa, batería, contador",
+            "de": "realistische Solar- und Stromdaten: Sonne mit Wolken, Haus, Tarif, Batterie, Zähler",
+            "fr": "données solaires et électriques réalistes : soleil et nuages, maison, tarif, batterie, compteur",
+            "it": "dati solari ed elettrici realistici: sole con nuvole, casa, tariffa, batteria, contatore",
+            "ja": "現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター",
+            "zh": "真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表",
+            "pt": "dados solares e elétricos realistas: sol com nuvens, casa, tarifa, bateria, contador"
           }
         },
         {
@@ -138,6 +164,32 @@
             "zh": "26 个",
             "pt": "26 testes"
           }
+        },
+        {
+          "name": "test_alarm_scenarios.py",
+          "desc": {
+            "en": "32 tests",
+            "es": "32 pruebas",
+            "de": "32 Tests",
+            "fr": "32 tests",
+            "it": "32 test",
+            "ja": "32 件",
+            "zh": "32 个",
+            "pt": "32 testes"
+          }
+        },
+        {
+          "name": "test_energy.py",
+          "desc": {
+            "en": "32 tests",
+            "es": "32 pruebas",
+            "de": "32 Tests",
+            "fr": "32 tests",
+            "it": "32 test",
+            "ja": "32 件",
+            "zh": "32 个",
+            "pt": "32 testes"
+          }
         }
       ]
     },
@@ -166,6 +218,32 @@
             "ja": "すべてのオプション、シナリオ、障害",
             "zh": "所有选项、场景和故障",
             "pt": "todas as opções, cenários e falhas"
+          }
+        },
+        {
+          "name": "ALARM_SCENARIOS.md",
+          "desc": {
+            "en": "alarm scenario files",
+            "es": "ficheros de escenarios",
+            "de": "Alarmszenarien",
+            "fr": "scénarios d'alarme",
+            "it": "scenari d'allarme",
+            "ja": "アラームシナリオ",
+            "zh": "报警场景文件",
+            "pt": "cenários de alarme"
+          }
+        },
+        {
+          "name": "ENERGY_MODEL.md",
+          "desc": {
+            "en": "the energy model",
+            "es": "el modelo de energía",
+            "de": "das Energiemodell",
+            "fr": "le modèle d'énergie",
+            "it": "il modello energetico",
+            "ja": "エネルギーモデル",
+            "zh": "能源模型",
+            "pt": "o modelo de energia"
           }
         }
       ]
@@ -200,8 +278,8 @@
       ]
     },
     {
-      "name": ".github/ images/",
-      "tree_name": ".github/ images/",
+      "name": ".github/ examples/ images/",
+      "tree_name": ".github/ examples/ images/",
       "kind": "group",
       "span": 3,
       "columns": 2,
@@ -217,6 +295,19 @@
             "ja": "CI ワークフローと Issue・Pull Request のテンプレート",
             "zh": "CI 工作流以及 Issue 和 Pull Request 模板",
             "pt": "fluxo de CI e modelos de issues e pull requests"
+          }
+        },
+        {
+          "name": "examples/",
+          "desc": {
+            "en": "alarm scenarios and settings of the energy model to start from",
+            "es": "escenarios de alarma y ajustes del modelo de energía para empezar",
+            "de": "Alarmszenarien und Einstellungen des Energiemodells als Ausgangspunkt",
+            "fr": "scénarios d'alarme et réglages du modèle d'énergie pour commencer",
+            "it": "scenari d'allarme e impostazioni del modello energetico da cui partire",
+            "ja": "出発点となるアラームシナリオとエネルギーモデルの設定",
+            "zh": "可供起步的报警场景与能源模型设置",
+            "pt": "cenários de alarme e definições do modelo de energia para começar"
           }
         },
         {

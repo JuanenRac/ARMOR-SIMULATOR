@@ -1,0 +1,15 @@
+{
+  "schema": "armor-energy-model/1",
+  "pv": {
+    "peak_w": 4200.0,
+    "mean_cloud": 0.15
+  },
+  "load": {
+    "evening_peak_w": 1600.0
+  },
+  "battery": {
+    "modules": 3,
+    "initial_soc": 50.0
+  },
+  "start_weekday": 5
+}

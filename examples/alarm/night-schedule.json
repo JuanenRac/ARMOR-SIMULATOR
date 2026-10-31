@@ -1,0 +1,91 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "The night mode of the calendar",
+  "description": "From 22:00 the calendar puts the house in night mode: the kitchen (interior) is not defended, the garden door is. A walk by the garden door at 21:10, while disarmed, raises nothing.",
+  "nodes": [
+    "radar-1"
+  ],
+  "duration_s": 6000,
+  "seed": 7,
+  "start_clock": "21:00",
+  "schedule": [
+    {
+      "from": "22:00",
+      "to": "06:00",
+      "mode": "night"
+    }
+  ],
+  "zones": [
+    {
+      "id": "kitchen",
+      "sensor_id": 2,
+      "armed_in": [
+        "away"
+      ]
+    },
+    {
+      "id": "garden-door",
+      "sensor_id": 1,
+      "armed_in": [
+        "home",
+        "away",
+        "night"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "type": "intrusion",
+      "at_s": 600,
+      "path": [
+        {
+          "zone": "garden-door",
+          "dwell_s": 20
+        }
+      ]
+    },
+    {
+      "type": "intrusion",
+      "at_s": 4000,
+      "path": [
+        {
+          "zone": "kitchen",
+          "dwell_s": 20
+        }
+      ]
+    },
+    {
+      "type": "intrusion",
+      "at_s": 5000,
+      "path": [
+        {
+          "zone": "garden-door",
+          "dwell_s": 20
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "intrusion",
+        "zone": "garden-door",
+        "at_s": [
+          5000,
+          5006
+        ]
+      }
+    ],
+    "forbidden": [
+      {
+        "code": "intrusion",
+        "from_s": 0,
+        "to_s": 3599
+      },
+      {
+        "code": "intrusion",
+        "zone": "kitchen"
+      }
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "Two people on two nodes",
+  "description": "Two people enter the same zone of the first node while a second one watches the back door.",
+  "nodes": [
+    "radar-front",
+    "radar-back"
+  ],
+  "duration_s": 90,
+  "seed": 2,
+  "zones": [
+    {
+      "id": "porch",
+      "node": "radar-front",
+      "sensor_id": 2
+    },
+    {
+      "id": "back-door",
+      "node": "radar-back",
+      "sensor_id": 1
+    }
+  ],
+  "events": [
+    {
+      "type": "mode",
+      "at_s": 0,
+      "mode": "away"
+    },
+    {
+      "type": "intrusion",
+      "at_s": 20,
+      "people": 2,
+      "path": [
+        {
+          "zone": "porch",
+          "dwell_s": 15
+        }
+      ]
+    },
+    {
+      "type": "intrusion",
+      "at_s": 50,
+      "path": [
+        {
+          "zone": "back-door",
+          "dwell_s": 10
+        }
+      ]
+    }
+  ],
+  "expect": {
+    "alarms": [
+      {
+        "code": "intrusion",
+        "node": "radar-front",
+        "at_s": [
+          20,
+          26
+        ]
+      },
+      {
+        "code": "intrusion",
+        "node": "radar-back",
+        "at_s": [
+          50,
+          56
+        ]
+      }
+    ],
+    "order": "strict"
+  }
+}
