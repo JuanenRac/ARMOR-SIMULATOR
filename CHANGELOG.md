@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.2] - The panel sync is checked in the CI against a real server and a real broker
+
 - **The panel sync is checked in the CI against a real server and a real broker.** `panel-sync.yml` (a workflow of its own, off with the variable `ARMOR_PANEL_SYNC=off`) installs Mosquitto, builds the ARMOR-SERVER of the main branch and runs `tools/ci_panel_sync.py`: the simulated panel answers each command (accepts, refuses, stays silent) and `--verify-panel-sync --verify-panel-map` compares the report of the server for every mode and for the choices of the owner with what must be true. The script starts and stops both programs on loopback ports and deletes its folder; it is tested for what it does without them.
 
 ## [0.3.1] - A check of how the arming modes reach the panels, against a real server
