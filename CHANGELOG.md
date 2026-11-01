@@ -4,7 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - A check of how the arming modes reach the panels, against a real server
+
 - **A check of how the modes reach the panels, against a real server:** `--verify-panel-map` (with `--verify-panel-sync`, and an administrator account) plays the choices of the owner in the arming modes of the server: a mode that arms another profile (home arms `away`), the list with only this panel, an empty list (no panel is asked) and a list that names a panel that does not exist (a failed panel, nobody else asked), compares the answers with what must be true, and puts the document of the modes back as it was. Tests: 169 (before 163).
+
 ## [0.3.0] - A simulated panel and a check of the panel sync and of its alarm against a real server
 
 - **The panel sync check also looks at the alarm centre:** after each step it asks the server for its alarms and requires exactly one open alarm `mode_panel_sync_failed` (high, not silent) when the panel refused or stayed silent, and none when it accepted.

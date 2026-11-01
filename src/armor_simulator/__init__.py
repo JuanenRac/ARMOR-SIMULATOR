@@ -3,4 +3,4 @@
 from .scenarios import SCENARIOS, health, telemetry
 
 __all__ = ["SCENARIOS", "health", "telemetry"]
-__version__ = "0.3.0"
+__version__ = "0.3.1"
