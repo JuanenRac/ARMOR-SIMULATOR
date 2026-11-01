@@ -13,7 +13,7 @@ import unittest
 from typing import Any
 
 from armor_simulator.cli import main
-from armor_simulator.panel_sim import BEHAVIORS, MODE_BASE, MODE_PROFILE, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_sync
+from armor_simulator.panel_sim import BEHAVIORS, MODE_BASE, MODE_PROFILE, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_map, verify_panel_sync
 
 
 class ModelServer:
@@ -28,9 +28,20 @@ class ModelServer:
         self.sync: dict[str, Any] | None = None
         self.counter = 0
 
+    panel_map: dict[str, Any] = {}
+    revision = 1
+    ignore_only = False
+    ignore_profiles = False
+    restores_nothing = False
+
     def call(self, method: str, path: str, body: dict[str, Any] | None = None) -> Any:
         if path == "/api/v1/alarm/modes":
-            return {"enabled": True, "panel_sync_enabled": self.sync_enabled, "revision": 1}
+            if method == "PUT":
+                assert body is not None
+                self.panel_map = {} if self.restores_nothing and not body["panel_map"] else dict(body["panel_map"])
+                self.revision += 1
+                return {"revision": self.revision}
+            return {"enabled": True, "panel_sync_enabled": self.sync_enabled, "revision": self.revision, "modes": {"away": {}, "home": {}, "night": {}}, "panel_map": self.panel_map}
         if path == "/api/v1/status":
             state: dict[str, Any] = {"mode": "armed" if self.mode != "disarmed" else "disarmed", "arming_mode": self.mode}
             if self.hold_back and self.sync and self.sync["status"] != "confirmed":
@@ -51,9 +62,17 @@ class ModelServer:
         if not self.sync_enabled or self.silent_server:
             return {}
         profile_id = MODE_PROFILE[mode] if not self.wrong_profile else "stay"
+        profile_id = profile_id if self.ignore_profiles else self.panel_map.get("profiles", {}).get(mode, profile_id)
+        only = None if self.ignore_only else self.panel_map.get("only")
+        if only is not None and self.panel.node_id not in only:
+            unknown = [name for name in only if name != self.panel.node_id]
+            self.sync = {"mode": mode, "profile": profile_id, "status": "failed" if unknown else "none", "nodes": []}
+            self.alarm_open = bool(unknown)
+            return {}
         self.counter += 1
-        command = {"kind": "alarm_command", "node_id": self.panel.node_id, "timestamp_ms": 1, "command_id": f"{self.counter:016x}", "action": "arm", "mode": MODE_BASE[mode],
-                   "profile": {"id": profile_id, "name": profile_id, "base": MODE_BASE[mode]}}
+        base = {"away": "away", "stay": "stay", "night": "stay"}.get(profile_id, MODE_BASE[mode])
+        command = {"kind": "alarm_command", "node_id": self.panel.node_id, "timestamp_ms": 1, "command_id": f"{self.counter:016x}", "action": "arm", "mode": base,
+                   "profile": {"id": profile_id, "name": profile_id, "base": base}}
         answer = self.panel.handle_command(command, 2)
         status = "confirmed" if answer is not None and answer["accepted"] else "failed"
         if self.confirm_everything:
@@ -66,6 +85,35 @@ class ModelServer:
 def run(**flags: bool) -> tuple[list[str], list[str]]:
     panel = SimulatedPanel()
     return verify_panel_sync(ModelServer(panel, **flags), panel, wait_s=0, sleep=lambda _s: None)
+
+
+class PanelMapCheckTests(unittest.TestCase):
+    def play(self, **flags: bool) -> tuple[list[str], list[str], ModelServer]:
+        panel = SimulatedPanel()
+        server = ModelServer(panel)
+        for name, value in flags.items():
+            setattr(server, name, value)
+        problems, log = verify_panel_map(server, panel, wait_s=0, sleep=lambda _s: None)
+        return problems, log, server
+
+    def test_a_server_that_follows_the_mapping_and_the_list_passes_and_gets_its_document_back(self) -> None:
+        problems, log, server = self.play()
+        self.assertEqual(problems, [])
+        self.assertEqual(len(log), 4)
+        self.assertEqual(server.panel_map, {}, "the document is put back as it was")
+
+    def test_a_server_that_ignores_the_list_is_caught(self) -> None:
+        problems, _, _ = self.play(ignore_only=True)
+        self.assertTrue(any("no panel at all" in problem and "arm command" in problem for problem in problems), problems)
+
+    def test_a_server_that_ignores_the_mapping_is_caught(self) -> None:
+        problems, _, _ = self.play(ignore_profiles=True)
+        self.assertTrue(any("home arms another profile" in problem and "profile" in problem for problem in problems), problems)
+
+    def test_it_refuses_to_run_when_the_modes_or_the_sync_are_off(self) -> None:
+        panel = SimulatedPanel()
+        problems, _ = verify_panel_map(ModelServer(panel, sync_enabled=False), panel, wait_s=0, sleep=lambda _s: None)
+        self.assertIn("alarm.mode_panel_sync", problems[0])
 
 
 class PanelModelTests(unittest.TestCase):

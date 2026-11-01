@@ -189,6 +189,80 @@ def _pending_wait(session: Any, wait_s: float, clock: Callable[[], float], sleep
         sleep(0.25)
 
 
+def verify_panel_map(
+    session: Any, panel: SimulatedPanel, *, pin: str | None = None, wait_s: float = 9.0, clock: Callable[[], float] = time.time, sleep: Callable[[float], None] = time.sleep,
+) -> tuple[list[str], list[str]]:
+    """Plays the two things the owner can choose about how the modes reach the panels against a REAL server and compares the answers with what must be true: the mapping of a mode to another
+    profile (home arms `away`) and the list of panels (only this panel; no panel at all; a panel that does not exist, which is a failed panel and asks nobody else). The document of the modes
+    is put back as it was. Needs the same set-up as `verify_panel_sync` and an administrator account."""
+    problems: list[str] = []
+    log: list[str] = []
+    first = session.call("GET", "/api/v1/alarm/modes") or {}
+    if not first.get("enabled"):
+        return ["the arming modes are off in the server (alarm.arming_modes): turn them on in Studio, Configuration > Security"], log
+    if not first.get("panel_sync_enabled"):
+        return ["the panel sync is off in the server (alarm.mode_panel_sync): turn it on in Studio, Configuration > Security"], log
+    raw_map = first.get("panel_map")
+    original_panel_map: dict[str, Any] = raw_map if isinstance(raw_map, dict) else {}
+    base = {"modes": first.get("modes"), **({"schedule": first.get("schedule")} if first.get("schedule") is not None else {})}
+    revision = first.get("revision")
+
+    def put(panel_map: dict[str, Any]) -> None:
+        nonlocal revision
+        saved = session.call("PUT", "/api/v1/alarm/modes", {"revision": revision, **base, "panel_map": panel_map}) or {}
+        revision = saved.get("revision", revision)
+
+    cases: tuple[tuple[str, dict[str, Any], str, int, str, str | None], ...] = (
+        ("home arms another profile", {"profiles": {"home": "away"}, "only": [panel.node_id]}, "home", 1, "away", None),
+        ("only this panel", {"only": [panel.node_id]}, "night", 1, "night", None),
+        ("no panel at all", {"only": []}, "away", 0, "away", "none"),
+        ("a panel that does not exist", {"only": ["no-such-panel"]}, "away", 0, "away", "failed"),
+    )
+    try:
+        for name, panel_map, mode, arms_wanted, profile_wanted, status_wanted in cases:
+            where = f"map/{name}"
+            panel.reset()
+            disarm: dict[str, Any] = {"mode": "disarmed"}
+            if pin:
+                disarm["pin"] = pin
+            try:
+                put(panel_map)
+                session.call("POST", "/api/v1/mode", disarm)
+                panel.reset()
+                session.call("POST", "/api/v1/mode", {"mode": mode, "confirm_unassigned": True})
+            except Exception as error:   # noqa: BLE001 - any refusal ends this step with its words
+                problems.append(f"{where}: the server refused an order ({error})")
+                continue
+            state = _pending_wait(session, wait_s, clock, sleep)
+            raw_sync = state.get("panel_sync")
+            sync: dict[str, Any] = raw_sync if isinstance(raw_sync, dict) else {}
+            arms = panel.arms_received()
+            if state.get("arming_mode") != mode or state.get("mode") != "armed":
+                problems.append(f"{where}: the server does not defend the mode (it says {state.get('mode')}/{state.get('arming_mode')})")
+            if len(arms) != arms_wanted:
+                problems.append(f"{where}: the panel received {len(arms)} arm command(s), it must be {arms_wanted}")
+            if arms_wanted and arms:
+                raw_profile = arms[0].get("profile")
+                profile: dict[str, Any] = raw_profile if isinstance(raw_profile, dict) else {}
+                if profile.get("id") != profile_wanted:
+                    problems.append(f"{where}: the panel was asked for the profile {profile.get('id')!r}, it must be {profile_wanted!r}")
+            if sync.get("profile") != profile_wanted:
+                problems.append(f"{where}: the report names the profile {sync.get('profile')!r}, it must be {profile_wanted!r}")
+            if status_wanted is not None and sync.get("status") != status_wanted:
+                problems.append(f"{where}: the report says {sync.get('status')!r}, it must be {status_wanted!r}")
+            log.append(f"{where}: the panel received {len(arms)} arm(s), the report says {sync.get('status')}")
+    finally:
+        try:
+            put(original_panel_map)
+            restore: dict[str, Any] = {"mode": "disarmed"}
+            if pin:
+                restore["pin"] = pin
+            session.call("POST", "/api/v1/mode", restore)
+        except Exception:   # noqa: BLE001, S110 - best effort: the document is left as the last step left it
+            pass
+    return problems, log
+
+
 def verify_panel_sync(
     session: Any, panel: SimulatedPanel, *, pin: str | None = None, modes: tuple[str, ...] = ("away", "home", "night"), behaviors: tuple[str, ...] = BEHAVIORS, wait_s: float = 9.0,
     clock: Callable[[], float] = time.time, sleep: Callable[[float], None] = time.sleep,

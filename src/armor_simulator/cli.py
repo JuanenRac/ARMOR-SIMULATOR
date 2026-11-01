@@ -18,7 +18,7 @@ from typing import Any
 from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
 from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
-from .panel_sim import BEHAVIORS, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_sync
+from .panel_sim import BEHAVIORS, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_map, verify_panel_sync
 from .publisher import DeliveryError, check_server_url, post
 from .scenarios import SCENARIOS, health, telemetry
 from .server_driver import DriverError, Session, drive
@@ -99,6 +99,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--apply-modes", action="store_true", help="with --drive-server, define in the server what home and night defend, from the scenario (an administrator account)")
     parser.add_argument("--settle-s", type=float, default=3.0, help="with --drive-server, seconds to wait after the scenario before reading the alarms (default 3)")
     parser.add_argument("--verify-panel-sync", action="store_true", help="check a real ARMOR-SERVER with alarm.mode_panel_sync on: a simulated alarm panel on the broker of the server answers (accept, refuse, silent) while every mode is chosen, and the report of the server is compared with what must be true; needs --server-url, --studio-user and --mqtt-url")
+    parser.add_argument("--verify-panel-map", action="store_true", help="with --verify-panel-sync, also check the choices of the owner about how the modes reach the panels (the profile of a mode and the list of panels); it changes the document of the modes and puts it back (needs an administrator)")
     parser.add_argument("--mqtt-url", help="with --verify-panel-sync, the broker the server uses (mqtt://host[:port]); the simulated panel connects to it")
     parser.add_argument("--mqtt-user", help="with --verify-panel-sync, the user of the broker (the password in ARMOR_MQTT_PASSWORD or --mqtt-password-file)")
     parser.add_argument("--mqtt-password-file", type=Path, metavar="FILE", help="a file whose first line is the password of the broker (never on the command line)")
@@ -184,6 +185,9 @@ def _verify_panel_sync(parser: argparse.ArgumentParser, args: argparse.Namespace
         link.start()
         time.sleep(3)   # the server must have seen the first state of the panel
         problems, log = verify_panel_sync(session, panel, pin=pin, behaviors=tuple(args.panel_behavior or BEHAVIORS))
+        if args.verify_panel_map:
+            more, more_log = verify_panel_map(session, panel, pin=pin)
+            problems, log = [*problems, *more], [*log, *more_log]
     except (DriverError, PanelLinkError) as error:
         print(f"armor-simulator: {error}", file=sys.stderr)
         return 2
