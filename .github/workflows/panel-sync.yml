@@ -1,0 +1,58 @@
+# =============================================================================
+# A.R.M.O.R. - ARMOR-SIMULATOR - the check of the panel sync against a real server and a real broker
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D)
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# A workflow of its own, apart from the baseline one, so that it can be turned off without touching the rest:
+#   * set the repository variable ARMOR_PANEL_SYNC to "off" (Settings > Secrets and variables > Actions > Variables) and every run is skipped, or
+#   * disable the workflow in the Actions tab (gh workflow disable panel-sync.yml).
+# It installs Mosquitto, builds the ARMOR-SERVER of the main branch next to this repository and runs tools/ci_panel_sync.py: a simulated alarm panel on the broker answers each command
+# of the server (accepts, refuses, stays silent) and the report of the server for every arming mode and for the choices of the owner (--verify-panel-map) is compared with what must be true.
+name: Panel sync against a real server and a real broker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  panel-sync:
+    name: Mosquitto + ARMOR-SERVER + the simulated panel
+    if: ${{ vars.ARMOR_PANEL_SYNC != 'off' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Fetch the server it runs against
+        run: git clone --depth 1 https://github.com/JuanenRac/ARMOR-SERVER.git ../ARMOR-SERVER
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Build the server
+        working-directory: ../ARMOR-SERVER
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install a real MQTT broker and the MQTT client of the simulated panel
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes mosquitto
+          sudo systemctl stop mosquitto || true
+          python -m pip install --quiet paho-mqtt
+
+      - name: Check the panel sync (every mode, every behaviour of the panel, and the choices of the owner)
+        run: python tools/ci_panel_sync.py
