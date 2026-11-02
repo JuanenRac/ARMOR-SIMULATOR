@@ -187,31 +187,32 @@ python -I tools/armor_ci_validate.py
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           le opzioni e l'esecuzione
-│   ├── scenarios.py cycle.py            i quattro scenari, la geometria a 270 gradi e il giorno di luce
-│   ├── alarm_scenarios.py               scenari d'allarme da file JSON, i loro messaggi e la verifica della risposta
-│   ├── solar.py                         un inverter e una pila di due moduli
-│   ├── electrical.py                    i tre canali di un nodo elettrico
-│   ├── meter_bus.py                     la linea seriale dei contatori di energia su TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                        dati solari ed elettrici realistici: sole con nuvole, casa, tariffa, batteria, contatore
-│   ├── faults.py                        i sette guasti ripetibili
-│   └── publisher.py                     consegna a un server con nuovi tentativi
-├── tests/                               i test
-├── docs/                                le guide di questo repository
-├── tools/                               i controlli CI condivisi e gli strumenti del progetto
-├── .github/                             workflow CI e modelli per issue e pull request
-├── examples/                            scenari d'allarme e impostazioni del modello energetico da cui partire
-├── images/                              banner, icona e le due immagini di questo README
-├── build.sh build.bat                   build tramite il flusso di progetto condiviso
-├── test.sh test.bat                     eseguire i test tramite il flusso condiviso
-├── run.sh run.bat                       avvio tramite il flusso di progetto condiviso
-├── armor.project.json                   manifesto: versione, ruolo, maturità, comando di build
-├── CHANGELOG.md                         cosa è cambiato in ogni versione
-├── SECURITY.md SUPPORT.md LICENSE       politica di sicurezza, supporto e licenza
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   come contribuire e il codice di condotta
-├── build-test.sh build-test.bat         eseguire i test tramite il flusso condiviso
-├── pyproject.toml                       metadati del pacchetto
-└── .gitattributes .gitignore            impostazioni di Git
+│   ├── cli.py                                 le opzioni e l'esecuzione
+│   ├── scenarios.py cycle.py                  i quattro scenari, la geometria a 270 gradi e il giorno di luce
+│   ├── alarm_scenarios.py                     scenari d'allarme da file JSON, i loro messaggi e la verifica della risposta
+│   ├── solar.py                               un inverter e una pila di due moduli
+│   ├── electrical.py                          i tre canali di un nodo elettrico
+│   ├── meter_bus.py                           la linea seriale dei contatori di energia su TCP (PZEM-004T, PZEM-017)
+│   ├── energy.py                              dati solari ed elettrici realistici: sole con nuvole, casa, tariffa, batteria, contatore
+│   ├── faults.py                              i sette guasti ripetibili
+│   └── publisher.py                           consegna a un server con nuovi tentativi
+├── tests/                                     i test
+├── docs/                                      le guide di questo repository
+├── tools/                                     i controlli CI condivisi e gli strumenti del progetto
+├── .github/                                   workflow CI e modelli per issue e pull request
+├── examples/                                  scenari d'allarme e impostazioni del modello energetico da cui partire
+├── images/                                    banner, icona e le due immagini di questo README
+├── Dockerfile .dockerignore docker/bench.sh   immagine del banco virtuale
+├── build.sh build.bat                         build tramite il flusso di progetto condiviso
+├── test.sh test.bat                           eseguire i test tramite il flusso condiviso
+├── run.sh run.bat                             avvio tramite il flusso di progetto condiviso
+├── armor.project.json                         manifesto: versione, ruolo, maturità, comando di build
+├── CHANGELOG.md                               cosa è cambiato in ogni versione
+├── SECURITY.md SUPPORT.md LICENSE             politica di sicurezza, supporto e licenza
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         come contribuire e il codice di condotta
+├── build-test.sh build-test.bat               eseguire i test tramite il flusso condiviso
+├── pyproject.toml                             metadati del pacchetto
+└── .gitattributes .gitignore                  impostazioni di Git
 ```
 
 </details>

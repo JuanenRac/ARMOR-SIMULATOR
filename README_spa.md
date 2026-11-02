@@ -187,31 +187,32 @@ Es Python puro: no hay nada que compilar. La versión vive en `pyproject.toml` y
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           las opciones y la ejecución
-│   ├── scenarios.py cycle.py            los cuatro escenarios, la geometría de 270 grados y el día de luz
-│   ├── alarm_scenarios.py               escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta
-│   ├── solar.py                         un inversor y una pila de dos módulos
-│   ├── electrical.py                    los tres canales de un nodo eléctrico
-│   ├── meter_bus.py                     la línea serie de los contadores de energía por TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                        datos solares y eléctricos realistas: sol con nubes, casa, tarifa, batería, contador
-│   ├── faults.py                        las siete averías repetibles
-│   └── publisher.py                     entrega a un servidor con reintentos
-├── tests/                               las pruebas
-├── docs/                                las guías de este repositorio
-├── tools/                               las comprobaciones de CI compartidas y las herramientas del proyecto
-├── .github/                             flujo de CI y plantillas de issues y pull requests
-├── examples/                            escenarios de alarma y ajustes del modelo de energía para empezar
-├── images/                              banner, icono y las dos imágenes de este README
-├── build.sh build.bat                   compilar con el flujo de proyecto compartido
-├── test.sh test.bat                     ejecutar las pruebas con el flujo compartido
-├── run.sh run.bat                       arrancar con el flujo de proyecto compartido
-├── armor.project.json                   manifiesto: versión, rol, madurez, comando de build
-├── CHANGELOG.md                         qué cambió en cada versión
-├── SECURITY.md SUPPORT.md LICENSE       política de seguridad, soporte y licencia
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   cómo contribuir y el código de conducta
-├── build-test.sh build-test.bat         ejecutar las pruebas con el flujo compartido
-├── pyproject.toml                       metadatos del paquete
-└── .gitattributes .gitignore            ajustes de Git
+│   ├── cli.py                                 las opciones y la ejecución
+│   ├── scenarios.py cycle.py                  los cuatro escenarios, la geometría de 270 grados y el día de luz
+│   ├── alarm_scenarios.py                     escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta
+│   ├── solar.py                               un inversor y una pila de dos módulos
+│   ├── electrical.py                          los tres canales de un nodo eléctrico
+│   ├── meter_bus.py                           la línea serie de los contadores de energía por TCP (PZEM-004T, PZEM-017)
+│   ├── energy.py                              datos solares y eléctricos realistas: sol con nubes, casa, tarifa, batería, contador
+│   ├── faults.py                              las siete averías repetibles
+│   └── publisher.py                           entrega a un servidor con reintentos
+├── tests/                                     las pruebas
+├── docs/                                      las guías de este repositorio
+├── tools/                                     las comprobaciones de CI compartidas y las herramientas del proyecto
+├── .github/                                   flujo de CI y plantillas de issues y pull requests
+├── examples/                                  escenarios de alarma y ajustes del modelo de energía para empezar
+├── images/                                    banner, icono y las dos imágenes de este README
+├── Dockerfile .dockerignore docker/bench.sh   imagen del banco virtual
+├── build.sh build.bat                         compilar con el flujo de proyecto compartido
+├── test.sh test.bat                           ejecutar las pruebas con el flujo compartido
+├── run.sh run.bat                             arrancar con el flujo de proyecto compartido
+├── armor.project.json                         manifiesto: versión, rol, madurez, comando de build
+├── CHANGELOG.md                               qué cambió en cada versión
+├── SECURITY.md SUPPORT.md LICENSE             política de seguridad, soporte y licencia
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         cómo contribuir y el código de conducta
+├── build-test.sh build-test.bat               ejecutar las pruebas con el flujo compartido
+├── pyproject.toml                             metadatos del paquete
+└── .gitattributes .gitignore                  ajustes de Git
 ```
 
 </details>

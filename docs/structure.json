@@ -216,6 +216,19 @@
             "zh": "28 个",
             "pt": "28 testes"
           }
+        },
+        {
+          "name": "test_bench_script.py",
+          "desc": {
+            "en": "5 tests",
+            "es": "5 pruebas",
+            "de": "5 Tests",
+            "fr": "5 tests",
+            "it": "5 test",
+            "ja": "5 件",
+            "zh": "5 个",
+            "pt": "5 testes"
+          }
         }
       ]
     },
@@ -379,6 +392,20 @@
       "span": 3,
       "columns": 2,
       "rows": [
+        {
+          "name": "Dockerfile  .dockerignore  docker/bench.sh",
+          "tree_name": "Dockerfile .dockerignore docker/bench.sh",
+          "desc": {
+            "en": "virtual bench image",
+            "es": "imagen del banco virtual",
+            "de": "Image der virtuellen Werkbank",
+            "fr": "image du banc virtuel",
+            "it": "immagine del banco virtuale",
+            "ja": "仮想ベンチのイメージ",
+            "zh": "虚拟测试台镜像",
+            "pt": "imagem do banco virtual"
+          }
+        },
         {
           "name": "build.sh  build.bat",
           "tree_name": "build.sh build.bat",

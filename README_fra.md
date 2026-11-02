@@ -187,31 +187,32 @@ C'est du Python pur : rien à compiler. La version est dans `pyproject.toml` et 
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           les options et l'exécution
-│   ├── scenarios.py cycle.py            les quatre scénarios, la géométrie de 270 degrés et le jour de lumière
-│   ├── alarm_scenarios.py               scénarios d'alarme depuis des fichiers JSON, leurs messages et la vérification de la réponse
-│   ├── solar.py                         un onduleur et une pile de deux modules
-│   ├── electrical.py                    les trois canaux d'un nœud électrique
-│   ├── meter_bus.py                     la ligne série des compteurs d'énergie sur TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                        données solaires et électriques réalistes : soleil et nuages, maison, tarif, batterie, compteur
-│   ├── faults.py                        les sept pannes répétables
-│   └── publisher.py                     livraison à un serveur avec nouvelles tentatives
-├── tests/                               les tests
-├── docs/                                les guides de ce dépôt
-├── tools/                               les contrôles CI partagés et les outils du projet
-├── .github/                             workflow CI et modèles d'issues et de pull requests
-├── examples/                            scénarios d'alarme et réglages du modèle d'énergie pour commencer
-├── images/                              bannière, icône et les deux images de ce README
-├── build.sh build.bat                   build par le flux de projet partagé
-├── test.sh test.bat                     lancer les tests par le flux partagé
-├── run.sh run.bat                       démarrer par le flux de projet partagé
-├── armor.project.json                   manifeste : version, rôle, maturité, commande de build
-├── CHANGELOG.md                         ce qui a changé à chaque version
-├── SECURITY.md SUPPORT.md LICENSE       politique de sécurité, support et licence
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   comment contribuer et le code de conduite
-├── build-test.sh build-test.bat         lancer les tests par le flux partagé
-├── pyproject.toml                       métadonnées du paquet
-└── .gitattributes .gitignore            réglages Git
+│   ├── cli.py                                 les options et l'exécution
+│   ├── scenarios.py cycle.py                  les quatre scénarios, la géométrie de 270 degrés et le jour de lumière
+│   ├── alarm_scenarios.py                     scénarios d'alarme depuis des fichiers JSON, leurs messages et la vérification de la réponse
+│   ├── solar.py                               un onduleur et une pile de deux modules
+│   ├── electrical.py                          les trois canaux d'un nœud électrique
+│   ├── meter_bus.py                           la ligne série des compteurs d'énergie sur TCP (PZEM-004T, PZEM-017)
+│   ├── energy.py                              données solaires et électriques réalistes : soleil et nuages, maison, tarif, batterie, compteur
+│   ├── faults.py                              les sept pannes répétables
+│   └── publisher.py                           livraison à un serveur avec nouvelles tentatives
+├── tests/                                     les tests
+├── docs/                                      les guides de ce dépôt
+├── tools/                                     les contrôles CI partagés et les outils du projet
+├── .github/                                   workflow CI et modèles d'issues et de pull requests
+├── examples/                                  scénarios d'alarme et réglages du modèle d'énergie pour commencer
+├── images/                                    bannière, icône et les deux images de ce README
+├── Dockerfile .dockerignore docker/bench.sh   image du banc virtuel
+├── build.sh build.bat                         build par le flux de projet partagé
+├── test.sh test.bat                           lancer les tests par le flux partagé
+├── run.sh run.bat                             démarrer par le flux de projet partagé
+├── armor.project.json                         manifeste : version, rôle, maturité, commande de build
+├── CHANGELOG.md                               ce qui a changé à chaque version
+├── SECURITY.md SUPPORT.md LICENSE             politique de sécurité, support et licence
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         comment contribuer et le code de conduite
+├── build-test.sh build-test.bat               lancer les tests par le flux partagé
+├── pyproject.toml                             métadonnées du paquet
+└── .gitattributes .gitignore                  réglages Git
 ```
 
 </details>

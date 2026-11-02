@@ -187,31 +187,32 @@ python -I tools/armor_ci_validate.py
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           オプションと実行
-│   ├── scenarios.py cycle.py            4 つのシナリオ、270 度の配置、1 日の光
-│   ├── alarm_scenarios.py               JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
-│   ├── solar.py                         インバーターと 2 モジュールのバッテリー
-│   ├── electrical.py                    電気ノードの 3 チャンネル
-│   ├── meter_bus.py                     エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
-│   ├── energy.py                        現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター
-│   ├── faults.py                        再現可能な 7 つの障害
-│   └── publisher.py                     再試行つきのサーバーへの配信
-├── tests/                               テスト
-├── docs/                                このリポジトリのガイド
-├── tools/                               共通の CI チェックとプロジェクトツール
-├── .github/                             CI ワークフローと Issue・Pull Request のテンプレート
-├── examples/                            出発点となるアラームシナリオとエネルギーモデルの設定
-├── images/                              バナー、アイコン、この README の 2 つの図
-├── build.sh build.bat                   共通のプロジェクトワークフローでビルド
-├── test.sh test.bat                     共通のワークフローでテストを実行
-├── run.sh run.bat                       共通のプロジェクトワークフローで起動
-├── armor.project.json                   マニフェスト：バージョン、役割、成熟度、ビルドコマンド
-├── CHANGELOG.md                         各バージョンの変更点
-├── SECURITY.md SUPPORT.md LICENSE       セキュリティポリシー、サポート、ライセンス
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   貢献方法と行動規範
-├── build-test.sh build-test.bat         共通のワークフローでテストを実行
-├── pyproject.toml                       パッケージのメタデータ
-└── .gitattributes .gitignore            Git の設定
+│   ├── cli.py                                 オプションと実行
+│   ├── scenarios.py cycle.py                  4 つのシナリオ、270 度の配置、1 日の光
+│   ├── alarm_scenarios.py                     JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
+│   ├── solar.py                               インバーターと 2 モジュールのバッテリー
+│   ├── electrical.py                          電気ノードの 3 チャンネル
+│   ├── meter_bus.py                           エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
+│   ├── energy.py                              現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター
+│   ├── faults.py                              再現可能な 7 つの障害
+│   └── publisher.py                           再試行つきのサーバーへの配信
+├── tests/                                     テスト
+├── docs/                                      このリポジトリのガイド
+├── tools/                                     共通の CI チェックとプロジェクトツール
+├── .github/                                   CI ワークフローと Issue・Pull Request のテンプレート
+├── examples/                                  出発点となるアラームシナリオとエネルギーモデルの設定
+├── images/                                    バナー、アイコン、この README の 2 つの図
+├── Dockerfile .dockerignore docker/bench.sh   仮想ベンチのイメージ
+├── build.sh build.bat                         共通のプロジェクトワークフローでビルド
+├── test.sh test.bat                           共通のワークフローでテストを実行
+├── run.sh run.bat                             共通のプロジェクトワークフローで起動
+├── armor.project.json                         マニフェスト：バージョン、役割、成熟度、ビルドコマンド
+├── CHANGELOG.md                               各バージョンの変更点
+├── SECURITY.md SUPPORT.md LICENSE             セキュリティポリシー、サポート、ライセンス
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         貢献方法と行動規範
+├── build-test.sh build-test.bat               共通のワークフローでテストを実行
+├── pyproject.toml                             パッケージのメタデータ
+└── .gitattributes .gitignore                  Git の設定
 ```
 
 </details>

@@ -187,31 +187,32 @@ python -I tools/armor_ci_validate.py
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           选项与运行
-│   ├── scenarios.py cycle.py            四种场景、270 度几何和一天的光照
-│   ├── alarm_scenarios.py               来自 JSON 文件的报警场景、其消息以及对响应的检查
-│   ├── solar.py                         逆变器和两模块电池组
-│   ├── electrical.py                    电气节点的三个通道
-│   ├── meter_bus.py                     通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
-│   ├── energy.py                        真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
-│   ├── faults.py                        七种可重复的故障
-│   └── publisher.py                     带重试的服务器投递
-├── tests/                               测试
-├── docs/                                本仓库的指南
-├── tools/                               共享的 CI 检查和项目工具
-├── .github/                             CI 工作流以及 Issue 和 Pull Request 模板
-├── examples/                            可供起步的报警场景与能源模型设置
-├── images/                              横幅、图标和本 README 的两幅图
-├── build.sh build.bat                   通过共享的项目工作流构建
-├── test.sh test.bat                     通过共享工作流运行测试
-├── run.sh run.bat                       通过共享的项目工作流启动
-├── armor.project.json                   清单：版本、角色、成熟度、构建命令
-├── CHANGELOG.md                         每个版本的变化
-├── SECURITY.md SUPPORT.md LICENSE       安全策略、支持和许可证
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   如何贡献与行为准则
-├── build-test.sh build-test.bat         通过共享工作流运行测试
-├── pyproject.toml                       包元数据
-└── .gitattributes .gitignore            Git 设置
+│   ├── cli.py                                 选项与运行
+│   ├── scenarios.py cycle.py                  四种场景、270 度几何和一天的光照
+│   ├── alarm_scenarios.py                     来自 JSON 文件的报警场景、其消息以及对响应的检查
+│   ├── solar.py                               逆变器和两模块电池组
+│   ├── electrical.py                          电气节点的三个通道
+│   ├── meter_bus.py                           通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
+│   ├── energy.py                              真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
+│   ├── faults.py                              七种可重复的故障
+│   └── publisher.py                           带重试的服务器投递
+├── tests/                                     测试
+├── docs/                                      本仓库的指南
+├── tools/                                     共享的 CI 检查和项目工具
+├── .github/                                   CI 工作流以及 Issue 和 Pull Request 模板
+├── examples/                                  可供起步的报警场景与能源模型设置
+├── images/                                    横幅、图标和本 README 的两幅图
+├── Dockerfile .dockerignore docker/bench.sh   虚拟测试台镜像
+├── build.sh build.bat                         通过共享的项目工作流构建
+├── test.sh test.bat                           通过共享工作流运行测试
+├── run.sh run.bat                             通过共享的项目工作流启动
+├── armor.project.json                         清单：版本、角色、成熟度、构建命令
+├── CHANGELOG.md                               每个版本的变化
+├── SECURITY.md SUPPORT.md LICENSE             安全策略、支持和许可证
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         如何贡献与行为准则
+├── build-test.sh build-test.bat               通过共享工作流运行测试
+├── pyproject.toml                             包元数据
+└── .gitattributes .gitignore                  Git 设置
 ```
 
 </details>

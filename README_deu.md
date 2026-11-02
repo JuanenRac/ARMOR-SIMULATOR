@@ -187,31 +187,32 @@ Es ist reines Python: nichts zu kompilieren. Die Version steht in `pyproject.tom
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           die Optionen und der Ablauf
-│   ├── scenarios.py cycle.py            die vier Szenarien, die 270-Grad-Geometrie und der Lichttag
-│   ├── alarm_scenarios.py               Alarmszenarien aus JSON-Dateien, ihre Nachrichten und die Prüfung der Antwort
-│   ├── solar.py                         ein Wechselrichter und ein Batteriestapel aus zwei Modulen
-│   ├── electrical.py                    die drei Kanäle eines Elektroknotens
-│   ├── meter_bus.py                     die serielle Leitung der Energiezähler über TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                        realistische Solar- und Stromdaten: Sonne mit Wolken, Haus, Tarif, Batterie, Zähler
-│   ├── faults.py                        die sieben wiederholbaren Fehler
-│   └── publisher.py                     Zustellung an einen Server mit Wiederholungen
-├── tests/                               die Tests
-├── docs/                                die Anleitungen dieses Repositorys
-├── tools/                               die gemeinsamen CI-Prüfungen und Projektwerkzeuge
-├── .github/                             CI-Workflow sowie Vorlagen für Issues und Pull Requests
-├── examples/                            Alarmszenarien und Einstellungen des Energiemodells als Ausgangspunkt
-├── images/                              Banner, Symbol und die zwei Bilder dieses READMEs
-├── build.sh build.bat                   Build über den gemeinsamen Projekt-Workflow
-├── test.sh test.bat                     Tests über den gemeinsamen Workflow ausführen
-├── run.sh run.bat                       Start über den gemeinsamen Projekt-Workflow
-├── armor.project.json                   Manifest: Version, Rolle, Reifegrad, Build-Befehl
-├── CHANGELOG.md                         was sich in jeder Version geändert hat
-├── SECURITY.md SUPPORT.md LICENSE       Sicherheitsrichtlinie, Support und Lizenz
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   Mitwirkung und Verhaltenskodex
-├── build-test.sh build-test.bat         Tests über den gemeinsamen Workflow ausführen
-├── pyproject.toml                       Paketmetadaten
-└── .gitattributes .gitignore            Git-Einstellungen
+│   ├── cli.py                                 die Optionen und der Ablauf
+│   ├── scenarios.py cycle.py                  die vier Szenarien, die 270-Grad-Geometrie und der Lichttag
+│   ├── alarm_scenarios.py                     Alarmszenarien aus JSON-Dateien, ihre Nachrichten und die Prüfung der Antwort
+│   ├── solar.py                               ein Wechselrichter und ein Batteriestapel aus zwei Modulen
+│   ├── electrical.py                          die drei Kanäle eines Elektroknotens
+│   ├── meter_bus.py                           die serielle Leitung der Energiezähler über TCP (PZEM-004T, PZEM-017)
+│   ├── energy.py                              realistische Solar- und Stromdaten: Sonne mit Wolken, Haus, Tarif, Batterie, Zähler
+│   ├── faults.py                              die sieben wiederholbaren Fehler
+│   └── publisher.py                           Zustellung an einen Server mit Wiederholungen
+├── tests/                                     die Tests
+├── docs/                                      die Anleitungen dieses Repositorys
+├── tools/                                     die gemeinsamen CI-Prüfungen und Projektwerkzeuge
+├── .github/                                   CI-Workflow sowie Vorlagen für Issues und Pull Requests
+├── examples/                                  Alarmszenarien und Einstellungen des Energiemodells als Ausgangspunkt
+├── images/                                    Banner, Symbol und die zwei Bilder dieses READMEs
+├── Dockerfile .dockerignore docker/bench.sh   Image der virtuellen Werkbank
+├── build.sh build.bat                         Build über den gemeinsamen Projekt-Workflow
+├── test.sh test.bat                           Tests über den gemeinsamen Workflow ausführen
+├── run.sh run.bat                             Start über den gemeinsamen Projekt-Workflow
+├── armor.project.json                         Manifest: Version, Rolle, Reifegrad, Build-Befehl
+├── CHANGELOG.md                               was sich in jeder Version geändert hat
+├── SECURITY.md SUPPORT.md LICENSE             Sicherheitsrichtlinie, Support und Lizenz
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         Mitwirkung und Verhaltenskodex
+├── build-test.sh build-test.bat               Tests über den gemeinsamen Workflow ausführen
+├── pyproject.toml                             Paketmetadaten
+└── .gitattributes .gitignore                  Git-Einstellungen
 ```
 
 </details>

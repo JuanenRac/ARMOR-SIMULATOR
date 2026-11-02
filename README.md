@@ -187,31 +187,32 @@ It is plain Python: nothing to compile. The version lives in `pyproject.toml` an
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                           the options and the run
-│   ├── scenarios.py cycle.py            the four scenarios, the 270 degree geometry and the day of light
-│   ├── alarm_scenarios.py               alarm scenarios from JSON files, their messages and the check of the answer
-│   ├── solar.py                         an inverter and a two-module battery stack
-│   ├── electrical.py                    the three channels of an electrical node
-│   ├── meter_bus.py                     the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                        realistic solar and electrical data: sun with clouds, house, tariff, battery, meter
-│   ├── faults.py                        the seven repeatable faults
-│   └── publisher.py                     delivery to a server with retries
-├── tests/                               the tests
-├── docs/                                the guides of this repository
-├── tools/                               the shared CI checks and project tooling
-├── .github/                             CI workflow, issue and pull-request templates
-├── examples/                            alarm scenarios and settings of the energy model to start from
-├── images/                              banner, icon and the two pictures of this README
-├── build.sh build.bat                   build through the shared project workflow
-├── test.sh test.bat                     run the tests through the shared workflow
-├── run.sh run.bat                       start through the shared project workflow
-├── armor.project.json                   manifest: version, role, maturity, build command
-├── CHANGELOG.md                         what changed in each version
-├── SECURITY.md SUPPORT.md LICENSE       security policy, support and license
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md   how to contribute and the code of conduct
-├── build-test.sh build-test.bat         run the tests through the shared workflow
-├── pyproject.toml                       package metadata
-└── .gitattributes .gitignore            Git settings
+│   ├── cli.py                                 the options and the run
+│   ├── scenarios.py cycle.py                  the four scenarios, the 270 degree geometry and the day of light
+│   ├── alarm_scenarios.py                     alarm scenarios from JSON files, their messages and the check of the answer
+│   ├── solar.py                               an inverter and a two-module battery stack
+│   ├── electrical.py                          the three channels of an electrical node
+│   ├── meter_bus.py                           the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)
+│   ├── energy.py                              realistic solar and electrical data: sun with clouds, house, tariff, battery, meter
+│   ├── faults.py                              the seven repeatable faults
+│   └── publisher.py                           delivery to a server with retries
+├── tests/                                     the tests
+├── docs/                                      the guides of this repository
+├── tools/                                     the shared CI checks and project tooling
+├── .github/                                   CI workflow, issue and pull-request templates
+├── examples/                                  alarm scenarios and settings of the energy model to start from
+├── images/                                    banner, icon and the two pictures of this README
+├── Dockerfile .dockerignore docker/bench.sh   virtual bench image
+├── build.sh build.bat                         build through the shared project workflow
+├── test.sh test.bat                           run the tests through the shared workflow
+├── run.sh run.bat                             start through the shared project workflow
+├── armor.project.json                         manifest: version, role, maturity, build command
+├── CHANGELOG.md                               what changed in each version
+├── SECURITY.md SUPPORT.md LICENSE             security policy, support and license
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md         how to contribute and the code of conduct
+├── build-test.sh build-test.bat               run the tests through the shared workflow
+├── pyproject.toml                             package metadata
+└── .gitattributes .gitignore                  Git settings
 ```
 
 </details>
