@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.3] - A run can be recorded and played again and the delivery to a server can be spoiled with latency, drops or duplicates
+
 - **A run can be recorded and played again:** `--record FILE` also writes every emitted message to a JSON-lines file (an existing file is never overwritten) and `--replay FILE` emits the messages of such a file instead of generating them; faults, `--validate` and delivery to a server still apply to a replay. A recording that has a bad line, a value that is not JSON (NaN, Infinity), a topic outside `armor/` or more than 64 MiB is refused whole. Without the new options the output is the same, byte for byte.
 - **The delivery to a server can be spoiled, not only the messages:** `--http-fault latency|drop|duplicate` (with `--http-fault-every`, `--http-latency-ms`) makes every Nth message arrive late, never be sent or be sent twice, to test how the server and its clients cope with a bad link; it needs `--server-url` and is off by default, and the end of the run says how many messages were affected.
 - Tests: 182 (before 174).
