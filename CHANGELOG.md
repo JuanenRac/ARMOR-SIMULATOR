@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.4] - A virtual bench for Docker, the serial line of the energy meters, the other node types, an MQTT output, several nodes at once and people walking across them
+
 - **Walks along a polyline in an alarm scenario:** the new `walk` event moves one or more people along 2 to 32 points of a node at a set speed (the radial speed of each track is worked out from the positions), with `examples/alarm/walk-across-two-nodes.json`.
 - **Several nodes at once:** `--nodes north-1,south-1` simulates up to eight radar nodes and the scenario `relay` hands one walker from node to node.
 - **The other nodes:** `--info` (what a node says about itself), `--alarm-node ID` (a simulated alarm panel that arms, counts down, sounds and disarms) and `--network-node ID` (a simulated network watcher whose devices come and go); the alarm and network messages are also delivered to `/api/v1/alarm/state` and `/api/v1/network/state`, and `--validate` checks them.
