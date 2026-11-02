@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 oder neuer">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Sprache">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-174%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-182%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Reifegrad">
 </p>
 
 ---
 
-**Ehrlichkeitsprüfung - was heute läuft:** Die Szenarien, die Fehler, die Zustellung an einen Server und die 174 Tests sind real, und der Simulator speist einen Server auf einem Computer, wenn kein Knoten angeschlossen ist. Die Geometrie ist **veranschaulichend**, kein Modell des echten LD2450-Radars, und nichts davon wurde mit echter Hardware verglichen.
+**Ehrlichkeitsprüfung - was heute läuft:** Die Szenarien, die Fehler, die Zustellung an einen Server und die 182 Tests sind real, und der Simulator speist einen Server auf einem Computer, wenn kein Knoten angeschlossen ist. Die Geometrie ist **veranschaulichend**, kein Modell des echten LD2450-Radars, und nichts davon wurde mit echter Hardware verglichen.
 
 ---
 
@@ -40,7 +40,7 @@
 | Reifegrad | Etabliert |
 | Rolle | Offline-Simulator für Telemetrie und Umgebung (Familie: Testing, übergeordnet: ARMOR-COMMON) |
 | Technik | Python 3.11+, nur Standardbibliothek |
-| Tests | 174 (`python -m unittest discover -s tests`) |
+| Tests | 182 (`python -m unittest discover -s tests`) |
 | Szenarien und Fehler | 4 Szenarien, 7 Fehler (3 brechen den Vertrag absichtlich) |
 | Läuft auf | Jeder Computer oder CI |
 | Auf echter Hardware | Nicht zutreffend: er ist der Hardware-Ersatz, auf einem Computer benutzt |
@@ -57,7 +57,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟢 | Die Szenarien, die Störungen und die Übergabe an einen Server funktionieren; er speist einen Server auf einem Rechner, wenn kein Knoten angeschlossen ist. |
-| Tests | 🟢 | 174 Tests bestehen (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 182 Tests bestehen (`python -m unittest discover -s tests`). |
 | Protokolle und Daten | 🟠 | Die Geometrie ist anschaulich und kein Modell des echten LD2450-Radars, und nichts wurde mit echter Hardware verglichen. |
 | Integration | 🟢 | Er übergibt seine Nachrichten in den Tests an einen Server, und der Server des CM5-Prüfstands kann damit gespeist werden. |
 | Dokumentation | 🟢 | Acht Sprachen und das Änderungsprotokoll sind aktuell. |
@@ -115,6 +115,8 @@ Dies ist ein Testwerkzeug: keine Sicherheitsfunktion, und seine Geometrie ist ke
 | `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | Ein Alarmszenario aus einer JSON-Datei abspielen / nur prüfen / die Alarme eines Servers mit der Erwartung vergleichen (Exit 1 bei Abweichung) |
 | `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | aus, -, `1`, `900` | Realistische Solar- und Stromdaten in Echtzeit statt des schnellen Tages von `--solar`/`--electrical` |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Spielt in einige Nachrichten einen wiederholbaren Fehler ein |
+| `--record`, `--replay` | - | Schreibt jede ausgegebene Nachricht in eine Datei (wird nie überschrieben) / spielt eine solche Datei erneut ab, statt Nachrichten zu erzeugen |
+| `--http-fault`, `--http-fault-every`, `--http-latency-ms` | `none`, `3`, `1500` | Stört die Zustellung an den Server statt der Nachrichten: lahme Verbindung (`latency`), nie gesendete Nachricht (`drop`) oder doppelt gesendete (`duplicate`) |
 | `--validate`, `--allow-invalid` | off | Prüft jede Nachricht gegen ARMOR-COMMON / erlaubt Fehler, die ihn brechen |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Zustellung an ARMOR-SERVER; das Token jedes Knotens bei striktem Server |
 

@@ -18,8 +18,10 @@ from typing import Any
 from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
 from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
+from .http_faults import HTTP_FAULTS, MAX_LATENCY_MS, plan as delivery_plan
 from .panel_sim import BEHAVIORS, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_map, verify_panel_sync
 from .publisher import DeliveryError, check_server_url, post
+from .recording import RecordingError, load_recording, open_for_recording, tee
 from .scenarios import SCENARIOS, health, telemetry
 from .server_driver import DriverError, Session, drive
 from .electrical import electrical_messages
@@ -110,6 +112,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--energy-config", type=Path, metavar="FILE", help="a JSON file with the settings of --energy (see docs/ENERGY_MODEL.md); the defaults apply to what it does not say")
     parser.add_argument("--energy-days", type=float, default=1.0, help="days of data of --energy (default 1)")
     parser.add_argument("--energy-step-s", type=int, default=900, help="seconds between the samples of --energy (default 900)")
+    parser.add_argument("--record", type=Path, metavar="FILE", help="also write every emitted message to FILE as JSON lines, to play it again with --replay (an existing file is never overwritten)")
+    parser.add_argument("--replay", type=Path, metavar="FILE", help="emit the messages of a recording made with --record instead of generating them (faults, --validate and --server-url still apply)")
+    parser.add_argument("--http-fault", choices=HTTP_FAULTS, default="none", help="spoil the delivery to --server-url, not the messages: a slow link (latency), a message that never arrives (drop) or one sent twice (duplicate)")
+    parser.add_argument("--http-fault-every", type=int, default=3, help="every Nth message suffers --http-fault (default 3)")
+    parser.add_argument("--http-latency-ms", type=int, default=1500, help=f"pause of --http-fault latency, up to {MAX_LATENCY_MS} (default 1500)")
     return parser
 
 
@@ -210,6 +217,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"--count must be between 1 and {MAX_COUNT}")
     if args.interval_ms < 0 or args.fault_every < 0 or args.health_every < 0:
         parser.error("--interval-ms, --fault-every and --health-every must not be negative")
+    if args.replay and (args.alarm_scenario or args.energy or args.solar or args.electrical or args.count != 1 or args.scenario != "patrol" or args.light != "cycle" or args.node_id != "simulator-1"):
+        parser.error("--replay brings its own messages: it cannot be combined with --alarm-scenario, --energy, --solar, --electrical, --count, --scenario, --light or --node-id")
+    if args.record and args.replay and args.record.resolve() == args.replay.resolve():
+        parser.error("--record and --replay cannot be the same file")
+    if args.http_fault != "none" and not args.server_url:
+        parser.error("--http-fault spoils the delivery to a server: it needs --server-url")
+    if args.http_fault_every < 1 or not 0 <= args.http_latency_ms <= MAX_LATENCY_MS:
+        parser.error(f"--http-fault-every must be at least 1 and --http-latency-ms between 0 and {MAX_LATENCY_MS}")
     scenario = None
     if args.alarm_scenario:
         if args.solar or args.electrical or args.energy or args.count != 1 or args.scenario != "patrol" or args.light != "cycle" or args.node_id != "simulator-1":
@@ -284,14 +299,36 @@ def main(argv: list[str] | None = None) -> int:
     server = check_server_url(args.server_url) if args.server_url else None
     validate, validate_solar, validate_electrical = _common_validators() if args.validate else (None, None, None)
 
-    if scenario:
+    if args.replay:
+        try:
+            base = iter(load_recording(args.replay))
+        except RecordingError as error:
+            print(f"armor-simulator: {error}", file=sys.stderr)
+            return 2
+    elif scenario:
         base = build_stream(scenario, args.health_every)
     elif energy_config:
         base = energy_messages(args.node_id, energy_config, args.seed, energy_steps, args.energy_step_s)
     else:
         base = messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical)
     stream = FAULTS[args.fault](_stamp(base, start_ms), args.fault_every, TOPIC_KINDS[args.fault_topic])
-    accepted_invalid = refused = 0
+    recording = None
+    if args.record:
+        try:
+            recording = open_for_recording(args.record)
+        except RecordingError as error:
+            print(f"armor-simulator: {error}", file=sys.stderr)
+            return 2
+        stream = tee(stream, recording)
+    try:
+        return _emit(args, stream, validate, validate_solar, validate_electrical, server, token)
+    finally:
+        if recording:
+            recording.close()
+
+
+def _emit(args: argparse.Namespace, stream: Iterator[Message], validate, validate_solar, validate_electrical, server, token: str) -> int:
+    accepted_invalid = refused = dropped = duplicated = delayed = 0
     for number, (topic, payload) in enumerate(stream, start=1):
         if validate:
             try:
@@ -299,9 +336,17 @@ def main(argv: list[str] | None = None) -> int:
             except (ValueError, KeyError, TypeError) as error:
                 print(f"armor-simulator: message {number} on {topic} is not valid for ARMOR-COMMON: {error}", file=sys.stderr)
                 return 1
-        if server:
+        delivery = delivery_plan(args.http_fault, number, args.http_fault_every, args.http_latency_ms)
+        if server and delivery.sends == 0:
+            dropped += 1
+        elif server:
+            if delivery.delay_ms:
+                delayed += 1
+                time.sleep(delivery.delay_ms / 1000)
+            duplicated += delivery.sends - 1
             try:
-                post(server, token, "solar" if topic.startswith("armor/solar/") else "electrical" if topic.startswith("armor/electrical/") else topic.rsplit("/", 1)[1], payload, per_node=args.per_node_token)
+                for _ in range(delivery.sends):
+                    post(server, token, "solar" if topic.startswith("armor/solar/") else "electrical" if topic.startswith("armor/electrical/") else topic.rsplit("/", 1)[1], payload, per_node=args.per_node_token)
                 if args.fault in INVALID_FAULTS and _is_invalid(args.fault, topic, payload):
                     accepted_invalid += 1
             except DeliveryError as error:
@@ -314,6 +359,8 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"topic": topic, "payload": payload}, separators=(",", ":"), sort_keys=True), flush=True)
         if args.interval_ms:
             time.sleep(args.interval_ms / 1000)
+    if args.http_fault != "none":
+        print(f"armor-simulator: delivery fault {args.http_fault}: {dropped} message(s) not sent, {duplicated} sent twice, {delayed} delayed", file=sys.stderr)
     if server and args.fault in INVALID_FAULTS:
         print(f"armor-simulator: of the invalid messages, {refused} were refused and {accepted_invalid} were accepted by the server (it accepts unknown fields in solar, electrical and MQTT messages on purpose)", file=sys.stderr)
     return 0

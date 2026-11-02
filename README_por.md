@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-174%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-182%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 174 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 182 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturidade | Estabelecido |
 | Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, só biblioteca padrão |
-| Testes | 174 (`python -m unittest discover -s tests`) |
+| Testes | 182 (`python -m unittest discover -s tests`) |
 | Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
 | Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
@@ -57,7 +57,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
-| Testes | 🟢 | Passam 174 testes (`python -m unittest discover -s tests`). |
+| Testes | 🟢 | Passam 182 testes (`python -m unittest discover -s tests`). |
 | Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
 | Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
 | Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
@@ -115,6 +115,8 @@ O ARMOR-SIMULATOR é a forma de experimentar o resto da família sem hardware: f
 | `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | Reproduzir um cenário de alarme a partir de um ficheiro JSON / só o validar / comparar os alarmes que um servidor levantou com o esperado (sai com 1 se diferirem) |
 | `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | não, -, `1`, `900` | Dados solares e elétricos realistas em tempo real em vez do dia rápido de `--solar`/`--electrical` |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Injeta uma falha repetível em algumas mensagens |
+| `--record`, `--replay` | - | Escreve cada mensagem emitida num ficheiro (nunca o substitui) / repõe esse ficheiro em vez de gerar mensagens |
+| `--http-fault`, `--http-fault-every`, `--http-latency-ms` | `none`, `3`, `1500` | Estraga a entrega ao servidor, não as mensagens: ligação lenta (`latency`), mensagem nunca enviada (`drop`) ou enviada duas vezes (`duplicate`) |
 | `--validate`, `--allow-invalid` | off | Verifica cada mensagem com o ARMOR-COMMON / permite as falhas que o violam |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Entrega ao ARMOR-SERVER; o token de cada nó se o servidor for estrito |
 

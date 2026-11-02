@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 ou ultérieure">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Langage">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-174%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-182%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturité">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 174 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
+**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 182 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturité | Établi |
 | Rôle | Simulateur hors ligne de télémétrie et d'environnement (famille : Testing, parent : ARMOR-COMMON) |
 | Technologie | Python 3.11+, bibliothèque standard uniquement |
-| Tests | 174 (`python -m unittest discover -s tests`) |
+| Tests | 182 (`python -m unittest discover -s tests`) |
 | Scénarios et pannes | 4 scénarios, 7 pannes (3 violent le contrat exprès) |
 | Fonctionne sur | N'importe quel ordinateur, ou la CI |
 | Sur matériel réel | Sans objet : c'est le substitut du matériel, utilisé sur un ordinateur |
@@ -57,7 +57,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟢 | Les scénarios, les pannes et la remise à un serveur fonctionnent ; c'est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. |
-| Tests | 🟢 | 174 tests réussissent (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 182 tests réussissent (`python -m unittest discover -s tests`). |
 | Protocoles et données | 🟠 | La géométrie est illustrative, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel. |
 | Intégration | 🟢 | Il remet ses messages à un serveur dans les tests, et le serveur du banc d'essai CM5 peut être alimenté par lui. |
 | Documentation | 🟢 | Huit langues et le journal des modifications sont à jour. |
@@ -115,6 +115,8 @@ C'est un outil de test : ce n'est pas une fonction de sécurité et sa géométr
 | `--alarm-scenario`, `--check-alarm-scenario`, `--verify-alarms` | - | Jouer un scénario d'alarme depuis un fichier JSON / seulement le valider / comparer les alarmes levées par un serveur à ce qu'il attend (code 1 si elles diffèrent) |
 | `--energy`, `--energy-config`, `--energy-days`, `--energy-step-s` | non, -, `1`, `900` | Données solaires et électriques réalistes en temps réel au lieu du jour rapide de `--solar`/`--electrical` |
 | `--fault`, `--fault-every`, `--fault-topic` | `none`, `3`, `all` | Injecte une panne répétable dans certains messages |
+| `--record`, `--replay` | - | Écrit chaque message émis dans un fichier (jamais écrasé) / rejoue un tel fichier au lieu de générer des messages |
+| `--http-fault`, `--http-fault-every`, `--http-latency-ms` | `none`, `3`, `1500` | Dégrade la livraison au serveur, pas les messages : lien lent (`latency`), message jamais envoyé (`drop`) ou envoyé deux fois (`duplicate`) |
 | `--validate`, `--allow-invalid` | off | Vérifie chaque message avec ARMOR-COMMON / autorise les pannes qui le violent |
 | `--server-url`, `--ingest-token-file`, `--per-node-token` | - | Livraison à ARMOR-SERVER ; le jeton de chaque nœud si le serveur est strict |
 
