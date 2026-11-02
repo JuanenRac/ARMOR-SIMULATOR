@@ -13,7 +13,16 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-ROUTES = {"telemetry": "/api/v1/telemetry", "health": "/api/v1/health", "solar": "/api/v1/solar", "electrical": "/api/v1/electrical/readings"}
+ROUTES = {"telemetry": "/api/v1/telemetry", "health": "/api/v1/health", "solar": "/api/v1/solar", "electrical": "/api/v1/electrical/readings", "alarm": "/api/v1/alarm/state", "network": "/api/v1/network/state"}
+
+
+def kind_of(topic: str) -> str | None:
+    """The ingest route of a message by its topic, or None when the server takes it only from the broker (the `info` of a node)."""
+    for prefix, kind in (("armor/solar/", "solar"), ("armor/electrical/", "electrical"), ("armor/alarm/", "alarm"), ("armor/network/", "network")):
+        if topic.startswith(prefix):
+            return kind
+    leaf = topic.rsplit("/", 1)[1]
+    return leaf if leaf in ("telemetry", "health") else None
 
 
 class DeliveryError(RuntimeError):

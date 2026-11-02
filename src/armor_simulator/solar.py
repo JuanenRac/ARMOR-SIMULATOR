@@ -12,6 +12,7 @@ from __future__ import annotations
 import math
 import random
 from collections.abc import Iterator
+from typing import Any
 
 from .cycle import outage, phase
 from .faults import Message
@@ -54,12 +55,13 @@ def inverter(node_id: str, sample: int, seed: int = 0, device: str = "axpert-1")
     }
 
 
-def battery(node_id: str, sample: int, seed: int = 0, device: str = "us3000-1") -> dict:
-    """One reading of a battery stack: two modules of fifteen cells, with capacities."""
+def battery(node_id: str, sample: int, seed: int = 0, device: str = "us3000-1", battery_a: float | None = None) -> dict:
+    """One reading of a battery stack: two modules of fifteen cells, with capacities. `battery_a` is the current the inverter of the same sample reads (given, it is not worked out twice)."""
     rng = random.Random(seed * 1_000_003 + sample + 7)
-    soc, current = _soc(sample), inverter(node_id, sample, seed)["battery_a"]
+    soc, current = _soc(sample), inverter(node_id, sample, seed)["battery_a"] if battery_a is None else battery_a
     base = 3.2 + soc / 100 * 0.2
-    stack, cells_all = [], []
+    stack: list[dict[str, Any]] = []
+    cells_all: list[float] = []
     for n in range(1, MODULES + 1):
         cells = [round(base + ((i * 7 + n * 3) % 5) * 0.0015 + rng.uniform(-0.0008, 0.0008) + (0.02 if (n, i) == (2, 9) else 0.0), 3) for i in range(CELLS)]
         cells_all += cells
@@ -81,5 +83,6 @@ def battery(node_id: str, sample: int, seed: int = 0, device: str = "us3000-1") 
 
 def solar_messages(node_id: str, sample: int, seed: int = 0) -> Iterator[Message]:
     """The topics and payloads of one sample of the solar equipment."""
-    yield f"armor/solar/{node_id}/axpert-1/state", inverter(node_id, sample, seed)
-    yield f"armor/solar/{node_id}/us3000-1/state", battery(node_id, sample, seed)
+    reading = inverter(node_id, sample, seed)
+    yield f"armor/solar/{node_id}/axpert-1/state", reading
+    yield f"armor/solar/{node_id}/us3000-1/state", battery(node_id, sample, seed, battery_a=reading["battery_a"])

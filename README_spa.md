@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 o posterior">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Lenguaje">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Pruebas">
+  <img src="https://img.shields.io/badge/Tests-234%20passing-2ea44f.svg" alt="Pruebas">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Versión">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Madurez">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 210 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
+**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 234 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Madurez | Establecido |
 | Función | Simulador offline de telemetría y entorno (familia: Testing, padre: ARMOR-COMMON) |
 | Tecnología | Python 3.11+, solo biblioteca estándar |
-| Pruebas | 210 (`python -m unittest discover -s tests`) |
+| Pruebas | 234 (`python -m unittest discover -s tests`) |
 | Escenarios y averías | 4 escenarios, 7 averías (3 rompen el contrato a propósito) |
 | Funciona en | Cualquier ordenador, o CI |
 | En hardware real | No aplica: es el sustituto del hardware, usado en un ordenador |
@@ -57,7 +57,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟢 | Los escenarios, los fallos y la entrega a un servidor funcionan; es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. |
-| Pruebas | 🟢 | Pasan 210 pruebas (`python -m unittest discover -s tests`). |
+| Pruebas | 🟢 | Pasan 234 pruebas (`python -m unittest discover -s tests`). |
 | Protocolos y datos | 🟠 | La geometría es ilustrativa, no un modelo del radar LD2450 real, y nada se ha comparado con hardware real. |
 | Integración | 🟢 | Entrega sus mensajes a un servidor en las pruebas, y el servidor del banco de pruebas CM5 puede alimentarse con él. |
 | Documentación | 🟢 | Ocho idiomas y el historial de cambios están al día. |
@@ -74,6 +74,8 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 * **Escenarios de alarma en ficheros:** `--alarm-scenario` reproduce un fichero JSON con una línea de tiempo (personas que cruzan varias zonas, una mascota, viento, un sensor atascado, ruidoso, con deriva o muerto, un nodo que pierde el enlace, un corte de red, el modo y el calendario) y puede decir qué debe responder el sistema; `--verify-alarms` compara las alarmas que levantó un servidor con ello, así que los ficheros son casos de prueba para ARMOR-SERVER. La lectura es estricta: se rechaza todo el fichero ante lo primero que no se entiende.
 * **Datos de energía realistas:** `--energy` emite un inversor, una pila de baterías y un nodo eléctrico a partir de un modelo en tiempo real (un sol con nubes, una casa hora a hora, una tarifa, una batería tipo Pylontech con ciclos, un contador con ruido y huecos), determinista para una semilla y ajustable desde un fichero JSON. Sin las opciones nuevas la salida es exactamente la de antes.
 * **Los contadores de energía por TCP:** `--meter-bus-port` reproduce la línea serie de un PZEM-004T y un PZEM-017 (Modbus-RTU, solo lectura, un CRC erróneo no recibe respuesta, una escritura se rechaza) con las lecturas de `--electrical`, con un fichero JSON para los contadores, umbrales y fallos, de modo que el código que lee los contadores se pueda probar sin uno.
+* **Los otros nodos, varios a la vez y un broker:** `--nodes` simula hasta ocho nodos de radar (con `--scenario relay` un caminante pasa de un nodo a otro), `--info`, `--alarm-node` y `--network-node` añaden la información de un nodo, una central de alarma y un vigilante de red, un escenario de alarma puede mover personas por una polilínea a una velocidad dada (`walk`), y `--mqtt-url` publica además cada mensaje en un broker de este equipo o de una red privada, de modo que también se ejercita la vía MQTT del servidor.
+* **Los otros nodos, varios a la vez y un broker:** `--nodes` simula hasta ocho nodos de radar (con `--scenario relay` un caminante pasa de un nodo a otro), `--info`, `--alarm-node` y `--network-node` añaden la información de un nodo, una central de alarma y un vigilante de red, un escenario de alarma puede mover personas por una polilínea a una velocidad dada (`walk`), y `--mqtt-url` publica además cada mensaje en un broker de este equipo o de una red privada, de modo que también se ejercita la vía MQTT del servidor.
 * **Escenarios contra un servidor real:** `--drive-server` reproduce un escenario de alarma contra un ARMOR-SERVER que tiene los modos de armado activados, convierte sus eventos `mode` en órdenes al servidor en tiempo real y comprueba las alarmas que el servidor levantó; `server_modes` dice qué defienden En casa y Noche y `--apply-modes` lo define en el servidor. La contraseña solo viene del entorno o de un fichero.
 
 ## 🧩 Papel en A.R.M.O.R.
@@ -187,32 +189,35 @@ Es Python puro: no hay nada que compilar. La versión vive en `pyproject.toml` y
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                                 las opciones y la ejecución
-│   ├── scenarios.py cycle.py                  los cuatro escenarios, la geometría de 270 grados y el día de luz
-│   ├── alarm_scenarios.py                     escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta
-│   ├── solar.py                               un inversor y una pila de dos módulos
-│   ├── electrical.py                          los tres canales de un nodo eléctrico
-│   ├── meter_bus.py                           la línea serie de los contadores de energía por TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                              datos solares y eléctricos realistas: sol con nubes, casa, tarifa, batería, contador
-│   ├── faults.py                              las siete averías repetibles
-│   └── publisher.py                           entrega a un servidor con reintentos
-├── tests/                                     las pruebas
-├── docs/                                      las guías de este repositorio
-├── tools/                                     las comprobaciones de CI compartidas y las herramientas del proyecto
-├── .github/                                   flujo de CI y plantillas de issues y pull requests
-├── examples/                                  escenarios de alarma y ajustes del modelo de energía para empezar
-├── images/                                    banner, icono y las dos imágenes de este README
-├── Dockerfile .dockerignore docker/bench.sh   imagen del banco virtual
-├── build.sh build.bat                         compilar con el flujo de proyecto compartido
-├── test.sh test.bat                           ejecutar las pruebas con el flujo compartido
-├── run.sh run.bat                             arrancar con el flujo de proyecto compartido
-├── armor.project.json                         manifiesto: versión, rol, madurez, comando de build
-├── CHANGELOG.md                               qué cambió en cada versión
-├── SECURITY.md SUPPORT.md LICENSE             política de seguridad, soporte y licencia
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md         cómo contribuir y el código de conducta
-├── build-test.sh build-test.bat               ejecutar las pruebas con el flujo compartido
-├── pyproject.toml                             metadatos del paquete
-└── .gitattributes .gitignore                  ajustes de Git
+│   ├── cli.py                           las opciones y la ejecución
+│   ├── scenarios.py cycle.py            los cinco escenarios, la geometría de 270 grados y el día de luz
+│   ├── alarm_scenarios.py               escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta
+│   ├── solar.py                         un inversor y una pila de dos módulos
+│   ├── electrical.py                    los tres canales de un nodo eléctrico
+│   ├── meter_bus.py                     la línea serie de los contadores de energía por TCP (PZEM-004T, PZEM-017)
+│   ├── nodes.py                         la información de un nodo, una central de alarma y un vigilante de red
+│   ├── mqtt_out.py                      publicar los mensajes en un broker MQTT
+│   ├── energy.py                        datos solares y eléctricos realistas: sol con nubes, casa, tarifa, batería, contador
+│   ├── faults.py                        las siete averías repetibles
+│   └── publisher.py                     entrega a un servidor con reintentos
+├── tests/                               las pruebas
+├── docs/                                las guías de este repositorio
+├── tools/                               las comprobaciones de CI compartidas y las herramientas del proyecto
+├── .github/                             flujo de CI y plantillas de issues y pull requests
+├── examples/                            escenarios de alarma y ajustes del modelo de energía para empezar
+├── images/                              banner, icono y las dos imágenes de este README
+├── Dockerfile .dockerignore             imagen del banco virtual
+├── docker/                              bench.sh, la entrada del banco virtual
+├── build.sh build.bat                   compilar con el flujo de proyecto compartido
+├── test.sh test.bat                     ejecutar las pruebas con el flujo compartido
+├── run.sh run.bat                       arrancar con el flujo de proyecto compartido
+├── armor.project.json                   manifiesto: versión, rol, madurez, comando de build
+├── CHANGELOG.md                         qué cambió en cada versión
+├── SECURITY.md SUPPORT.md LICENSE       política de seguridad, soporte y licencia
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md   cómo contribuir y el código de conducta
+├── build-test.sh build-test.bat         ejecutar las pruebas con el flujo compartido
+├── pyproject.toml                       metadatos del paquete
+└── .gitattributes .gitignore            ajustes de Git
 ```
 
 </details>

@@ -1,0 +1,18 @@
+{
+  "schema": "armor-alarm-scenario/1",
+  "name": "A walker crosses two nodes",
+  "description": "Someone walks a polyline at a set speed in front of the first node and, a little later, in front of the second one.",
+  "nodes": ["radar-front", "radar-back"],
+  "duration_s": 60,
+  "seed": 3,
+  "zones": [
+    {"id": "porch", "node": "radar-front", "sensor_id": 2},
+    {"id": "back-door", "node": "radar-back", "sensor_id": 1}
+  ],
+  "events": [
+    {"type": "mode", "at_s": 0, "mode": "away"},
+    {"type": "walk", "at_s": 5, "node": "radar-front", "speed_mm_s": 1000, "points": [{"x_mm": -3000, "y_mm": 3000}, {"x_mm": 0, "y_mm": 2000}, {"x_mm": 3000, "y_mm": 3000}]},
+    {"type": "walk", "at_s": 25, "node": "radar-back", "speed_mm_s": 800, "people": 2, "points": [{"x_mm": 2500, "y_mm": 4500}, {"x_mm": -2500, "y_mm": 1500}]}
+  ],
+  "expect": {"alarms": [{"code": "intrusion", "node": "radar-front", "severity": "high", "at_s": [5, 25]}, {"code": "intrusion", "node": "radar-back", "severity": "high", "at_s": [25, 50]}]}
+}

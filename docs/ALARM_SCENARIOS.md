@@ -62,6 +62,7 @@ All have `type` and `at_s` (a whole second from 0 to `duration_s`) and must end 
 |---|---|---|
 | `mode` | `mode`: `disarmed`, `home`, `away` or `night` | Sets the mode of the system from that second on, over the calendar. The mode is `disarmed` until something says otherwise |
 | `intrusion` | `path`: 1 to 16 steps `{zone, dwell_s}`; `people`: 1 to 5 (default 1) | People who walk the zones in order, each for `dwell_s` seconds (a sequential intrusion) |
+| `walk` | `node`, `points`, `speed_mm_s`, `people`? | A person (or up to 5, 400 mm apart) who walks a **polyline** in the coordinates of that node (2 to 32 points `{x_mm, y_mm}`, each between -6 000 and 6 000) at a speed of 50 to 3 000 mm/s. It starts at `at_s` on the first point, stays on the last one for the final second and then is gone. The speed each track reports is the radial one seen by the sensor, worked out from the positions. A walk has no zone: two walks one after the other on two nodes are how a person passes from one node to the next |
 | `pet` | `zone`, `duration_s` | A small, erratic track in the zone |
 | `wind` | `zone`, `duration_s`, `intensity` 0.01 to 1 (default 0.3) | Single-second ghost tracks, each second with that probability |
 | `sensor_fault` | `zone`, `duration_s`, `fault`, `magnitude`? | The sensor of the zone lies: `stuck` (a phantom still track), `noise` (ghost tracks; `magnitude` 0 to 1 is their probability, default 0.5), `drift` (the reported positions slide by `magnitude` mm per second, default 50, up to 1 000) or `dead` (it reports nothing) |
@@ -109,7 +110,7 @@ python -m armor_simulator --alarm-scenario examples/alarm/arming-modes-server.js
 
 ## The examples
 
-`examples/alarm/` has nine files: a sequential intrusion, two people on two nodes, a sensor that is stuck and one that is dead, noise and drift, a node that loses its link, a pet and wind, the night mode of the calendar, a mains outage, and home and night modes on a real server (`arming-modes-server.json`, written for `--drive-server`).
+`examples/alarm/` has ten files (the tenth, `walk-across-two-nodes.json`, shows the `walk` event on two nodes): a sequential intrusion, two people on two nodes, a sensor that is stuck and one that is dead, noise and drift, a node that loses its link, a pet and wind, the night mode of the calendar, a mains outage, and home and night modes on a real server (`arming-modes-server.json`, written for `--drive-server`).
 
 ## What this is and is not
 

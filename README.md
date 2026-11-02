@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-234%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 210 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 234 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturity | Established |
 | Role | Offline telemetry and environment simulator (family: Testing, parent: ARMOR-COMMON) |
 | Stack | Python 3.11+, standard library only |
-| Tests | 210 (`python -m unittest discover -s tests`) |
+| Tests | 234 (`python -m unittest discover -s tests`) |
 | Scenarios and faults | 4 scenarios, 7 faults (3 break the contract on purpose) |
 | Runs on | Any computer, or CI |
 | On real hardware | Not applicable: it is the stand-in for hardware, used on a computer |
@@ -57,7 +57,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | The scenarios, the faults and the delivery to a server work; it is what feeds a server on a computer when no node is plugged in. |
-| Tests | 🟢 | 210 tests pass (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 234 tests pass (`python -m unittest discover -s tests`). |
 | Protocols and data | 🟠 | The geometry is illustrative, not a model of the real LD2450 radar, and nothing has been compared with real hardware. |
 | Integration | 🟢 | It delivers its messages to a server in the tests, and the server of the CM5 test bench can be fed by it. |
 | Documentation | 🟢 | Eight languages and the changelog are up to date. |
@@ -74,6 +74,8 @@ Each line is one part of this repository and the light says how far it is today.
 * **Alarm scenarios in files:** `--alarm-scenario` plays a JSON file with a timeline (people crossing several zones, a pet, wind, a sensor that is stuck, noisy, drifting or dead, a node that loses its link, a mains outage, the mode and the calendar) and may say what the system is expected to answer; `--verify-alarms` compares the alarms a server raised with it, so the files are test cases for ARMOR-SERVER. The reading is strict: the whole file is refused at the first thing that is not understood.
 * **Realistic energy data:** `--energy` emits an inverter, a battery stack and an electrical node from a real-time model (a sun with clouds, a house by the hour, a tariff, a Pylontech-style battery with cycles, a noisy meter with holes), deterministic for a seed and tuned from a JSON file. Without the new options the output is exactly what it was.
 * **The energy meters over TCP:** `--meter-bus-port` plays the serial line of a PZEM-004T and a PZEM-017 (Modbus-RTU, read only, a bad CRC gets no answer, a write is refused) with the readings of `--electrical`, with a JSON file for the meters, thresholds and faults, so the code that reads the meters can be tried without one.
+* **The other nodes, several at once and a broker:** `--nodes` simulates up to eight radar nodes (with `--scenario relay` one walker passes from node to node), `--info`, `--alarm-node` and `--network-node` add the information of a node, an alarm panel and a network watcher, an alarm scenario can move people along a polyline at a set speed (`walk`), and `--mqtt-url` also publishes every message on a broker of this machine or a private network, so the MQTT road of the server is exercised too.
+* **The other nodes, several at once and a broker:** `--nodes` simulates up to eight radar nodes (with `--scenario relay` one walker passes from node to node), `--info`, `--alarm-node` and `--network-node` add the information of a node, an alarm panel and a network watcher, an alarm scenario can move people along a polyline at a set speed (`walk`), and `--mqtt-url` also publishes every message on a broker of this machine or a private network, so the MQTT road of the server is exercised too.
 * **Scenarios against a real server:** `--drive-server` plays an alarm scenario against an ARMOR-SERVER that has the arming modes on, turns its `mode` events into orders to the server in real time and checks the alarms the server raised; `server_modes` says what home and night defend and `--apply-modes` defines it in the server. The password comes only from the environment or a file.
 
 ## 🧩 Role in A.R.M.O.R.
@@ -187,32 +189,35 @@ It is plain Python: nothing to compile. The version lives in `pyproject.toml` an
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                                 the options and the run
-│   ├── scenarios.py cycle.py                  the four scenarios, the 270 degree geometry and the day of light
-│   ├── alarm_scenarios.py                     alarm scenarios from JSON files, their messages and the check of the answer
-│   ├── solar.py                               an inverter and a two-module battery stack
-│   ├── electrical.py                          the three channels of an electrical node
-│   ├── meter_bus.py                           the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)
-│   ├── energy.py                              realistic solar and electrical data: sun with clouds, house, tariff, battery, meter
-│   ├── faults.py                              the seven repeatable faults
-│   └── publisher.py                           delivery to a server with retries
-├── tests/                                     the tests
-├── docs/                                      the guides of this repository
-├── tools/                                     the shared CI checks and project tooling
-├── .github/                                   CI workflow, issue and pull-request templates
-├── examples/                                  alarm scenarios and settings of the energy model to start from
-├── images/                                    banner, icon and the two pictures of this README
-├── Dockerfile .dockerignore docker/bench.sh   virtual bench image
-├── build.sh build.bat                         build through the shared project workflow
-├── test.sh test.bat                           run the tests through the shared workflow
-├── run.sh run.bat                             start through the shared project workflow
-├── armor.project.json                         manifest: version, role, maturity, build command
-├── CHANGELOG.md                               what changed in each version
-├── SECURITY.md SUPPORT.md LICENSE             security policy, support and license
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md         how to contribute and the code of conduct
-├── build-test.sh build-test.bat               run the tests through the shared workflow
-├── pyproject.toml                             package metadata
-└── .gitattributes .gitignore                  Git settings
+│   ├── cli.py                           the options and the run
+│   ├── scenarios.py cycle.py            the five scenarios, the 270 degree geometry and the day of light
+│   ├── alarm_scenarios.py               alarm scenarios from JSON files, their messages and the check of the answer
+│   ├── solar.py                         an inverter and a two-module battery stack
+│   ├── electrical.py                    the three channels of an electrical node
+│   ├── meter_bus.py                     the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)
+│   ├── nodes.py                         the information of a node, an alarm panel and a network watcher
+│   ├── mqtt_out.py                      publishing the messages on an MQTT broker
+│   ├── energy.py                        realistic solar and electrical data: sun with clouds, house, tariff, battery, meter
+│   ├── faults.py                        the seven repeatable faults
+│   └── publisher.py                     delivery to a server with retries
+├── tests/                               the tests
+├── docs/                                the guides of this repository
+├── tools/                               the shared CI checks and project tooling
+├── .github/                             CI workflow, issue and pull-request templates
+├── examples/                            alarm scenarios and settings of the energy model to start from
+├── images/                              banner, icon and the two pictures of this README
+├── Dockerfile .dockerignore             virtual bench image
+├── docker/                              bench.sh, the entry of the virtual bench
+├── build.sh build.bat                   build through the shared project workflow
+├── test.sh test.bat                     run the tests through the shared workflow
+├── run.sh run.bat                       start through the shared project workflow
+├── armor.project.json                   manifest: version, role, maturity, build command
+├── CHANGELOG.md                         what changed in each version
+├── SECURITY.md SUPPORT.md LICENSE       security policy, support and license
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md   how to contribute and the code of conduct
+├── build-test.sh build-test.bat         run the tests through the shared workflow
+├── pyproject.toml                       package metadata
+└── .gitattributes .gitignore            Git settings
 ```
 
 </details>

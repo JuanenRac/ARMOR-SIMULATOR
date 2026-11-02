@@ -8,6 +8,9 @@ version = "0.3.3"
 description = "Deterministic offline telemetry and fault simulator for A.R.M.O.R."
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+mqtt = ["paho-mqtt"]
+
 [project.scripts]
 armor-simulator = "armor_simulator.cli:main"
 

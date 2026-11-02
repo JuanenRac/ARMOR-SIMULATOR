@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-234%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、210 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、234 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 確立 |
 | 役割 | オフラインのテレメトリ・環境シミュレーター（ファミリー：Testing、親：ARMOR-COMMON） |
 | 技術 | Python 3.11+、標準ライブラリのみ |
-| テスト | 210 (`python -m unittest discover -s tests`) |
+| テスト | 234 (`python -m unittest discover -s tests`) |
 | シナリオと障害 | シナリオ 4、障害 7（うち 3 は意図的にコントラクト違反） |
 | 動作環境 | 任意のコンピューターまたは CI |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
@@ -57,7 +57,7 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | シナリオ、故障、サーバーへの配信は動作します。ノードを接続していないとき、コンピューター上のサーバーにデータを送るのがこれです。 |
-| テスト | 🟢 | 210 件のテストが通ります（`python -m unittest discover -s tests`）。 |
+| テスト | 🟢 | 234 件のテストが通ります（`python -m unittest discover -s tests`）。 |
 | プロトコルとデータ | 🟠 | 幾何は例示用で、実際の LD2450 レーダーのモデルではありません。実機との比較もしていません。 |
 | 連携 | 🟢 | テストではメッセージをサーバーに配信しており、CM5 テストベンチのサーバーにもこれでデータを送れます。 |
 | ドキュメント | 🟢 | 8 言語と変更履歴は最新です。 |
@@ -74,6 +74,8 @@
 * **ファイルで記述するアラームシナリオ:** `--alarm-scenario` は、時系列（複数のゾーンを横切る人、ペット、風、固着・ノイズ・ドリフト・故障したセンサー、通信が途絶えるノード、停電、モードとカレンダー）を記した JSON ファイルを再生し、システムが返すべき応答も記述できます。`--verify-alarms` はサーバーが発したアラームをそれと比較するので、このファイルは ARMOR-SERVER のテストケースになります。読み込みは厳格で、理解できない箇所が最初に見つかった時点でファイル全体を拒否します。
 * **現実的なエネルギーデータ:** `--energy` は、リアルタイムのモデル（雲のある日射、1 時間ごとの住宅の消費、料金、サイクルを持つ Pylontech 型バッテリー、ノイズと欠測のあるメーター）からインバーター、バッテリースタック、電気ノードを出力します。シードで決定的で、JSON ファイルで調整できます。新しいオプションを使わなければ、出力は従来とまったく同じです。
 * **TCP 経由のエネルギーメーター:** `--meter-bus-port` は PZEM-004T と PZEM-017 のシリアル回線を再現します（Modbus-RTU、読み取り専用、CRC が誤っていると応答なし、書き込みは拒否）。測定値は `--electrical` と同じで、メーター・しきい値・故障は JSON ファイルで指定でき、メーターなしでメーターを読むコードを試せます。
+* **ほかのノード、複数同時、ブローカー:** `--nodes` は最大8つのレーダーノードを模擬し（`--scenario relay` では歩行者がノードからノードへ移ります）、`--info`、`--alarm-node`、`--network-node` はノードの情報、警報パネル、ネットワーク監視を加え、警報シナリオでは人を折れ線に沿って一定の速度で動かせ（`walk`）、`--mqtt-url` はこのマシンまたはプライベートネットワーク上のブローカーにも全メッセージを公開するので、サーバーのMQTT経路も試せます。
+* **ほかのノード、複数同時、ブローカー:** `--nodes` は最大8つのレーダーノードを模擬し（`--scenario relay` では歩行者がノードからノードへ移ります）、`--info`、`--alarm-node`、`--network-node` はノードの情報、警報パネル、ネットワーク監視を加え、警報シナリオでは人を折れ線に沿って一定の速度で動かせ（`walk`）、`--mqtt-url` はこのマシンまたはプライベートネットワーク上のブローカーにも全メッセージを公開するので、サーバーのMQTT経路も試せます。
 * **実サーバーに対するシナリオ:** `--drive-server` は、警戒モードが有効な ARMOR-SERVER に対してアラームシナリオを再生し、`mode` イベントをリアルタイムでサーバーへの命令に変え、サーバーが発した警報を検証します。`server_modes` で在宅・夜間が守る対象を指定でき、`--apply-modes` でサーバーに定義します。パスワードは環境変数またはファイルからのみ取得します。
 
 ## 🧩 A.R.M.O.R. での役割
@@ -187,32 +189,35 @@ python -I tools/armor_ci_validate.py
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                                 オプションと実行
-│   ├── scenarios.py cycle.py                  4 つのシナリオ、270 度の配置、1 日の光
-│   ├── alarm_scenarios.py                     JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
-│   ├── solar.py                               インバーターと 2 モジュールのバッテリー
-│   ├── electrical.py                          電気ノードの 3 チャンネル
-│   ├── meter_bus.py                           エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
-│   ├── energy.py                              現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター
-│   ├── faults.py                              再現可能な 7 つの障害
-│   └── publisher.py                           再試行つきのサーバーへの配信
-├── tests/                                     テスト
-├── docs/                                      このリポジトリのガイド
-├── tools/                                     共通の CI チェックとプロジェクトツール
-├── .github/                                   CI ワークフローと Issue・Pull Request のテンプレート
-├── examples/                                  出発点となるアラームシナリオとエネルギーモデルの設定
-├── images/                                    バナー、アイコン、この README の 2 つの図
-├── Dockerfile .dockerignore docker/bench.sh   仮想ベンチのイメージ
-├── build.sh build.bat                         共通のプロジェクトワークフローでビルド
-├── test.sh test.bat                           共通のワークフローでテストを実行
-├── run.sh run.bat                             共通のプロジェクトワークフローで起動
-├── armor.project.json                         マニフェスト：バージョン、役割、成熟度、ビルドコマンド
-├── CHANGELOG.md                               各バージョンの変更点
-├── SECURITY.md SUPPORT.md LICENSE             セキュリティポリシー、サポート、ライセンス
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md         貢献方法と行動規範
-├── build-test.sh build-test.bat               共通のワークフローでテストを実行
-├── pyproject.toml                             パッケージのメタデータ
-└── .gitattributes .gitignore                  Git の設定
+│   ├── cli.py                           オプションと実行
+│   ├── scenarios.py cycle.py            5つのシナリオ、270度の形状、光の一日
+│   ├── alarm_scenarios.py               JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
+│   ├── solar.py                         インバーターと 2 モジュールのバッテリー
+│   ├── electrical.py                    電気ノードの 3 チャンネル
+│   ├── meter_bus.py                     エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
+│   ├── nodes.py                         ノードの情報、警報パネル、ネットワーク監視
+│   ├── mqtt_out.py                      メッセージをMQTTブローカーへ公開
+│   ├── energy.py                        現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター
+│   ├── faults.py                        再現可能な 7 つの障害
+│   └── publisher.py                     再試行つきのサーバーへの配信
+├── tests/                               テスト
+├── docs/                                このリポジトリのガイド
+├── tools/                               共通の CI チェックとプロジェクトツール
+├── .github/                             CI ワークフローと Issue・Pull Request のテンプレート
+├── examples/                            出発点となるアラームシナリオとエネルギーモデルの設定
+├── images/                              バナー、アイコン、この README の 2 つの図
+├── Dockerfile .dockerignore             仮想ベンチのイメージ
+├── docker/                              bench.sh、仮想ベンチの入口
+├── build.sh build.bat                   共通のプロジェクトワークフローでビルド
+├── test.sh test.bat                     共通のワークフローでテストを実行
+├── run.sh run.bat                       共通のプロジェクトワークフローで起動
+├── armor.project.json                   マニフェスト：バージョン、役割、成熟度、ビルドコマンド
+├── CHANGELOG.md                         各バージョンの変更点
+├── SECURITY.md SUPPORT.md LICENSE       セキュリティポリシー、サポート、ライセンス
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md   貢献方法と行動規範
+├── build-test.sh build-test.bat         共通のワークフローでテストを実行
+├── pyproject.toml                       パッケージのメタデータ
+└── .gitattributes .gitignore            Git の設定
 ```
 
 </details>

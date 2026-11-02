@@ -199,7 +199,7 @@ class ValidationTests(unittest.TestCase):
         def never(topic, payload):
             raise AssertionError("the solar validator was not expected")
 
-        with mock.patch.object(cli, "_common_validators", return_value=(validate, never, never)):
+        with mock.patch.object(cli, "_common_validators", return_value=(validate, never, never, never, never)):
             code, out, err = run("--count", "3", "--health-every", "1", "--validate")
         self.assertEqual(code, 1)
         self.assertIn("message 2", err)
@@ -207,14 +207,16 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(len(out.splitlines()), 1)                                        # nothing after the first bad message is emitted
 
     def test_each_kind_of_message_goes_to_its_own_validator(self):
-        seen = {"node": [], "solar": [], "electrical": []}
-        validators = (lambda t, p: seen["node"].append(t), lambda t, p: seen["solar"].append(t), lambda t, p: seen["electrical"].append(t))
+        seen = {"node": [], "solar": [], "electrical": [], "alarm": [], "network": []}
+        validators = tuple((lambda t, p, kind=kind: seen[kind].append(t)) for kind in seen)
         with mock.patch.object(cli, "_common_validators", return_value=validators):
-            code, _out, _err = run("--count", "1", "--health-every", "1", "--solar", "--electrical", "--validate")
+            code, _out, _err = run("--count", "1", "--health-every", "1", "--solar", "--electrical", "--alarm-node", "alarm-1", "--network-node", "network-1", "--validate")
         self.assertEqual(code, 0)
         self.assertTrue(all(topic.startswith("armor/node/") for topic in seen["node"]) and seen["node"])
         self.assertTrue(all(topic.startswith("armor/solar/") for topic in seen["solar"]) and seen["solar"])
         self.assertTrue(all(topic.startswith("armor/electrical/") for topic in seen["electrical"]) and seen["electrical"])
+        self.assertEqual(seen["alarm"], ["armor/alarm/alarm-1/state"])
+        self.assertEqual(seen["network"], ["armor/network/network-1/state"])
 
 
 class InvalidFaultReportTests(unittest.TestCase):

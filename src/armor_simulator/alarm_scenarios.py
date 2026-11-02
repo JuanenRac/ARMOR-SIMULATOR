@@ -37,10 +37,12 @@ MAX_ZONES = 64
 MAX_NODES = 8
 MAX_PEOPLE = 5
 MAX_PATH = 16
+MAX_WALK_POINTS = 32
+WALK_SPEED_MM_S = (50, 3000)   # the same ceiling as the other scenarios: nothing moves farther than 3 m between two samples
 MODES = ("disarmed", "home", "away", "night")
 FAULT_KINDS = ("stuck", "noise", "drift", "dead")
 SEVERITIES = ("info", "warning", "high", "critical")
-EVENT_TYPES = ("mode", "intrusion", "pet", "wind", "sensor_fault", "node_comm_loss", "mains_outage")
+EVENT_TYPES = ("mode", "intrusion", "walk", "pet", "wind", "sensor_fault", "node_comm_loss", "mains_outage")
 # The alarm codes a scenario may expect (all are codes of ARMOR-COMMON's alarm table; a test checks it when that checkout is next to this one).
 ALARM_CODES = (
     "intrusion", "node_down", "camera_down", "camera_motion", "motion", "door_open", "window_open", "glass_break", "vibration", "tamper", "triggered", "device_offline", "low_battery",
@@ -306,6 +308,25 @@ def _zone_ref(value: Any, where: str, zones: dict[str, Zone]) -> str:
     return zone
 
 
+MAX_RANGE_MM = 6000.0
+
+
+def _walk_seconds(points: list[tuple[float, float]], speed: float) -> int:
+    """Whole seconds a walk along the polyline takes at `speed` (the last second is the one at which the walker stands on the last point)."""
+    return math.ceil(sum(math.dist(a, b) for a, b in zip(points, points[1:], strict=False)) / speed) + 1
+
+
+def walk_position(points: list[tuple[float, float]], speed: float, elapsed: float) -> tuple[float, float]:
+    """Where a walker is `elapsed` seconds after setting out along the polyline at `speed` mm/s: on the point where the path ends once it is over."""
+    left = speed * elapsed
+    for a, b in zip(points, points[1:], strict=False):
+        leg = math.dist(a, b)
+        if left <= leg:
+            return (a[0] + (b[0] - a[0]) * left / leg, a[1] + (b[1] - a[1]) * left / leg) if leg else a
+        left -= leg
+    return points[-1]
+
+
 def _parse_events(raw: Any, duration: int, nodes: tuple[str, ...], zones: dict[str, Zone]) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     for i, item in enumerate(_list(raw, "events", MAX_EVENTS)):
@@ -328,6 +349,25 @@ def _parse_events(raw: Any, duration: int, nodes: tuple[str, ...], zones: dict[s
             if at + sum(step["dwell_s"] for step in path) > duration:
                 raise ScenarioError(f"{where} ends after the scenario does")
             parsed = {"type": kind, "at_s": at, "path": path, "people": _int(event.get("people", 1), f"{where}.people", 1, MAX_PEOPLE)}
+        elif kind == "walk":
+            event = _object(item, where, ("type", "at_s", "node", "points", "speed_mm_s"), ("people",))
+            node = _id(event["node"], f"{where}.node")
+            if node not in nodes:
+                raise ScenarioError(f"{where}.node {node!r} is not in nodes")
+            points = []
+            for j, point in enumerate(_list(event["points"], f"{where}.points", MAX_WALK_POINTS)):
+                entry = _object(point, f"{where}.points[{j}]", ("x_mm", "y_mm"))
+                points.append((_number(entry["x_mm"], f"{where}.points[{j}].x_mm", -MAX_RANGE_MM, MAX_RANGE_MM), _number(entry["y_mm"], f"{where}.points[{j}].y_mm", -MAX_RANGE_MM, MAX_RANGE_MM)))
+            if len(points) < 2:
+                raise ScenarioError(f"{where}.points must have at least two points")
+            speed = _number(event["speed_mm_s"], f"{where}.speed_mm_s", *WALK_SPEED_MM_S)
+            at = _int(event["at_s"], f"{where}.at_s", 0, duration)
+            length = _walk_seconds(points, speed)
+            if length < 2:
+                raise ScenarioError(f"{where} does not move: its points are all the same")
+            if at + length > duration:
+                raise ScenarioError(f"{where} ends after the scenario does")
+            parsed = {"type": kind, "at_s": at, "node": node, "points": points, "speed_mm_s": speed, "duration_s": length, "people": _int(event.get("people", 1), f"{where}.people", 1, MAX_PEOPLE)}
         elif kind in ("pet", "wind", "sensor_fault"):
             extra = {"pet": (), "wind": ("intensity",), "sensor_fault": ("magnitude",)}[kind]
             required = ("type", "at_s", "zone", "duration_s") + (("fault",) if kind == "sensor_fault" else ())
@@ -429,7 +469,7 @@ def _active(scenario: Scenario, kind: str, second: int) -> list[dict[str, Any]]:
 
 
 def _length(event: dict[str, Any]) -> int:
-    return sum(step["dwell_s"] for step in event["path"]) if event["type"] == "intrusion" else event["duration_s"]
+    return sum(step["dwell_s"] for step in event["path"]) if event["type"] == "intrusion" else event["duration_s"]   # a walk holds its duration_s too
 
 
 def _targets(scenario: Scenario, node: str, second: int, rng: random.Random) -> list[dict[str, int]]:
@@ -457,6 +497,15 @@ def _targets(scenario: Scenario, node: str, second: int, rng: random.Random) -> 
         if zone and where_node(zone):
             for person in range(event["people"]):
                 add(zone, 120, (-1200, -300), person * 400.0)
+    for event in _active(scenario, "walk", second):
+        if event["node"] != node:
+            continue
+        for person in range(event["people"]):
+            elapsed = second - event["at_s"]
+            x0, y0 = walk_position(event["points"], event["speed_mm_s"], elapsed)
+            x1, y1 = walk_position(event["points"], event["speed_mm_s"], elapsed + 1)
+            x0, x1 = x0 + person * 400.0, x1 + person * 400.0
+            points.append((x0, y0, math.hypot(x1, y1) - math.hypot(x0, y0)))   # the radial speed seen by the sensor, negative when it comes closer
     for event in _active(scenario, "pet", second):
         if where_node(event["zone"]):
             add(event["zone"], 500, (-800, 800))

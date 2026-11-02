@@ -77,7 +77,20 @@ def empty(_sample: int, _rng: random.Random) -> list[tuple[float, float, float]]
     return []
 
 
-SCENARIOS: dict[str, Scenario] = {"patrol": patrol, "crossing": crossing, "two-intruders": two_intruders, "empty": empty}
+def relay(sample: int, rng: random.Random) -> list[tuple[float, float, float]]:
+    """The walker of `crossing`; with several nodes (`--nodes`) it is seen by one node at a time and then handed to the next (see `scenario_for_node`)."""
+    return crossing(sample, rng)
+
+
+SCENARIOS: dict[str, Scenario] = {"patrol": patrol, "crossing": crossing, "two-intruders": two_intruders, "empty": empty, "relay": relay}
+RELAY_PERIOD = 12   # samples one node sees the walker of `relay` for
+
+
+def scenario_for_node(scenario: str, node_index: int, node_count: int, sample: int) -> str:
+    """The scenario a node plays at this sample: the same one for everybody, except `relay`, where the walker is in front of one node at a time and the others see nothing."""
+    if scenario != "relay" or node_count < 2:
+        return scenario
+    return "crossing" if (sample // RELAY_PERIOD) % node_count == node_index else "empty"
 
 
 def lux_for(sample: int, mode: str) -> float:

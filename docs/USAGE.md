@@ -16,13 +16,18 @@ built in, so a test can never reach a production broker by accident.
 |---|---|
 | `--node-id` | Node identifier (lowercase letters, digits, `-`, `_`; up to 64) |
 | `--count` | Samples to generate, 1 to 10 000; one sample is one second of simulated time |
-| `--scenario` | `patrol`, `crossing`, `two-intruders` or `empty` |
+| `--scenario` | `patrol`, `crossing`, `two-intruders`, `empty` or `relay` (the walker of `crossing` handed from node to node with `--nodes`) |
 | `--light` | `cycle` (the 240-sample day shared with the solar and electrical sources: from 0.3 lux at night to about 50 000 at noon) or `night` (fixed 0.3 lux, for the low-light vision profile) |
 | `--start-ms` | Date of the first sample: `0` (default: identical runs, but the server replaces such old dates by its own clock), a number of milliseconds, or `now` (dates the server takes as they are, so an out-of-order message really is late) |
 | `--seed` | Same seed, same output |
 | `--health-every` | One health message every N samples (0 disables) |
 | `--solar` | Also emit an inverter and a two-module battery stack (fifteen cells each, with capacities) over a fast day of 240 samples, with a mains outage late in the day |
 | `--electrical` | Also emit the three channels of an electrical node (the grid input, a water heater and a DC bus) over the same fast day, with the mains outage, a spell of high voltage and a meter alarm |
+| `--nodes` | Simulate 1 to 8 radar nodes at once (`--nodes north-1,south-1`, instead of `--node-id`); each has its own jitter, and the first also carries `--solar` and `--electrical`. With `--scenario relay` one walker is seen by one node at a time (12 samples each) and then by the next, to try the fusion of the server and the nodes that cover a zone |
+| `--info` | Also emit what each radar node says about itself (`armor/node/<id>/info`: a name, a firmware, an address of a private network and the port of its panel), at the start and every 30 samples. The server takes it from the broker only |
+| `--alarm-node ID` | Also emit the state of a simulated alarm panel (`armor/alarm/<id>/state`, every sample): disarmed, a delay to leave, armed, a person at the door, the siren and disarmed again, over 120 samples. It walks a fixed timeline and does not answer orders (for that see `--verify-panel-sync`) |
+| `--network-node ID` | Also emit the state of a simulated network watcher (`armor/network/<id>/state`, every 5 samples): a router, a laptop that is on and off, a printer that joins half way through, and the internet |
+| `--mqtt-url`, `--mqtt-user`, `--mqtt-password-file`, `--mqtt-allow-network` | Also publish every message on an MQTT broker with its topic, the way the nodes do (QoS 1); it needs `pip install paho-mqtt`. The broker must be this machine or a private network address unless you add `--mqtt-allow-network`; the password comes from `ARMOR_MQTT_PASSWORD` or a file, never from the command line. With `--verify-panel-sync` the same option names the broker of the server instead |
 | `--fault`, `--fault-every` | Inject a repeatable fault (below) |
 | `--record` | Also write every emitted message to a JSON-lines file, to play it again later; an existing file is never overwritten, so a recording is not lost by mistake |
 | `--replay` | Emit the messages of a recording made with `--record` instead of generating them. It cannot be combined with `--alarm-scenario`, `--energy`, `--solar`, `--electrical`, `--count`, `--scenario`, `--light` or `--node-id`; `--fault`, `--validate` and `--server-url` still apply. A bad recording is refused whole |
@@ -50,6 +55,9 @@ when the object comes closer, positive when it goes away.
 * `crossing`: a person crossing left to right at about 1.2 m/s, handed from sensor 1 to sensor 3.
 * `two-intruders`: two people approaching; two tracks raise a **high** alert while the system is armed.
 * `empty`: a quiet perimeter.
+* `relay`: the walker of `crossing`; with `--nodes` a different node sees it every 12 samples (the others see nothing).
+
+The tracks follow the real node's format: whole numbers, one id per slot while the object is in the scene, a radial speed with a sign. The tests compare the fields and types of every message (telemetry, health, info, alarm, network) with the conformance vectors of ARMOR-COMMON, the same ones the firmware serialisers are held to, and the contract validators accept them. A walk with a speed along a polyline is written in an alarm scenario file (the `walk` event, see [ALARM_SCENARIOS.md](ALARM_SCENARIOS.md)).
 
 ## Faults
 
@@ -76,6 +84,8 @@ expected and is reported without stopping the run, and at the end the simulator 
 ```powershell
 python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:8080 --ingest-token <ingest token>
 ```
+
+The alarm and network messages go to `/api/v1/alarm/state` and `/api/v1/network/state`; the `info` of a node has no HTTP route (use `--mqtt-url`) and the run says how many messages were left out.
 
 Only a plain `http(s)://host[:port]` origin is accepted. A 4xx answer stops the
 run at once (the message or the token is wrong); a network error or a 5xx is

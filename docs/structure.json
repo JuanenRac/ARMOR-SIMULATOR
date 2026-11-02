@@ -35,14 +35,14 @@
           "name": "scenarios.py cycle.py",
           "tree_name": "scenarios.py cycle.py",
           "desc": {
-            "en": "the four scenarios, the 270 degree geometry and the day of light",
-            "es": "los cuatro escenarios, la geometría de 270 grados y el día de luz",
-            "de": "die vier Szenarien, die 270-Grad-Geometrie und der Lichttag",
-            "fr": "les quatre scénarios, la géométrie de 270 degrés et le jour de lumière",
-            "it": "i quattro scenari, la geometria a 270 gradi e il giorno di luce",
-            "ja": "4 つのシナリオ、270 度の配置、1 日の光",
-            "zh": "四种场景、270 度几何和一天的光照",
-            "pt": "os quatro cenários, a geometria de 270 graus e o dia de luz"
+            "en": "the five scenarios, the 270 degree geometry and the day of light",
+            "es": "los cinco escenarios, la geometría de 270 grados y el día de luz",
+            "de": "die fünf Szenarien, die 270-Grad-Geometrie und der Lichttag",
+            "fr": "les cinq scénarios, la géométrie de 270 degrés et le jour de lumière",
+            "it": "i cinque scenari, la geometria a 270 gradi e il giorno di luce",
+            "ja": "5つのシナリオ、270度の形状、光の一日",
+            "zh": "五个场景、270 度几何和一天的光照",
+            "pt": "os cinco cenários, a geometria de 270 graus e o dia de luz"
           }
         },
         {
@@ -95,6 +95,32 @@
             "ja": "エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)",
             "zh": "通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)",
             "pt": "a linha série dos contadores de energia por TCP (PZEM-004T, PZEM-017)"
+          }
+        },
+        {
+          "name": "nodes.py",
+          "desc": {
+            "en": "the information of a node, an alarm panel and a network watcher",
+            "es": "la información de un nodo, una central de alarma y un vigilante de red",
+            "de": "die Angaben eines Knotens, eine Alarmzentrale und ein Netzwächter",
+            "fr": "les informations d'un nœud, une centrale d'alarme et un surveillant de réseau",
+            "it": "le informazioni di un nodo, una centrale di allarme e un sorvegliante di rete",
+            "ja": "ノードの情報、警報パネル、ネットワーク監視",
+            "zh": "节点信息、报警面板和网络监视器",
+            "pt": "a informação de um nó, uma central de alarme e um vigilante de rede"
+          }
+        },
+        {
+          "name": "mqtt_out.py",
+          "desc": {
+            "en": "publishing the messages on an MQTT broker",
+            "es": "publicar los mensajes en un broker MQTT",
+            "de": "die Nachrichten auf einem MQTT-Broker veröffentlichen",
+            "fr": "publier les messages sur un broker MQTT",
+            "it": "pubblicare i messaggi su un broker MQTT",
+            "ja": "メッセージをMQTTブローカーへ公開",
+            "zh": "把消息发布到 MQTT 代理",
+            "pt": "publicar as mensagens num broker MQTT"
           }
         },
         {
@@ -215,6 +241,19 @@
             "ja": "28 件",
             "zh": "28 个",
             "pt": "28 testes"
+          }
+        },
+        {
+          "name": "test_other_nodes.py",
+          "desc": {
+            "en": "19 tests",
+            "es": "19 pruebas",
+            "de": "19 Tests",
+            "fr": "19 tests",
+            "it": "19 test",
+            "ja": "19 件",
+            "zh": "19 个",
+            "pt": "19 testes"
           }
         },
         {
@@ -393,8 +432,8 @@
       "columns": 2,
       "rows": [
         {
-          "name": "Dockerfile  .dockerignore  docker/bench.sh",
-          "tree_name": "Dockerfile .dockerignore docker/bench.sh",
+          "name": "Dockerfile  .dockerignore",
+          "tree_name": "Dockerfile .dockerignore",
           "desc": {
             "en": "virtual bench image",
             "es": "imagen del banco virtual",
@@ -404,6 +443,19 @@
             "ja": "仮想ベンチのイメージ",
             "zh": "虚拟测试台镜像",
             "pt": "imagem do banco virtual"
+          }
+        },
+        {
+          "name": "docker/",
+          "desc": {
+            "en": "bench.sh, the entry of the virtual bench",
+            "es": "bench.sh, la entrada del banco virtual",
+            "de": "bench.sh, der Einstieg der virtuellen Werkbank",
+            "fr": "bench.sh, l'entrée du banc virtuel",
+            "it": "bench.sh, l'ingresso del banco virtuale",
+            "ja": "bench.sh、仮想ベンチの入口",
+            "zh": "bench.sh,虚拟测试台的入口",
+            "pt": "bench.sh, a entrada do banco virtual"
           }
         },
         {

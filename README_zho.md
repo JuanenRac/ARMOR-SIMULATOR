@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-234%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 210 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 234 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 成熟 |
 | 角色 | 离线遥测与环境模拟器（家族：Testing，上级：ARMOR-COMMON） |
 | 技术栈 | Python 3.11+，仅标准库 |
-| 测试 | 210 (`python -m unittest discover -s tests`) |
+| 测试 | 234 (`python -m unittest discover -s tests`) |
 | 场景与故障 | 4 个场景、7 种故障（其中 3 种故意违反合约） |
 | 运行位置 | 任何计算机或 CI |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
@@ -57,7 +57,7 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 场景、故障和向服务器的投递都能工作；没有接入节点时，它为电脑上的服务器提供数据。 |
-| 测试 | 🟢 | 210 项测试通过（`python -m unittest discover -s tests`）。 |
+| 测试 | 🟢 | 234 项测试通过（`python -m unittest discover -s tests`）。 |
 | 协议与数据 | 🟠 | 几何模型仅作示意，并不是真实 LD2450 雷达的模型，也没有与真实硬件对比过。 |
 | 集成 | 🟢 | 测试中它会把消息投递到服务器，CM5 测试台的服务器也可以由它提供数据。 |
 | 文档 | 🟢 | 八种语言和更新日志均为最新。 |
@@ -74,6 +74,8 @@
 * **用文件描述的报警场景：** `--alarm-scenario` 播放一个带时间线的 JSON 文件（人依次穿过多个区域、宠物、风、卡死/噪声/漂移/失效的传感器、失去链路的节点、市电中断、模式与日历），还可以写明系统应当如何响应；`--verify-alarms` 把服务器实际发出的报警与之比较，因此这些文件就是 ARMOR-SERVER 的测试用例。读取很严格：遇到第一处无法理解的内容就拒绝整个文件。
 * **真实的能源数据：** `--energy` 根据实时模型（带云的日照、按小时变化的住宅用电、电价、带循环的 Pylontech 式电池、有噪声和缺失的电表）输出逆变器、电池组和电气节点的消息；对同一种子结果确定，并可通过 JSON 文件调整。不使用新选项时，输出与之前完全一致。
 * **通过 TCP 的能量电表:** `--meter-bus-port` 模拟 PZEM-004T 与 PZEM-017 的串行线路（Modbus-RTU,只读,CRC 错误不应答,写入被拒绝）,读数与 `--electrical` 相同,电表、阈值和故障由 JSON 文件设定,无需电表即可测试读取电表的代码。
+* **其他节点、多节点同时运行与代理:** `--nodes` 最多模拟八个雷达节点(用 `--scenario relay` 时一名行人会从一个节点走到下一个),`--info`、`--alarm-node` 和 `--network-node` 分别加入节点信息、报警面板和网络监视器,报警场景可让人以设定速度沿折线移动(`walk`),`--mqtt-url` 还会把每条消息发布到本机或私有网络的代理上,因此服务器的 MQTT 路径也能得到测试。
+* **其他节点、多节点同时运行与代理:** `--nodes` 最多模拟八个雷达节点(用 `--scenario relay` 时一名行人会从一个节点走到下一个),`--info`、`--alarm-node` 和 `--network-node` 分别加入节点信息、报警面板和网络监视器,报警场景可让人以设定速度沿折线移动(`walk`),`--mqtt-url` 还会把每条消息发布到本机或私有网络的代理上,因此服务器的 MQTT 路径也能得到测试。
 * **针对真实服务器的场景：** `--drive-server` 针对已启用布防模式的 ARMOR-SERVER 播放报警场景，把其中的 `mode` 事件实时转成对服务器的命令，并检查服务器发出的报警；`server_modes` 指定在家和夜间保护的对象，`--apply-modes` 把它定义到服务器中。密码只来自环境变量或文件。
 
 ## 🧩 在 A.R.M.O.R. 中的角色
@@ -187,32 +189,35 @@ python -I tools/armor_ci_validate.py
 ```text
 ARMOR-SIMULATOR/
 ├── src/armor_simulator/
-│   ├── cli.py                                 选项与运行
-│   ├── scenarios.py cycle.py                  四种场景、270 度几何和一天的光照
-│   ├── alarm_scenarios.py                     来自 JSON 文件的报警场景、其消息以及对响应的检查
-│   ├── solar.py                               逆变器和两模块电池组
-│   ├── electrical.py                          电气节点的三个通道
-│   ├── meter_bus.py                           通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
-│   ├── energy.py                              真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
-│   ├── faults.py                              七种可重复的故障
-│   └── publisher.py                           带重试的服务器投递
-├── tests/                                     测试
-├── docs/                                      本仓库的指南
-├── tools/                                     共享的 CI 检查和项目工具
-├── .github/                                   CI 工作流以及 Issue 和 Pull Request 模板
-├── examples/                                  可供起步的报警场景与能源模型设置
-├── images/                                    横幅、图标和本 README 的两幅图
-├── Dockerfile .dockerignore docker/bench.sh   虚拟测试台镜像
-├── build.sh build.bat                         通过共享的项目工作流构建
-├── test.sh test.bat                           通过共享工作流运行测试
-├── run.sh run.bat                             通过共享的项目工作流启动
-├── armor.project.json                         清单：版本、角色、成熟度、构建命令
-├── CHANGELOG.md                               每个版本的变化
-├── SECURITY.md SUPPORT.md LICENSE             安全策略、支持和许可证
-├── CONTRIBUTING.md CODE_OF_CONDUCT.md         如何贡献与行为准则
-├── build-test.sh build-test.bat               通过共享工作流运行测试
-├── pyproject.toml                             包元数据
-└── .gitattributes .gitignore                  Git 设置
+│   ├── cli.py                           选项与运行
+│   ├── scenarios.py cycle.py            五个场景、270 度几何和一天的光照
+│   ├── alarm_scenarios.py               来自 JSON 文件的报警场景、其消息以及对响应的检查
+│   ├── solar.py                         逆变器和两模块电池组
+│   ├── electrical.py                    电气节点的三个通道
+│   ├── meter_bus.py                     通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
+│   ├── nodes.py                         节点信息、报警面板和网络监视器
+│   ├── mqtt_out.py                      把消息发布到 MQTT 代理
+│   ├── energy.py                        真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
+│   ├── faults.py                        七种可重复的故障
+│   └── publisher.py                     带重试的服务器投递
+├── tests/                               测试
+├── docs/                                本仓库的指南
+├── tools/                               共享的 CI 检查和项目工具
+├── .github/                             CI 工作流以及 Issue 和 Pull Request 模板
+├── examples/                            可供起步的报警场景与能源模型设置
+├── images/                              横幅、图标和本 README 的两幅图
+├── Dockerfile .dockerignore             虚拟测试台镜像
+├── docker/                              bench.sh,虚拟测试台的入口
+├── build.sh build.bat                   通过共享的项目工作流构建
+├── test.sh test.bat                     通过共享工作流运行测试
+├── run.sh run.bat                       通过共享的项目工作流启动
+├── armor.project.json                   清单：版本、角色、成熟度、构建命令
+├── CHANGELOG.md                         每个版本的变化
+├── SECURITY.md SUPPORT.md LICENSE       安全策略、支持和许可证
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md   如何贡献与行为准则
+├── build-test.sh build-test.bat         通过共享工作流运行测试
+├── pyproject.toml                       包元数据
+└── .gitattributes .gitignore            Git 设置
 ```
 
 </details>

@@ -20,11 +20,13 @@ from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
 from .http_faults import HTTP_FAULTS, MAX_LATENCY_MS, plan as delivery_plan
 from .panel_sim import BEHAVIORS, PanelLink, PanelLinkError, SimulatedPanel, verify_panel_map, verify_panel_sync
-from .publisher import DeliveryError, check_server_url, post
+from .publisher import DeliveryError, check_server_url, kind_of, post
 from .recording import RecordingError, load_recording, open_for_recording, tee
-from .scenarios import SCENARIOS, health, telemetry
+from .scenarios import SCENARIOS, health, scenario_for_node, telemetry
 from .server_driver import DriverError, Session, drive
 from .electrical import electrical_messages
+from .mqtt_out import MqttOutError, MqttSink
+from .nodes import alarm_state, info as node_info, network_state
 from .meter_bus import LOOPBACK, MeterBus, MeterBusError, load_config as load_meter_bus, real_time_sample, serve as serve_meter_bus, stop as stop_meter_bus
 from .solar import solar_messages
 
@@ -32,16 +34,33 @@ NODE_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 MAX_COUNT = 10_000
 
 
-def messages(node_id: str, count: int, scenario: str, light: str, seed: int, health_every: int, solar: bool = False, electrical: bool = False) -> Iterator[Message]:
-    """The clean message stream: telemetry every second, a health beat every `health_every` samples and, when asked, the solar readings and the electrical node's."""
+INFO_EVERY = 30      # samples between the "info" messages of a node (and one at the start)
+NETWORK_EVERY = 5    # samples between the messages of a simulated network watcher
+
+
+def messages(node_id: str, count: int, scenario: str, light: str, seed: int, health_every: int, solar: bool = False, electrical: bool = False, *,
+              nodes: tuple[str, ...] = (), info: bool = False, alarm_node: str | None = None, network_node: str | None = None) -> Iterator[Message]:
+    """The clean message stream: telemetry every second, a health beat every `health_every` samples and, when asked, the solar readings and the electrical node's.
+
+    `nodes` simulates several radar nodes at once (the first one also carries the solar and electrical readings); with the scenario `relay` one walker goes from node to node.
+    `info` adds what each radar node says about itself, `alarm_node` and `network_node` a simulated alarm panel and a network watcher.
+    """
+    radars = nodes or (node_id,)
     for sample in range(count):
-        yield f"armor/node/{node_id}/telemetry", telemetry(node_id, sample, scenario, light, seed)
-        if health_every and sample % health_every == 0:
-            yield f"armor/node/{node_id}/health", health(node_id, sample)
+        for index, radar in enumerate(radars):
+            yield f"armor/node/{radar}/telemetry", telemetry(radar, sample, scenario_for_node(scenario, index, len(radars), sample), light, seed)
+            if health_every and sample % health_every == 0:
+                yield f"armor/node/{radar}/health", health(radar, sample)
+            if info and sample % INFO_EVERY == 0:
+                yield f"armor/node/{radar}/info", node_info(radar, sample)
         if solar:
-            yield from solar_messages(node_id, sample, seed)
+            yield from solar_messages(radars[0], sample, seed)
         if electrical:
-            yield from electrical_messages(node_id, sample, seed)
+            yield from electrical_messages(radars[0], sample, seed)
+        if alarm_node:
+            yield f"armor/alarm/{alarm_node}/state", alarm_state(alarm_node, sample)
+        if network_node and sample % NETWORK_EVERY == 0:
+            yield f"armor/network/{network_node}/state", network_state(network_node, sample)
 
 
 def _stamp(stream: Iterator[Message], start_ms: int) -> Iterator[Message]:
@@ -57,7 +76,7 @@ def _common_validators():
     """The ARMOR-COMMON validators (node, solar and electrical messages), found next to this repository when it is not installed."""
     try:
         from armor_common import validate_topic_and_payload
-        from armor_common.contracts import validate_electrical_message, validate_solar_message
+        from armor_common.contracts import validate_alarm_message, validate_electrical_message, validate_network_message, validate_solar_message
     except ImportError:
         sibling = Path(__file__).resolve().parents[3] / "ARMOR-COMMON" / "src"
         if not sibling.is_dir():
@@ -65,10 +84,10 @@ def _common_validators():
         sys.path.insert(0, str(sibling))
         try:
             from armor_common import validate_topic_and_payload
-            from armor_common.contracts import validate_electrical_message, validate_solar_message
+            from armor_common.contracts import validate_alarm_message, validate_electrical_message, validate_network_message, validate_solar_message
         except ImportError as error:
             raise SystemExit(f"--validate: the ARMOR-COMMON found does not have the validators this simulator needs ({error})") from None
-    return validate_topic_and_payload, validate_solar_message, validate_electrical_message
+    return validate_topic_and_payload, validate_solar_message, validate_electrical_message, validate_alarm_message, validate_network_message
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,9 +122,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--settle-s", type=float, default=3.0, help="with --drive-server, seconds to wait after the scenario before reading the alarms (default 3)")
     parser.add_argument("--verify-panel-sync", action="store_true", help="check a real ARMOR-SERVER with alarm.mode_panel_sync on: a simulated alarm panel on the broker of the server answers (accept, refuse, silent) while every mode is chosen, and the report of the server is compared with what must be true; needs --server-url, --studio-user and --mqtt-url")
     parser.add_argument("--verify-panel-map", action="store_true", help="with --verify-panel-sync, also check the choices of the owner about how the modes reach the panels (the profile of a mode and the list of panels); it changes the document of the modes and puts it back (needs an administrator)")
-    parser.add_argument("--mqtt-url", help="with --verify-panel-sync, the broker the server uses (mqtt://host[:port]); the simulated panel connects to it")
+    parser.add_argument("--mqtt-url", help="a broker (mqtt://host[:port]): the messages are also published there with their topics (this machine or a private network; others need --mqtt-allow-network); with --verify-panel-sync, the broker the server uses (mqtt://host[:port]); the simulated panel connects to it")
     parser.add_argument("--mqtt-user", help="with --verify-panel-sync, the user of the broker (the password in ARMOR_MQTT_PASSWORD or --mqtt-password-file)")
     parser.add_argument("--mqtt-password-file", type=Path, metavar="FILE", help="a file whose first line is the password of the broker (never on the command line)")
+    parser.add_argument("--mqtt-allow-network", action="store_true", help="allow --mqtt-url to name a broker that is neither this machine nor a private network address")
+    parser.add_argument("--nodes", help="simulate several radar nodes at once: ids separated by commas (the first one carries --solar and --electrical); with --scenario relay one walker passes from node to node")
+    parser.add_argument("--info", action="store_true", help="also emit what each radar node says about itself (armor/node/<id>/info; the server takes it from the broker only)")
+    parser.add_argument("--alarm-node", metavar="ID", help="also emit the state of a simulated alarm panel with this id (armor/alarm/<id>/state): disarmed, delay, armed, entry delay, siren")
+    parser.add_argument("--network-node", metavar="ID", help="also emit the state of a simulated network watcher with this id (armor/network/<id>/state)")
     parser.add_argument("--panel-id", default="sim-panel", help="with --verify-panel-sync, the node id of the simulated panel (default sim-panel)")
     parser.add_argument("--panel-behavior", choices=BEHAVIORS, action="append", help="with --verify-panel-sync, play only this behaviour of the panel (repeat for several; default all)")
     parser.add_argument("--save-observed", type=Path, metavar="FILE", help="with --drive-server, write the alarms the server raised as JSON, to repeat the check with --verify-alarms")
@@ -256,6 +280,20 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--node-id must be 1-64 characters: lowercase letters, digits, '-' or '_'")
     if not 1 <= args.count <= MAX_COUNT:
         parser.error(f"--count must be between 1 and {MAX_COUNT}")
+    radars: tuple[str, ...] = ()
+    if args.nodes:
+        radars = tuple(item.strip() for item in args.nodes.split(","))
+        if not 1 <= len(radars) <= 8 or len(set(radars)) != len(radars) or not all(NODE_ID.match(item) for item in radars):
+            parser.error("--nodes is 1 to 8 different ids separated by commas (each 1-64 characters: lowercase letters, digits, '-' or '_')")
+        if args.node_id != "simulator-1" or args.alarm_scenario or args.replay or args.energy:
+            parser.error("--nodes replaces --node-id and cannot be combined with --alarm-scenario (which brings its own nodes), --replay or --energy")
+    for option, value in (("--alarm-node", args.alarm_node), ("--network-node", args.network_node)):
+        if value is not None and not NODE_ID.match(value):
+            parser.error(f"{option} must be 1-64 characters: lowercase letters, digits, '-' or '_'")
+    if (args.info or args.alarm_node or args.network_node) and (args.alarm_scenario or args.replay or args.energy):
+        parser.error("--info, --alarm-node and --network-node cannot be combined with --alarm-scenario, --replay or --energy")
+    if args.mqtt_allow_network and not args.mqtt_url:
+        parser.error("--mqtt-allow-network needs --mqtt-url")
     if args.meter_bus_port is not None:
         if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync:
             parser.error("--meter-bus-port plays the meters and emits no messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault or --verify-panel-sync")
@@ -344,7 +382,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.fault in INVALID_FAULTS and args.validate:
         parser.error("--validate and an invalid fault contradict each other")
     server = check_server_url(args.server_url) if args.server_url else None
-    validate, validate_solar, validate_electrical = _common_validators() if args.validate else (None, None, None)
+    validators = _common_validators() if args.validate else None
+    sink = None
+    if args.mqtt_url:
+        try:
+            sink = MqttSink(args.mqtt_url, username=args.mqtt_user, password=_first_line(parser, args.mqtt_password_file, "ARMOR_MQTT_PASSWORD") or None, allow_network=args.mqtt_allow_network)
+            sink.open()
+        except MqttOutError as error:
+            print(f"armor-simulator: {error}", file=sys.stderr)
+            return 2
 
     if args.replay:
         try:
@@ -357,7 +403,8 @@ def main(argv: list[str] | None = None) -> int:
     elif energy_config:
         base = energy_messages(args.node_id, energy_config, args.seed, energy_steps, args.energy_step_s)
     else:
-        base = messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical)
+        base = messages(args.node_id, args.count, args.scenario, args.light, args.seed, args.health_every, args.solar, args.electrical,
+                        nodes=radars, info=args.info, alarm_node=args.alarm_node, network_node=args.network_node)
     stream = FAULTS[args.fault](_stamp(base, start_ms), args.fault_every, TOPIC_KINDS[args.fault_topic])
     recording = None
     if args.record:
@@ -365,27 +412,42 @@ def main(argv: list[str] | None = None) -> int:
             recording = open_for_recording(args.record)
         except RecordingError as error:
             print(f"armor-simulator: {error}", file=sys.stderr)
+            if sink:
+                sink.close()
             return 2
         stream = tee(stream, recording)
     try:
-        return _emit(args, stream, validate, validate_solar, validate_electrical, server, token)
+        return _emit(args, stream, validators, server, token, sink)
+    except MqttOutError as error:
+        print(f"armor-simulator: {error}", file=sys.stderr)
+        return 1
     finally:
         if recording:
             recording.close()
+        if sink:
+            sink.close()
 
 
-def _emit(args: argparse.Namespace, stream: Iterator[Message], validate, validate_solar, validate_electrical, server, token: str) -> int:
-    accepted_invalid = refused = dropped = duplicated = delayed = 0
+def _validator_for(topic: str, validators: tuple[Any, ...]) -> Any:
+    """The ARMOR-COMMON validator of the topic (node messages, solar, electrical, alarm, network)."""
+    node, solar, electrical, alarm, network = validators
+    return solar if topic.startswith("armor/solar/") else electrical if topic.startswith("armor/electrical/") else alarm if topic.startswith("armor/alarm/") else network if topic.startswith("armor/network/") else node
+
+
+def _emit(args: argparse.Namespace, stream: Iterator[Message], validators: tuple[Any, ...] | None, server, token: str, sink: MqttSink | None = None) -> int:
+    accepted_invalid = refused = dropped = duplicated = delayed = broker_only = 0
     for number, (topic, payload) in enumerate(stream, start=1):
-        if validate:
+        if validators:
             try:
-                (validate_solar if topic.startswith("armor/solar/") else validate_electrical if topic.startswith("armor/electrical/") else validate)(topic, payload)  # type: ignore[misc]
+                _validator_for(topic, validators)(topic, payload)
             except (ValueError, KeyError, TypeError) as error:
                 print(f"armor-simulator: message {number} on {topic} is not valid for ARMOR-COMMON: {error}", file=sys.stderr)
                 return 1
         delivery = delivery_plan(args.http_fault, number, args.http_fault_every, args.http_latency_ms)
         if server and delivery.sends == 0:
             dropped += 1
+        elif server and kind_of(topic) is None:
+            broker_only += 1   # the server takes this message from the broker only
         elif server:
             if delivery.delay_ms:
                 delayed += 1
@@ -393,7 +455,7 @@ def _emit(args: argparse.Namespace, stream: Iterator[Message], validate, validat
             duplicated += delivery.sends - 1
             try:
                 for _ in range(delivery.sends):
-                    post(server, token, "solar" if topic.startswith("armor/solar/") else "electrical" if topic.startswith("armor/electrical/") else topic.rsplit("/", 1)[1], payload, per_node=args.per_node_token)
+                    post(server, token, kind_of(topic) or "telemetry", payload, per_node=args.per_node_token)
                 if args.fault in INVALID_FAULTS and _is_invalid(args.fault, topic, payload):
                     accepted_invalid += 1
             except DeliveryError as error:
@@ -403,9 +465,15 @@ def _emit(args: argparse.Namespace, stream: Iterator[Message], validate, validat
                     return 1
                 refused += 1
                 print(f"armor-simulator: refused as expected ({error})", file=sys.stderr)
+        if sink:
+            sink.publish(topic, payload)
         print(json.dumps({"topic": topic, "payload": payload}, separators=(",", ":"), sort_keys=True), flush=True)
         if args.interval_ms:
             time.sleep(args.interval_ms / 1000)
+    if broker_only:
+        print(f"armor-simulator: {broker_only} message(s) were not delivered over HTTP because the server takes them from the broker only (use --mqtt-url)", file=sys.stderr)
+    if sink:
+        print(f"armor-simulator: {sink.published} message(s) published on the broker", file=sys.stderr)
     if args.http_fault != "none":
         print(f"armor-simulator: delivery fault {args.http_fault}: {dropped} message(s) not sent, {duplicated} sent twice, {delayed} delayed", file=sys.stderr)
     if server and args.fault in INVALID_FAULTS:
