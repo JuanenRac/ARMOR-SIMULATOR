@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-182%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、182 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、210 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 確立 |
 | 役割 | オフラインのテレメトリ・環境シミュレーター（ファミリー：Testing、親：ARMOR-COMMON） |
 | 技術 | Python 3.11+、標準ライブラリのみ |
-| テスト | 182 (`python -m unittest discover -s tests`) |
+| テスト | 210 (`python -m unittest discover -s tests`) |
 | シナリオと障害 | シナリオ 4、障害 7（うち 3 は意図的にコントラクト違反） |
 | 動作環境 | 任意のコンピューターまたは CI |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
@@ -57,7 +57,7 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | シナリオ、故障、サーバーへの配信は動作します。ノードを接続していないとき、コンピューター上のサーバーにデータを送るのがこれです。 |
-| テスト | 🟢 | 182 件のテストが通ります（`python -m unittest discover -s tests`）。 |
+| テスト | 🟢 | 210 件のテストが通ります（`python -m unittest discover -s tests`）。 |
 | プロトコルとデータ | 🟠 | 幾何は例示用で、実際の LD2450 レーダーのモデルではありません。実機との比較もしていません。 |
 | 連携 | 🟢 | テストではメッセージをサーバーに配信しており、CM5 テストベンチのサーバーにもこれでデータを送れます。 |
 | ドキュメント | 🟢 | 8 言語と変更履歴は最新です。 |
@@ -73,6 +73,7 @@
 * **太陽光設備：** `--solar` は、240 サンプルの早送りの 1 日の間に、インバーターと 2 モジュールのバッテリースタック（各 15 セル、容量付き）を加え、夕方に系統の停電を起こします。メッセージは ARMOR-COMMON の太陽光契約で検査され、`/api/v1/solar` に送られます。
 * **ファイルで記述するアラームシナリオ:** `--alarm-scenario` は、時系列（複数のゾーンを横切る人、ペット、風、固着・ノイズ・ドリフト・故障したセンサー、通信が途絶えるノード、停電、モードとカレンダー）を記した JSON ファイルを再生し、システムが返すべき応答も記述できます。`--verify-alarms` はサーバーが発したアラームをそれと比較するので、このファイルは ARMOR-SERVER のテストケースになります。読み込みは厳格で、理解できない箇所が最初に見つかった時点でファイル全体を拒否します。
 * **現実的なエネルギーデータ:** `--energy` は、リアルタイムのモデル（雲のある日射、1 時間ごとの住宅の消費、料金、サイクルを持つ Pylontech 型バッテリー、ノイズと欠測のあるメーター）からインバーター、バッテリースタック、電気ノードを出力します。シードで決定的で、JSON ファイルで調整できます。新しいオプションを使わなければ、出力は従来とまったく同じです。
+* **TCP 経由のエネルギーメーター:** `--meter-bus-port` は PZEM-004T と PZEM-017 のシリアル回線を再現します（Modbus-RTU、読み取り専用、CRC が誤っていると応答なし、書き込みは拒否）。測定値は `--electrical` と同じで、メーター・しきい値・故障は JSON ファイルで指定でき、メーターなしでメーターを読むコードを試せます。
 * **実サーバーに対するシナリオ:** `--drive-server` は、警戒モードが有効な ARMOR-SERVER に対してアラームシナリオを再生し、`mode` イベントをリアルタイムでサーバーへの命令に変え、サーバーが発した警報を検証します。`server_modes` で在宅・夜間が守る対象を指定でき、`--apply-modes` でサーバーに定義します。パスワードは環境変数またはファイルからのみ取得します。
 
 ## 🧩 A.R.M.O.R. での役割
@@ -191,6 +192,7 @@ ARMOR-SIMULATOR/
 │   ├── alarm_scenarios.py               JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
 │   ├── solar.py                         インバーターと 2 モジュールのバッテリー
 │   ├── electrical.py                    電気ノードの 3 チャンネル
+│   ├── meter_bus.py                     エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
 │   ├── energy.py                        現実的な太陽光・電力データ: 雲のある日射、住宅、料金、バッテリー、メーター
 │   ├── faults.py                        再現可能な 7 つの障害
 │   └── publisher.py                     再試行つきのサーバーへの配信
@@ -258,6 +260,7 @@ README とテキストは、英語、スペイン語、フランス語、イタ�
 * [使い方](docs/USAGE.md)：すべてのオプション、シナリオ、障害
 * [アラームシナリオ](docs/ALARM_SCENARIOS.md)：ファイル形式とサーバーの応答の検証方法
 * [エネルギーモデル](docs/ENERGY_MODEL.md)：現実的な太陽光・電力データとその設定
+* [メーターバス](docs/METER_BUS.md)：TCP 経由のエネルギーメーターと設定ファイル
 * [機能マトリクス：何が証明され、何が証明されていないか](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [プロジェクトカタログ：バージョンと、リポジトリ同士の依存関係](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [このリポジトリの変更履歴](CHANGELOG.md)

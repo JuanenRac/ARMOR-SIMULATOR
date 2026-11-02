@@ -85,6 +85,19 @@
           }
         },
         {
+          "name": "meter_bus.py",
+          "desc": {
+            "en": "the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)",
+            "es": "la línea serie de los contadores de energía por TCP (PZEM-004T, PZEM-017)",
+            "de": "die serielle Leitung der Energiezähler über TCP (PZEM-004T, PZEM-017)",
+            "fr": "la ligne série des compteurs d'énergie sur TCP (PZEM-004T, PZEM-017)",
+            "it": "la linea seriale dei contatori di energia su TCP (PZEM-004T, PZEM-017)",
+            "ja": "エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)",
+            "zh": "通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)",
+            "pt": "a linha série dos contadores de energia por TCP (PZEM-004T, PZEM-017)"
+          }
+        },
+        {
           "name": "energy.py",
           "desc": {
             "en": "realistic solar and electrical data: sun with clouds, house, tariff, battery, meter",
@@ -190,6 +203,19 @@
             "zh": "32 个",
             "pt": "32 testes"
           }
+        },
+        {
+          "name": "test_meter_bus.py",
+          "desc": {
+            "en": "28 tests",
+            "es": "28 pruebas",
+            "de": "28 Tests",
+            "fr": "28 tests",
+            "it": "28 test",
+            "ja": "28 件",
+            "zh": "28 个",
+            "pt": "28 testes"
+          }
         }
       ]
     },
@@ -244,6 +270,19 @@
             "ja": "エネルギーモデル",
             "zh": "能源模型",
             "pt": "o modelo de energia"
+          }
+        },
+        {
+          "name": "METER_BUS.md",
+          "desc": {
+            "en": "the meter bus and its settings file",
+            "es": "el bus de contadores y su fichero de ajustes",
+            "de": "der Zählerbus und seine Einstellungsdatei",
+            "fr": "le bus de compteurs et son fichier de réglages",
+            "it": "il bus dei contatori e il suo file di impostazioni",
+            "ja": "メーターバスと設定ファイル",
+            "zh": "电表总线及其设置文件",
+            "pt": "o bus de contadores e o seu ficheiro de definições"
           }
         }
       ]

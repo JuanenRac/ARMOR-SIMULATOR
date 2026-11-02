@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The serial line of the energy meters, over TCP:** `--meter-bus-port PORT` (with `--meter-bus-config`, `--meter-bus-host`, `--meter-bus-allow-network`, `--meter-bus-seconds`) answers Modbus-RTU requests like a PZEM-004T v3 (AC) and a PZEM-017 (DC) answer them, with the readings of `--electrical`, so the code that reads the meters can be tried without one. It is read only (the writes and the reset of the energy counter are refused and counted), a frame with a bad CRC gets no answer, and the meters, their thresholds and the faults (a silent meter, a garbled reply, an exception) live in a JSON file (`docs/METER_BUS.md`). It listens on the loopback unless told otherwise. Without the new options the output is the same, byte for byte. Tests: 210 (before 182).
+
 ## [0.3.3] - A run can be recorded and played again and the delivery to a server can be spoiled with latency, drops or duplicates
 
 - **A run can be recorded and played again:** `--record FILE` also writes every emitted message to a JSON-lines file (an existing file is never overwritten) and `--replay FILE` emits the messages of such a file instead of generating them; faults, `--validate` and delivery to a server still apply to a replay. A recording that has a bad line, a value that is not JSON (NaN, Infinity), a topic outside `armor/` or more than 64 MiB is refused whole. Without the new options the output is the same, byte for byte.

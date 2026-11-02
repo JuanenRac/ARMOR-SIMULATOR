@@ -67,6 +67,10 @@ Faults that produce invalid messages need `--allow-invalid` and cannot be combin
 with `--validate`. When delivering to a server, a refusal of such a message is
 expected and is reported without stopping the run, and at the end the simulator says how many were refused and how many were accepted: the server accepts unknown fields in solar, electrical and MQTT messages on purpose, so `unknown-field` is not always refused.
 
+## Playing the energy meters
+
+`--meter-bus-port PORT` stops emitting messages and plays the serial line of the energy meters over TCP: Modbus-RTU requests are answered like a PZEM-004T v3 and a PZEM-017 answer them (read only, a bad CRC gets no answer, a write is refused), with the readings of `--electrical`. `--meter-bus-config FILE` holds the meters, thresholds and faults, `--meter-bus-seconds` stops it after a time, and it listens on the loopback unless `--meter-bus-host` and `--meter-bus-allow-network` say otherwise. See [METER_BUS.md](METER_BUS.md).
+
 ## Delivering to a server
 
 ```powershell

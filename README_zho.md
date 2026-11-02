@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-182%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 182 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 210 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 成熟 |
 | 角色 | 离线遥测与环境模拟器（家族：Testing，上级：ARMOR-COMMON） |
 | 技术栈 | Python 3.11+，仅标准库 |
-| 测试 | 182 (`python -m unittest discover -s tests`) |
+| 测试 | 210 (`python -m unittest discover -s tests`) |
 | 场景与故障 | 4 个场景、7 种故障（其中 3 种故意违反合约） |
 | 运行位置 | 任何计算机或 CI |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
@@ -57,7 +57,7 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 场景、故障和向服务器的投递都能工作；没有接入节点时，它为电脑上的服务器提供数据。 |
-| 测试 | 🟢 | 182 项测试通过（`python -m unittest discover -s tests`）。 |
+| 测试 | 🟢 | 210 项测试通过（`python -m unittest discover -s tests`）。 |
 | 协议与数据 | 🟠 | 几何模型仅作示意，并不是真实 LD2450 雷达的模型，也没有与真实硬件对比过。 |
 | 集成 | 🟢 | 测试中它会把消息投递到服务器，CM5 测试台的服务器也可以由它提供数据。 |
 | 文档 | 🟢 | 八种语言和更新日志均为最新。 |
@@ -73,6 +73,7 @@
 * **太阳能设备：** `--solar` 会在 240 个样本的快进一天中加入一台逆变器和一个两模块的电池组（每个模块十五个电芯，含容量），并在傍晚出现一次市电中断；消息会对照 ARMOR-COMMON 的太阳能契约检查，并投递到 `/api/v1/solar`。
 * **用文件描述的报警场景：** `--alarm-scenario` 播放一个带时间线的 JSON 文件（人依次穿过多个区域、宠物、风、卡死/噪声/漂移/失效的传感器、失去链路的节点、市电中断、模式与日历），还可以写明系统应当如何响应；`--verify-alarms` 把服务器实际发出的报警与之比较，因此这些文件就是 ARMOR-SERVER 的测试用例。读取很严格：遇到第一处无法理解的内容就拒绝整个文件。
 * **真实的能源数据：** `--energy` 根据实时模型（带云的日照、按小时变化的住宅用电、电价、带循环的 Pylontech 式电池、有噪声和缺失的电表）输出逆变器、电池组和电气节点的消息；对同一种子结果确定，并可通过 JSON 文件调整。不使用新选项时，输出与之前完全一致。
+* **通过 TCP 的能量电表:** `--meter-bus-port` 模拟 PZEM-004T 与 PZEM-017 的串行线路（Modbus-RTU,只读,CRC 错误不应答,写入被拒绝）,读数与 `--electrical` 相同,电表、阈值和故障由 JSON 文件设定,无需电表即可测试读取电表的代码。
 * **针对真实服务器的场景：** `--drive-server` 针对已启用布防模式的 ARMOR-SERVER 播放报警场景，把其中的 `mode` 事件实时转成对服务器的命令，并检查服务器发出的报警；`server_modes` 指定在家和夜间保护的对象，`--apply-modes` 把它定义到服务器中。密码只来自环境变量或文件。
 
 ## 🧩 在 A.R.M.O.R. 中的角色
@@ -191,6 +192,7 @@ ARMOR-SIMULATOR/
 │   ├── alarm_scenarios.py               来自 JSON 文件的报警场景、其消息以及对响应的检查
 │   ├── solar.py                         逆变器和两模块电池组
 │   ├── electrical.py                    电气节点的三个通道
+│   ├── meter_bus.py                     通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
 │   ├── energy.py                        真实的太阳能与电力数据:带云的日照、住宅、电价、电池、电表
 │   ├── faults.py                        七种可重复的故障
 │   └── publisher.py                     带重试的服务器投递
@@ -258,6 +260,7 @@ README 和文本提供英语、西班牙语、法语、意大利语、德语、�
 * [用法](docs/USAGE.md)：所有选项、场景和故障
 * [报警场景](docs/ALARM_SCENARIOS.md)：文件格式以及如何验证服务器的响应
 * [能源模型](docs/ENERGY_MODEL.md)：真实的太阳能与电力数据及其设置
+* [电表总线](docs/METER_BUS.md)：通过 TCP 的能量电表及设置文件
 * [能力矩阵：哪些已被证明，哪些没有](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [项目目录：版本以及各仓库之间如何相互依赖](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [本仓库的更新日志](CHANGELOG.md)

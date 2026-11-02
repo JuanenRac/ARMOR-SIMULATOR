@@ -25,6 +25,7 @@ from .recording import RecordingError, load_recording, open_for_recording, tee
 from .scenarios import SCENARIOS, health, telemetry
 from .server_driver import DriverError, Session, drive
 from .electrical import electrical_messages
+from .meter_bus import LOOPBACK, MeterBus, MeterBusError, load_config as load_meter_bus, real_time_sample, serve as serve_meter_bus, stop as stop_meter_bus
 from .solar import solar_messages
 
 NODE_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
@@ -117,7 +118,47 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--http-fault", choices=HTTP_FAULTS, default="none", help="spoil the delivery to --server-url, not the messages: a slow link (latency), a message that never arrives (drop) or one sent twice (duplicate)")
     parser.add_argument("--http-fault-every", type=int, default=3, help="every Nth message suffers --http-fault (default 3)")
     parser.add_argument("--http-latency-ms", type=int, default=1500, help=f"pause of --http-fault latency, up to {MAX_LATENCY_MS} (default 1500)")
+    parser.add_argument("--meter-bus-port", type=int, metavar="PORT", help="instead of emitting messages, play the serial line of the energy meters over TCP on this port (0: any free one): Modbus-RTU requests are answered like a PZEM-004T and a PZEM-017 answer them (see docs/METER_BUS.md)")
+    parser.add_argument("--meter-bus-config", type=Path, metavar="FILE", help="a JSON file with the meters, thresholds and faults of --meter-bus-port; the defaults are the three meters of --electrical")
+    parser.add_argument("--meter-bus-host", default="127.0.0.1", help="the address --meter-bus-port listens on (default 127.0.0.1, this computer only)")
+    parser.add_argument("--meter-bus-allow-network", action="store_true", help="required to listen on an address that is not the loopback; the bus has no authentication")
+    parser.add_argument("--meter-bus-seconds", type=float, default=0.0, help="stop the meter bus after this many seconds (0: until interrupted)")
     return parser
+
+
+def _meter_bus(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """--meter-bus-port: the meters answer on a TCP port until the time is up or the run is interrupted."""
+    if not 0 <= args.meter_bus_port <= 65535:
+        parser.error("--meter-bus-port must be between 0 and 65535")
+    if not 0 <= args.meter_bus_seconds <= 86400 * 7:
+        parser.error("--meter-bus-seconds must be between 0 and 604800")
+    if args.meter_bus_host not in LOOPBACK and not args.meter_bus_allow_network:
+        parser.error("--meter-bus-host: only the loopback is allowed unless you add --meter-bus-allow-network (the bus has no authentication)")
+    try:
+        config = load_meter_bus(args.meter_bus_config)
+    except MeterBusError as error:
+        print(f"armor-simulator: meter bus: {error}", file=sys.stderr)
+        return 2
+    bus = MeterBus(config, real_time_sample(config.speed))
+    try:
+        server, _ = serve_meter_bus(bus, args.meter_bus_host, args.meter_bus_port)
+    except OSError as error:
+        print(f"armor-simulator: meter bus: cannot listen on {args.meter_bus_host}:{args.meter_bus_port}: {str(error.strerror or error)}", file=sys.stderr)
+        return 2
+    host, port = str(server.server_address[0]), server.server_address[1]
+    print(f"armor-simulator: meter bus listening on {host}:{port} with {len(config.meters)} meter(s) at address(es) {', '.join(str(m.address) for m in config.meters)}", file=sys.stderr, flush=True)
+    try:
+        if args.meter_bus_seconds:
+            time.sleep(args.meter_bus_seconds)
+        else:
+            while True:
+                time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        stop_meter_bus(server)
+    print(f"armor-simulator: meter bus: {bus.requests} request(s), {bus.answered} answered, {bus.silent} left without an answer, {bus.refused_writes} write(s) refused", file=sys.stderr)
+    return 0
 
 
 def _token(args: argparse.Namespace) -> str:
@@ -215,6 +256,12 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--node-id must be 1-64 characters: lowercase letters, digits, '-' or '_'")
     if not 1 <= args.count <= MAX_COUNT:
         parser.error(f"--count must be between 1 and {MAX_COUNT}")
+    if args.meter_bus_port is not None:
+        if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync:
+            parser.error("--meter-bus-port plays the meters and emits no messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault or --verify-panel-sync")
+        return _meter_bus(parser, args)
+    if args.meter_bus_config or args.meter_bus_allow_network or args.meter_bus_seconds or args.meter_bus_host != "127.0.0.1":
+        parser.error("--meter-bus-config, --meter-bus-host, --meter-bus-allow-network and --meter-bus-seconds need --meter-bus-port")
     if args.interval_ms < 0 or args.fault_every < 0 or args.health_every < 0:
         parser.error("--interval-ms, --fault-every and --health-every must not be negative")
     if args.replay and (args.alarm_scenario or args.energy or args.solar or args.electrical or args.count != 1 or args.scenario != "patrol" or args.light != "cycle" or args.node_id != "simulator-1"):
