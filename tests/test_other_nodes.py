@@ -44,14 +44,8 @@ def shape(value):
     return "int" if isinstance(value, int) and not isinstance(value, bool) else "number" if isinstance(value, float) else type(value).__name__
 
 
-class Parity(unittest.TestCase):
-    """The simulator says the same fields, with the same types, as the vectors the contract and the firmware are held to."""
-
-    def vectors(self, name):
-        path = COMMON / "conformance" / f"{name}.json"
-        if not path.is_file():
-            self.skipTest("ARMOR-COMMON is not next to this repository")
-        return [item["payload"] for item in json.loads(path.read_text(encoding="utf-8"))["vectors"] if item["valid"]]
+class Shapes:
+    """Comparing the fields and types of a message with examples of it."""
 
     def assertSameFields(self, produced, vectors, optional=()):
         """Every field the vectors all have is there, no field is invented, and the types agree (a whole number counts as a number)."""
@@ -74,6 +68,16 @@ class Parity(unittest.TestCase):
             numbers = (int, float)
             ok = any(isinstance(e, numbers) and not isinstance(e, bool) for e in examples) if isinstance(value, numbers) and not isinstance(value, bool) else any(type(e) is type(value) for e in examples)
             self.assertTrue(ok, f"{where} has another type than the vectors")
+
+
+class Parity(Shapes, unittest.TestCase):
+    """The simulator says the same fields, with the same types, as the vectors the contract and the firmware are held to."""
+
+    def vectors(self, name):
+        path = COMMON / "conformance" / f"{name}.json"
+        if not path.is_file():
+            self.skipTest("ARMOR-COMMON is not next to this repository")
+        return [item["payload"] for item in json.loads(path.read_text(encoding="utf-8"))["vectors"] if item["valid"]]
 
     def test_telemetry_health_and_info(self):
         telemetry_vectors = self.vectors("telemetry")
@@ -101,6 +105,34 @@ class Parity(unittest.TestCase):
             validate_alarm_message("armor/alarm/alarm-1/state", nodes.alarm_state("alarm-1", sample))
             validate_network_message("armor/network/network-1/state", nodes.network_state("network-1", sample))
             validate_payload("info", nodes.info("north-1", sample, "0.8.0.1"))
+
+
+class FirmwareParity(Shapes, unittest.TestCase):
+    """What the real serialiser of the radar firmware prints (the program `emit_samples` of ARMOR-NODE-RADAR, built on the host) against what the simulator says.
+
+    It runs when ARMOR_FIRMWARE_SAMPLES names a file with that output (`emit_samples > samples.txt`, built in WSL or any Linux with g++ -std=c++17 tests/emit_samples.cpp) and is skipped otherwise:
+    nothing here compiles C++.
+    """
+
+    def samples(self):
+        name = os.environ.get("ARMOR_FIRMWARE_SAMPLES")
+        if not name or not Path(name).is_file():
+            self.skipTest("ARMOR_FIRMWARE_SAMPLES does not name the output of emit_samples")
+        found = {}
+        for line in Path(name).read_text(encoding="utf-8").splitlines():
+            kind, _, body = line.partition(" ")
+            if kind in ("telemetry", "health", "info"):
+                found.setdefault(kind, []).append(json.loads(body))
+        return found
+
+    def test_the_simulator_says_what_the_firmware_says(self):
+        found = self.samples()
+        self.assertEqual(set(found), {"telemetry", "health", "info"})
+        self.assertSameFields(telemetry("north-1", 3, "two-intruders"), found["telemetry"])
+        self.assertSameFields(health("north-1", 3), found["health"])
+        self.assertSameFields(nodes.info("north-1", 3), found["info"])
+        track_keys = {frozenset(t) for p in found["telemetry"] for t in p["targets"]}
+        self.assertEqual({frozenset(t) for p in (telemetry("north-1", n, "two-intruders") for n in range(10)) for t in p["targets"]}, track_keys)
 
 
 class Panel(unittest.TestCase):
@@ -291,6 +323,80 @@ class Broker(unittest.TestCase):
             code, _out, err = run("--count", "1", "--mqtt-url", "mqtt://127.0.0.1")
         self.assertEqual(code, 2)
         self.assertIn("paho-mqtt", err)
+
+
+class TinyBroker:
+    """Just enough of an MQTT 3.1.1 broker for a test: it accepts a connection, acknowledges what is published at QoS 1 and keeps (topic, payload)."""
+
+    def __init__(self):
+        import socket
+        import threading
+        self.received = []
+        self.server = socket.socket()
+        self.server.bind(("127.0.0.1", 0))
+        self.server.listen(1)
+        self.port = self.server.getsockname()[1]
+        self.thread = threading.Thread(target=self.serve, daemon=True)
+        self.thread.start()
+
+    @staticmethod
+    def read(connection, count):
+        data = b""
+        while len(data) < count:
+            chunk = connection.recv(count - len(data))
+            if not chunk:
+                raise EOFError
+            data += chunk
+        return data
+
+    def serve(self):
+        try:
+            connection, _ = self.server.accept()
+            while True:
+                first = self.read(connection, 1)[0]
+                length, shift = 0, 0
+                while True:
+                    byte = self.read(connection, 1)[0]
+                    length |= (byte & 0x7F) << shift
+                    shift += 7
+                    if not byte & 0x80:
+                        break
+                body = self.read(connection, length)
+                kind = first >> 4
+                if kind == 1:
+                    connection.sendall(b"\x20\x02\x00\x00")
+                elif kind == 3:
+                    topic_length = int.from_bytes(body[:2], "big")
+                    topic, rest = body[2:2 + topic_length].decode(), body[2 + topic_length:]
+                    if (first >> 1) & 3:
+                        connection.sendall(b"\x40\x02" + rest[:2])
+                        rest = rest[2:]
+                    self.received.append((topic, json.loads(rest)))
+                elif kind == 12:
+                    connection.sendall(b"\xd0\x00")
+                elif kind == 14:
+                    break
+        except (EOFError, OSError):
+            pass
+        finally:
+            self.server.close()
+
+
+class BrokerOnTheWire(unittest.TestCase):
+    """The same publishing through the real paho-mqtt client, to a broker on this machine (skipped without paho-mqtt)."""
+
+    def test_the_messages_arrive_with_their_topics(self):
+        try:
+            import paho.mqtt.client  # noqa: F401
+        except ImportError:
+            self.skipTest("paho-mqtt is not installed")
+        broker = TinyBroker()
+        code, out, err = run("--count", "2", "--health-every", "1", "--info", "--alarm-node", "alarm-1", "--mqtt-url", f"mqtt://127.0.0.1:{broker.port}")
+        self.assertEqual(code, 0, err)
+        broker.thread.join(5)
+        sent = [(json.loads(line)["topic"], json.loads(line)["payload"]) for line in out.splitlines()]
+        self.assertEqual(broker.received, sent)
+        self.assertIn("armor/alarm/alarm-1/state", [topic for topic, _ in broker.received])
 
 
 if __name__ == "__main__":

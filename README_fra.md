@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 ou ultérieure">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Langage">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-234%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-236%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturité">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 234 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
+**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 236 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturité | Établi |
 | Rôle | Simulateur hors ligne de télémétrie et d'environnement (famille : Testing, parent : ARMOR-COMMON) |
 | Technologie | Python 3.11+, bibliothèque standard uniquement |
-| Tests | 234 (`python -m unittest discover -s tests`) |
+| Tests | 236 (`python -m unittest discover -s tests`) |
 | Scénarios et pannes | 4 scénarios, 7 pannes (3 violent le contrat exprès) |
 | Fonctionne sur | N'importe quel ordinateur, ou la CI |
 | Sur matériel réel | Sans objet : c'est le substitut du matériel, utilisé sur un ordinateur |
@@ -57,7 +57,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟢 | Les scénarios, les pannes et la remise à un serveur fonctionnent ; c'est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. |
-| Tests | 🟢 | 234 tests réussissent (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 236 tests réussissent (`python -m unittest discover -s tests`). |
 | Protocoles et données | 🟠 | La géométrie est illustrative, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel. |
 | Intégration | 🟢 | Il remet ses messages à un serveur dans les tests, et le serveur du banc d'essai CM5 peut être alimenté par lui. |
 | Documentation | 🟢 | Huit langues et le journal des modifications sont à jour. |
@@ -74,6 +74,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 * **Scénarios d'alarme dans des fichiers :** `--alarm-scenario` joue un fichier JSON avec une chronologie (des personnes qui traversent plusieurs zones, un animal, le vent, un capteur bloqué, bruité, qui dérive ou mort, un nœud qui perd la liaison, une coupure du secteur, le mode et le calendrier) et peut dire ce que le système doit répondre ; `--verify-alarms` compare les alarmes levées par un serveur à ce fichier, qui sert donc de cas de test pour ARMOR-SERVER. La lecture est stricte : tout le fichier est refusé dès la première chose non comprise.
 * **Données d'énergie réalistes :** `--energy` émet un onduleur, un empilement de batteries et un nœud électrique à partir d'un modèle en temps réel (un soleil avec des nuages, une maison heure par heure, un tarif, une batterie de type Pylontech avec cycles, un compteur bruité avec des trous), déterministe pour une graine et réglable depuis un fichier JSON. Sans les nouvelles options, la sortie est exactement celle d'avant.
 * **Les compteurs d'énergie sur TCP :** `--meter-bus-port` joue la ligne série d'un PZEM-004T et d'un PZEM-017 (Modbus-RTU, lecture seule, un CRC erroné n'obtient aucune réponse, une écriture est refusée) avec les mesures de `--electrical`, avec un fichier JSON pour les compteurs, les seuils et les pannes, afin que le code qui lit les compteurs puisse être essayé sans compteur.
+* **Les autres nœuds, plusieurs à la fois et un broker :** `--nodes` simule jusqu'à huit nœuds radar (avec `--scenario relay` un marcheur passe d'un nœud à l'autre), `--info`, `--alarm-node` et `--network-node` ajoutent les informations d'un nœud, une centrale d'alarme et un surveillant de réseau, un scénario d'alarme peut déplacer des personnes le long d'une polyligne à une vitesse donnée (`walk`), et `--mqtt-url` publie aussi chaque message sur un broker de cette machine ou d'un réseau privé, de sorte que la voie MQTT du serveur est elle aussi exercée.
 * **Les autres nœuds, plusieurs à la fois et un broker :** `--nodes` simule jusqu'à huit nœuds radar (avec `--scenario relay` un marcheur passe d'un nœud à l'autre), `--info`, `--alarm-node` et `--network-node` ajoutent les informations d'un nœud, une centrale d'alarme et un surveillant de réseau, un scénario d'alarme peut déplacer des personnes le long d'une polyligne à une vitesse donnée (`walk`), et `--mqtt-url` publie aussi chaque message sur un broker de cette machine ou d'un réseau privé, de sorte que la voie MQTT du serveur est elle aussi exercée.
 * **Les autres nœuds, plusieurs à la fois et un broker :** `--nodes` simule jusqu'à huit nœuds radar (avec `--scenario relay` un marcheur passe d'un nœud à l'autre), `--info`, `--alarm-node` et `--network-node` ajoutent les informations d'un nœud, une centrale d'alarme et un surveillant de réseau, un scénario d'alarme peut déplacer des personnes le long d'une polyligne à une vitesse donnée (`walk`), et `--mqtt-url` publie aussi chaque message sur un broker de cette machine ou d'un réseau privé, de sorte que la voie MQTT du serveur est elle aussi exercée.
 * **Scénarios contre un vrai serveur :** `--drive-server` joue un scénario d'alarme contre un ARMOR-SERVER dont les modes d'armement sont activés, transforme ses événements `mode` en ordres au serveur en temps réel et vérifie les alarmes que le serveur a levées ; `server_modes` dit ce que protègent À la maison et Nuit et `--apply-modes` le définit dans le serveur. Le mot de passe ne vient que de l'environnement ou d'un fichier.
