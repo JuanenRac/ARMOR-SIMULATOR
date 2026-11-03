@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.5] - The launchers find the shared repository through ARMORCOMMONDIR: build, build-test, test and run (.sh and .bat) use the folder named by that variable when it is set and the sibling ARMOR-COMMON folder otherwise, so a checkout... (and 2 more changes)
+
 - **The launchers find the shared repository through `ARMOR_COMMON_DIR`:** `build`, `build-test`, `test` and `run` (`.sh` and `.bat`) use the folder named by that variable when it is set and the sibling `ARMOR-COMMON` folder otherwise, so a checkout with another layout builds without changing a file.
 - **Fake IP cameras over HTTP:** `--camera-port PORT` (with `--camera-config`, `--camera-host`, `--camera-allow-network`, `--camera-password-file`, `--camera-seconds`) plays cameras that answer their snapshot address with a grey PNG that changes like a scene (`still`, `walker`, `flicker`, `dark`, `waving-tree`), with an optional Basic or Digest (MD5 or SHA-256) login and faults on purpose (an error status, a body that is not a picture, an empty or oversize body, a late answer), so the server's camera preview and the code that fetches pictures can be tried without a camera. It is read only, listens on the loopback unless told otherwise, speaks no RTSP and keeps the password out of the settings file (`docs/FAKE_CAMERAS.md`). Tests: 253 (before 236).
 - **The examples, the help and the bench script point at port 18080:** the server of every way of running A.R.M.O.R. is now on 18080 (the Docker stack used 8080), so `--server-url http://127.0.0.1:18080` and `ARMOR_SIM_SERVER_URL` in the bench container say the same as the installer of the CM5.
