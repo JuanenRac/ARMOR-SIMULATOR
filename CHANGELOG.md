@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The examples, the help and the bench script point at port 18080:** the server of every way of running A.R.M.O.R. is now on 18080 (the Docker stack used 8080), so `--server-url http://127.0.0.1:18080` and `ARMOR_SIM_SERVER_URL` in the bench container say the same as the installer of the CM5.
+
 ## [0.3.4] - A virtual bench for Docker, the serial line of the energy meters, the other node types, an MQTT output, several nodes at once and people walking across them
 
 - **Walks along a polyline in an alarm scenario:** the new `walk` event moves one or more people along 2 to 32 points of a node at a set speed (the radial speed of each track is worked out from the positions), with `examples/alarm/walk-across-two-nodes.json`.

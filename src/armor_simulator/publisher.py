@@ -49,7 +49,7 @@ def check_server_url(server_url: str) -> str:
     parsed = urlparse(server_url)
     if (parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.password is not None or "@" in parsed.netloc
             or parsed.path not in ("", "/") or parsed.query or parsed.fragment or parsed.params):
-        raise ValueError("--server-url must be a plain http(s) origin such as http://127.0.0.1:8080")
+        raise ValueError("--server-url must be a plain http(s) origin such as http://127.0.0.1:18080")
     return f"{parsed.scheme}://{parsed.netloc}"
 
 

@@ -98,7 +98,7 @@ A scenario is also refused when an expectation contradicts it: a code that only 
 ```powershell
 $env:ARMOR_STUDIO_PASSWORD = "..."          # or --studio-password-file; never on the command line
 $env:ARMOR_INGEST_TOKEN = "..."
-python -m armor_simulator --alarm-scenario examples/alarm/arming-modes-server.json --drive-server --server-url http://127.0.0.1:8080 --studio-user admin --apply-modes
+python -m armor_simulator --alarm-scenario examples/alarm/arming-modes-server.json --drive-server --server-url http://127.0.0.1:18080 --studio-user admin --apply-modes
 ```
 
 `--drive-server` signs in as `--studio-user`, sends the telemetry of the scenario to the ingest routes **in real time** (one second of scenario per second of the clock, because the delays of the server are real), turns each `mode` event (and each change of the calendar) into `POST /api/v1/mode` at its second, waits `--settle-s` seconds (3 by default) and reads `GET /api/v1/alarms`. The alarms that the server raised are compared with `expect` by the same check as `--verify-alarms` (exit 0 as expected, 1 different, 2 could not be played). `--save-observed FILE` writes them down.

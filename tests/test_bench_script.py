@@ -40,7 +40,7 @@ class BenchScriptTests(unittest.TestCase):
         for line in lines:
             args = build_parser().parse_args(shlex.split(line)[1:])
             ids.add(args.node_id)
-            self.assertEqual(args.server_url, "http://server:8080")
+            self.assertEqual(args.server_url, "http://server:18080")
             self.assertTrue(args.per_node_token and args.solar and args.electrical)
             self.assertEqual(args.start_ms, "now")
         self.assertEqual(ids, {"bench-1", "bench-2", "bench-3"})

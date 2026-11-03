@@ -147,7 +147,7 @@ Todas las opciones, escenarios y averías están en [docs/USAGE.md](docs/USAGE.m
 ```powershell
 $env:PYTHONPATH = "src"
 python -m armor_simulator --count 20 --scenario crossing --seed 1 --validate
-python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:8080 --ingest-token-file token.env
+python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:18080 --ingest-token-file token.env
 ```
 
 ## 🧪 Pruebas

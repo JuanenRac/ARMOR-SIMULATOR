@@ -82,7 +82,7 @@ expected and is reported without stopping the run, and at the end the simulator 
 ## Delivering to a server
 
 ```powershell
-python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:8080 --ingest-token <ingest token>
+python -m armor_simulator --count 60 --scenario two-intruders --server-url http://127.0.0.1:18080 --ingest-token <ingest token>
 ```
 
 The alarm and network messages go to `/api/v1/alarm/state` and `/api/v1/network/state`; the `info` of a node has no HTTP route (use `--mqtt-url`) and the run says how many messages were left out.
@@ -97,7 +97,7 @@ With the server settings `alarm.arming_modes` and `alarm.mode_panel_sync` on and
 
 ```powershell
 $env:ARMOR_STUDIO_PASSWORD = "<password>"
-python -m armor_simulator --verify-panel-sync --server-url http://127.0.0.1:8080 --studio-user ana --mqtt-url mqtt://127.0.0.1:1883 --mqtt-user armor --mqtt-password-file broker.txt
+python -m armor_simulator --verify-panel-sync --server-url http://127.0.0.1:18080 --studio-user ana --mqtt-url mqtt://127.0.0.1:18883 --mqtt-user armor --mqtt-password-file broker.txt
 ```
 
 With `--verify-panel-map` (an administrator account) the check also plays the choices of the owner about how the modes reach the panels: home arming the profile `away`, the list of panels with only this one, an empty list (nobody is asked) and a list naming a panel that does not exist (a failed panel, and the others are not asked); it puts the document of the modes back as it was.
