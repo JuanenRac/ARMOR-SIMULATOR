@@ -98,6 +98,19 @@
           }
         },
         {
+          "name": "fake_cameras.py",
+          "desc": {
+            "en": "fake IP cameras over HTTP (snapshots, logins, faults)",
+            "es": "cámaras IP falsas por HTTP (imágenes, login, fallos)",
+            "de": "falsche IP-Kameras per HTTP (Bilder, Login, Fehler)",
+            "fr": "fausses caméras IP sur HTTP (images, login, pannes)",
+            "it": "false telecamere IP su HTTP (immagini, login, guasti)",
+            "ja": "HTTP の偽 IP カメラ (静止画、ログイン、故障)",
+            "zh": "通过 HTTP 模拟 IP 摄像头 (图像、登录、故障)",
+            "pt": "câmaras IP falsas por HTTP (imagens, login, falhas)"
+          }
+        },
+        {
           "name": "nodes.py",
           "desc": {
             "en": "the information of a node, an alarm panel and a network watcher",
@@ -244,6 +257,19 @@
           }
         },
         {
+          "name": "test_fake_cameras.py",
+          "desc": {
+            "en": "17 tests",
+            "es": "17 pruebas",
+            "de": "17 Tests",
+            "fr": "17 tests",
+            "it": "17 test",
+            "ja": "17 件",
+            "zh": "17 个",
+            "pt": "17 testes"
+          }
+        },
+        {
           "name": "test_other_nodes.py",
           "desc": {
             "en": "21 tests",
@@ -335,6 +361,19 @@
             "ja": "メーターバスと設定ファイル",
             "zh": "电表总线及其设置文件",
             "pt": "o bus de contadores e o seu ficheiro de definições"
+          }
+        },
+        {
+          "name": "FAKE_CAMERAS.md",
+          "desc": {
+            "en": "the fake cameras and settings",
+            "es": "las cámaras falsas y ajustes",
+            "de": "die falschen Kameras",
+            "fr": "les fausses caméras",
+            "it": "le false telecamere",
+            "ja": "偽カメラと設定",
+            "zh": "模拟摄像头与设置",
+            "pt": "as câmaras falsas e ajustes"
           }
         }
       ]

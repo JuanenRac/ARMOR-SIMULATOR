@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 oder neuer">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Sprache">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-236%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-253%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Reifegrad">
 </p>
 
 ---
 
-**Ehrlichkeitsprüfung - was heute läuft:** Die Szenarien, die Fehler, die Zustellung an einen Server und die 236 Tests sind real, und der Simulator speist einen Server auf einem Computer, wenn kein Knoten angeschlossen ist. Die Geometrie ist **veranschaulichend**, kein Modell des echten LD2450-Radars, und nichts davon wurde mit echter Hardware verglichen.
+**Ehrlichkeitsprüfung - was heute läuft:** Die Szenarien, die Fehler, die Zustellung an einen Server und die 253 Tests sind real, und der Simulator speist einen Server auf einem Computer, wenn kein Knoten angeschlossen ist. Die Geometrie ist **veranschaulichend**, kein Modell des echten LD2450-Radars, und nichts davon wurde mit echter Hardware verglichen.
 
 ---
 
@@ -40,7 +40,7 @@
 | Reifegrad | Etabliert |
 | Rolle | Offline-Simulator für Telemetrie und Umgebung (Familie: Testing, übergeordnet: ARMOR-COMMON) |
 | Technik | Python 3.11+, nur Standardbibliothek |
-| Tests | 236 (`python -m unittest discover -s tests`) |
+| Tests | 253 (`python -m unittest discover -s tests`) |
 | Szenarien und Fehler | 4 Szenarien, 7 Fehler (3 brechen den Vertrag absichtlich) |
 | Läuft auf | Jeder Computer oder CI |
 | Auf echter Hardware | Nicht zutreffend: er ist der Hardware-Ersatz, auf einem Computer benutzt |
@@ -57,7 +57,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟢 | Die Szenarien, die Störungen und die Übergabe an einen Server funktionieren; er speist einen Server auf einem Rechner, wenn kein Knoten angeschlossen ist. |
-| Tests | 🟢 | 236 Tests bestehen (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 253 Tests bestehen (`python -m unittest discover -s tests`). |
 | Protokolle und Daten | 🟠 | Die Geometrie ist anschaulich und kein Modell des echten LD2450-Radars, und nichts wurde mit echter Hardware verglichen. |
 | Integration | 🟢 | Er übergibt seine Nachrichten in den Tests an einen Server, und der Server des CM5-Prüfstands kann damit gespeist werden. |
 | Dokumentation | 🟢 | Acht Sprachen und das Änderungsprotokoll sind aktuell. |
@@ -74,6 +74,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 * **Alarmszenarien in Dateien:** `--alarm-scenario` spielt eine JSON-Datei mit einem Zeitablauf ab (Personen, die mehrere Zonen durchqueren, ein Haustier, Wind, ein Sensor, der hängt, rauscht, driftet oder ausgefallen ist, ein Knoten, der die Verbindung verliert, ein Netzausfall, der Modus und der Kalender) und kann festlegen, was das System antworten soll; `--verify-alarms` vergleicht die Alarme, die ein Server ausgelöst hat, damit, die Dateien sind also Testfälle für ARMOR-SERVER. Das Lesen ist streng: Die ganze Datei wird beim ersten nicht verstandenen Punkt abgelehnt.
 * **Realistische Energiedaten:** `--energy` gibt einen Wechselrichter, einen Batteriestapel und einen Elektroknoten aus einem Echtzeitmodell aus (Sonne mit Wolken, ein Haus im Stundenverlauf, ein Tarif, eine Pylontech-artige Batterie mit Zyklen, ein verrauschter Zähler mit Lücken), deterministisch für einen Seed und über eine JSON-Datei einstellbar. Ohne die neuen Optionen bleibt die Ausgabe genau wie zuvor.
 * **Die Energiezähler über TCP:** `--meter-bus-port` spielt die serielle Leitung eines PZEM-004T und eines PZEM-017 (Modbus-RTU, nur lesend, bei falschem CRC keine Antwort, ein Schreibzugriff wird abgelehnt) mit den Messwerten von `--electrical`, mit einer JSON-Datei für Zähler, Schwellen und Fehler, damit der Code, der die Zähler liest, ohne Zähler erprobt werden kann.
+* **Falsche IP-Kameras über HTTP:** `--camera-port` spielt IP-Kameras, die unter ihrer Standbild-Adresse ein graues PNG liefern, das sich wie eine Szene ändert (nichts bewegt sich, eine Person läuft durchs Bild, das Licht flackert, eine Nacht mit Rauschen, ein wehender Baum), mit optionalem Basic- oder Digest-Login und absichtlichen Fehlern (ein Fehlerstatus, ein Inhalt, der kein Bild ist, ein leerer oder zu großer Inhalt, eine späte Antwort), damit der Code, der das Bild einer Kamera abruft, ohne Kamera erprobt werden kann. Nur lesend, hört auf der Loopback-Adresse und spricht kein RTSP.
 * **Die anderen Knoten, mehrere zugleich und ein Broker:** `--nodes` simuliert bis zu acht Radarknoten (mit `--scenario relay` geht ein Läufer von Knoten zu Knoten), `--info`, `--alarm-node` und `--network-node` fügen die Angaben eines Knotens, eine Alarmzentrale und einen Netzwächter hinzu, ein Alarmszenario kann Personen mit fester Geschwindigkeit entlang eines Polygonzugs bewegen (`walk`), und `--mqtt-url` veröffentlicht jede Nachricht zusätzlich auf einem Broker dieses Rechners oder eines privaten Netzes, sodass auch der MQTT-Weg des Servers geprüft wird.
 * **Die anderen Knoten, mehrere zugleich und ein Broker:** `--nodes` simuliert bis zu acht Radarknoten (mit `--scenario relay` geht ein Läufer von Knoten zu Knoten), `--info`, `--alarm-node` und `--network-node` fügen die Angaben eines Knotens, eine Alarmzentrale und einen Netzwächter hinzu, ein Alarmszenario kann Personen mit fester Geschwindigkeit entlang eines Polygonzugs bewegen (`walk`), und `--mqtt-url` veröffentlicht jede Nachricht zusätzlich auf einem Broker dieses Rechners oder eines privaten Netzes, sodass auch der MQTT-Weg des Servers geprüft wird.
 * **Die anderen Knoten, mehrere zugleich und ein Broker:** `--nodes` simuliert bis zu acht Radarknoten (mit `--scenario relay` geht ein Läufer von Knoten zu Knoten), `--info`, `--alarm-node` und `--network-node` fügen die Angaben eines Knotens, eine Alarmzentrale und einen Netzwächter hinzu, ein Alarmszenario kann Personen mit fester Geschwindigkeit entlang eines Polygonzugs bewegen (`walk`), und `--mqtt-url` veröffentlicht jede Nachricht zusätzlich auf einem Broker dieses Rechners oder eines privaten Netzes, sodass auch der MQTT-Weg des Servers geprüft wird.
@@ -164,6 +165,7 @@ python -I tools/armor_ci_validate.py
 | `test_cli_options.py` | 26 | Die Optionen, ihre Grenzen und die Ablehnungen |
 | `test_alarm_scenarios.py` | 32 | Alarmszenario-Dateien: strenges Lesen, der Nachrichtenstrom, Modi und Kalender, Prüfung der Antwort, die Optionen |
 | `test_energy.py` | 32 | Energiemodell: physikalische Eigenschaften für viele Seeds, Tarif, Zähler, Einstellungen, Verträge, die Optionen |
+| `test_fake_cameras.py` | 17 | Falsche Kameras: die Bilder, Basic- und Digest-Login, Fehler, die Datei und die Befehlszeile |
 
 ## 🏗️ Build und Veröffentlichung
 
@@ -196,6 +198,7 @@ ARMOR-SIMULATOR/
 │   ├── solar.py                         ein Wechselrichter und ein Batteriestapel aus zwei Modulen
 │   ├── electrical.py                    die drei Kanäle eines Elektroknotens
 │   ├── meter_bus.py                     die serielle Leitung der Energiezähler über TCP (PZEM-004T, PZEM-017)
+│   ├── fake_cameras.py                  falsche IP-Kameras per HTTP (Bilder, Login, Fehler)
 │   ├── nodes.py                         die Angaben eines Knotens, eine Alarmzentrale und ein Netzwächter
 │   ├── mqtt_out.py                      die Nachrichten auf einem MQTT-Broker veröffentlichen
 │   ├── energy.py                        realistische Solar- und Stromdaten: Sonne mit Wolken, Haus, Tarif, Batterie, Zähler
@@ -268,6 +271,7 @@ README und Texte gibt es auf Englisch, Spanisch, Französisch, Italienisch, Deut
 * [Alarmszenarien](docs/ALARM_SCENARIOS.md): das Dateiformat und wie man die Antwort eines Servers prüft
 * [Energiemodell](docs/ENERGY_MODEL.md): die realistischen Solar- und Stromdaten und ihre Einstellungen
 * [Zählerbus](docs/METER_BUS.md): die Energiezähler über TCP und die Einstellungsdatei
+* [Falsche Kameras](docs/FAKE_CAMERAS.md): die falschen IP-Kameras und ihre Einstellungsdatei
 * [Fähigkeitsmatrix: was belegt ist und was nicht](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Projektkatalog: Versionen und wie die Repositorys voneinander abhängen](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [Änderungsverlauf dieses Repositorys](CHANGELOG.md)

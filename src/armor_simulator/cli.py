@@ -27,6 +27,7 @@ from .server_driver import DriverError, Session, drive
 from .electrical import electrical_messages
 from .mqtt_out import MqttOutError, MqttSink
 from .nodes import alarm_state, info as node_info, network_state
+from .fake_cameras import FakeCameraError, FakeCameras, load_config as load_fake_cameras, read_password as read_camera_password, serve as serve_fake_cameras, stop as stop_fake_cameras
 from .meter_bus import LOOPBACK, MeterBus, MeterBusError, load_config as load_meter_bus, real_time_sample, serve as serve_meter_bus, stop as stop_meter_bus
 from .solar import solar_messages
 
@@ -146,6 +147,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--meter-bus-config", type=Path, metavar="FILE", help="a JSON file with the meters, thresholds and faults of --meter-bus-port; the defaults are the three meters of --electrical")
     parser.add_argument("--meter-bus-host", default="127.0.0.1", help="the address --meter-bus-port listens on (default 127.0.0.1, this computer only)")
     parser.add_argument("--meter-bus-allow-network", action="store_true", help="required to listen on an address that is not the loopback; the bus has no authentication")
+    parser.add_argument("--camera-port", type=int, metavar="PORT", help="instead of emitting messages, play fake IP cameras over HTTP on this port (0: any free one): each answers its snapshot address with a grey PNG that changes like a scene (see docs/FAKE_CAMERAS.md)")
+    parser.add_argument("--camera-config", type=Path, metavar="FILE", help="a JSON file with the cameras, scenes, logins and faults of --camera-port; the default is one camera at /snapshot.png with a walker")
+    parser.add_argument("--camera-host", default="127.0.0.1", help="the address --camera-port listens on (default 127.0.0.1, this computer only)")
+    parser.add_argument("--camera-allow-network", action="store_true", help="required to listen on an address that is not the loopback; the cameras are fake and their login is for tests only")
+    parser.add_argument("--camera-password-file", type=Path, metavar="FILE", help="the first line is the password of the cameras that ask for a login (or ARMOR_FAKE_CAMERA_PASSWORD); never given on the command line")
+    parser.add_argument("--camera-seconds", type=float, default=0.0, help="stop the cameras after this many seconds (0: until interrupted)")
     parser.add_argument("--meter-bus-seconds", type=float, default=0.0, help="stop the meter bus after this many seconds (0: until interrupted)")
     return parser
 
@@ -182,6 +189,42 @@ def _meter_bus(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int
     finally:
         stop_meter_bus(server)
     print(f"armor-simulator: meter bus: {bus.requests} request(s), {bus.answered} answered, {bus.silent} left without an answer, {bus.refused_writes} write(s) refused", file=sys.stderr)
+    return 0
+
+
+def _fake_cameras(parser: argparse.ArgumentParser, args: argparse.Namespace) -> int:
+    """--camera-port: the cameras answer on a TCP port until the time is up or the run is interrupted."""
+    if not 0 <= args.camera_port <= 65535:
+        parser.error("--camera-port must be between 0 and 65535")
+    if not 0 <= args.camera_seconds <= 86400 * 7:
+        parser.error("--camera-seconds must be between 0 and 604800")
+    if args.camera_host not in LOOPBACK and not args.camera_allow_network:
+        parser.error("--camera-host: only the loopback is allowed unless you add --camera-allow-network")
+    try:
+        cameras = FakeCameras(load_fake_cameras(args.camera_config), read_camera_password(args.camera_password_file))
+    except FakeCameraError as error:
+        print(f"armor-simulator: cameras: {error}", file=sys.stderr)
+        return 2
+    try:
+        server, _ = serve_fake_cameras(cameras, args.camera_host, args.camera_port)
+    except OSError as error:
+        print(f"armor-simulator: cameras: cannot listen on {args.camera_host}:{args.camera_port}: {str(error.strerror or error)}", file=sys.stderr)
+        return 2
+    host, port = str(server.server_address[0]), server.server_address[1]
+    for camera in cameras.config.cameras:
+        print(f"armor-simulator: camera {camera.id} at http://{host}:{port}{camera.path} (scene {camera.scene}, login {camera.auth}, fault {camera.fault})", file=sys.stderr, flush=True)
+    try:
+        if args.camera_seconds:
+            time.sleep(args.camera_seconds)
+        else:
+            while True:
+                time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        stop_fake_cameras(server)
+    c = cameras.counters
+    print(f"armor-simulator: cameras: {c.requests} request(s), {c.pictures} picture(s), {c.challenged} login(s) asked for, {c.refused_logins} refused, {c.faulted} fault(s), {c.not_found} not found", file=sys.stderr)
     return 0
 
 
@@ -294,6 +337,12 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--info, --alarm-node and --network-node cannot be combined with --alarm-scenario, --replay or --energy")
     if args.mqtt_allow_network and not args.mqtt_url:
         parser.error("--mqtt-allow-network needs --mqtt-url")
+    if args.camera_port is not None:
+        if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync or args.meter_bus_port is not None:
+            parser.error("--camera-port plays cameras and emits no messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault, --verify-panel-sync or --meter-bus-port")
+        return _fake_cameras(parser, args)
+    if args.camera_config or args.camera_allow_network or args.camera_password_file or args.camera_seconds or args.camera_host != "127.0.0.1":
+        parser.error("--camera-config, --camera-host, --camera-allow-network, --camera-password-file and --camera-seconds need --camera-port")
     if args.meter_bus_port is not None:
         if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync:
             parser.error("--meter-bus-port plays the meters and emits no messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault or --verify-panel-sync")

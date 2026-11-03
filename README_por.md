@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-236%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-253%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 236 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 253 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturidade | Estabelecido |
 | Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, só biblioteca padrão |
-| Testes | 236 (`python -m unittest discover -s tests`) |
+| Testes | 253 (`python -m unittest discover -s tests`) |
 | Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
 | Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
@@ -57,7 +57,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
-| Testes | 🟢 | Passam 236 testes (`python -m unittest discover -s tests`). |
+| Testes | 🟢 | Passam 253 testes (`python -m unittest discover -s tests`). |
 | Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
 | Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
 | Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
@@ -74,6 +74,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 * **Cenários de alarme em ficheiros:** `--alarm-scenario` reproduz um ficheiro JSON com uma linha de tempo (pessoas que atravessam várias zonas, um animal de estimação, vento, um sensor preso, ruidoso, com deriva ou morto, um nó que perde a ligação, um corte de rede, o modo e o calendário) e pode dizer o que o sistema deve responder; `--verify-alarms` compara os alarmes que um servidor levantou com isso, pelo que os ficheiros são casos de teste para o ARMOR-SERVER. A leitura é estrita: o ficheiro inteiro é recusado à primeira coisa que não se entenda.
 * **Dados de energia realistas:** `--energy` emite um inversor, uma pilha de baterias e um nó elétrico a partir de um modelo em tempo real (um sol com nuvens, uma casa hora a hora, uma tarifa, uma bateria do tipo Pylontech com ciclos, um contador com ruído e falhas), determinista para uma semente e ajustável a partir de um ficheiro JSON. Sem as novas opções, a saída é exatamente a de antes.
 * **Os contadores de energia por TCP:** `--meter-bus-port` reproduz a linha série de um PZEM-004T e de um PZEM-017 (Modbus-RTU, só de leitura, um CRC errado não recebe resposta, uma escrita é recusada) com as leituras de `--electrical`, com um ficheiro JSON para os contadores, limiares e falhas, para que o código que lê os contadores possa ser experimentado sem contador.
+* **Câmaras IP falsas por HTTP:** `--camera-port` reproduz câmaras IP que respondem no seu endereço de imagem com um PNG cinzento que muda como uma cena (nada se mexe, uma pessoa atravessa, a luz pisca, uma noite com ruído, uma árvore que baloiça), com login Basic ou Digest opcional e falhas propositadas (um estado de erro, um corpo que não é uma imagem, um corpo vazio ou grande demais, uma resposta tardia), para testar sem câmara o código que pede a imagem de uma câmara. Só de leitura, escuta no loopback e não fala RTSP.
 * **Os outros nós, vários ao mesmo tempo e um broker:** `--nodes` simula até oito nós de radar (com `--scenario relay` um caminhante passa de um nó para o seguinte), `--info`, `--alarm-node` e `--network-node` acrescentam a informação de um nó, uma central de alarme e um vigilante de rede, um cenário de alarme pode mover pessoas ao longo de uma poligonal a uma velocidade dada (`walk`), e `--mqtt-url` publica ainda cada mensagem num broker desta máquina ou de uma rede privada, de modo que também se exercita a via MQTT do servidor.
 * **Os outros nós, vários ao mesmo tempo e um broker:** `--nodes` simula até oito nós de radar (com `--scenario relay` um caminhante passa de um nó para o seguinte), `--info`, `--alarm-node` e `--network-node` acrescentam a informação de um nó, uma central de alarme e um vigilante de rede, um cenário de alarme pode mover pessoas ao longo de uma poligonal a uma velocidade dada (`walk`), e `--mqtt-url` publica ainda cada mensagem num broker desta máquina ou de uma rede privada, de modo que também se exercita a via MQTT do servidor.
 * **Os outros nós, vários ao mesmo tempo e um broker:** `--nodes` simula até oito nós de radar (com `--scenario relay` um caminhante passa de um nó para o seguinte), `--info`, `--alarm-node` e `--network-node` acrescentam a informação de um nó, uma central de alarme e um vigilante de rede, um cenário de alarme pode mover pessoas ao longo de uma poligonal a uma velocidade dada (`walk`), e `--mqtt-url` publica ainda cada mensagem num broker desta máquina ou de uma rede privada, de modo que também se exercita a via MQTT do servidor.
@@ -164,6 +165,7 @@ python -I tools/armor_ci_validate.py
 | `test_cli_options.py` | 26 | As opções, os seus limites e as recusas |
 | `test_alarm_scenarios.py` | 32 | Ficheiros de cenários de alarme: leitura estrita, o fluxo, modos e calendário, verificação da resposta, as opções |
 | `test_energy.py` | 32 | Modelo de energia: propriedades físicas com muitas sementes, tarifa, contador, definições, contratos, as opções |
+| `test_fake_cameras.py` | 17 | Câmaras falsas: as imagens, os logins Basic e Digest, as falhas, o ficheiro e a linha de comandos |
 
 ## 🏗️ Compilação e publicação
 
@@ -196,6 +198,7 @@ ARMOR-SIMULATOR/
 │   ├── solar.py                         um inversor e uma pilha de dois módulos
 │   ├── electrical.py                    os três canais de um nó elétrico
 │   ├── meter_bus.py                     a linha série dos contadores de energia por TCP (PZEM-004T, PZEM-017)
+│   ├── fake_cameras.py                  câmaras IP falsas por HTTP (imagens, login, falhas)
 │   ├── nodes.py                         a informação de um nó, uma central de alarme e um vigilante de rede
 │   ├── mqtt_out.py                      publicar as mensagens num broker MQTT
 │   ├── energy.py                        dados solares e elétricos realistas: sol com nuvens, casa, tarifa, bateria, contador
@@ -268,6 +271,7 @@ O **A.R.M.O.R.** (Autonomous Radar & Multimodal Observation Range) é um sistema
 * [Cenários de alarme](docs/ALARM_SCENARIOS.md): o formato do ficheiro e como verificar a resposta de um servidor
 * [Modelo de energia](docs/ENERGY_MODEL.md): os dados solares e elétricos realistas e as suas definições
 * [Bus de contadores](docs/METER_BUS.md): os contadores de energia por TCP e o ficheiro de definições
+* [Câmaras falsas](docs/FAKE_CAMERAS.md): as câmaras IP falsas e o seu ficheiro de definições
 * [Matriz de capacidades: o que está demonstrado e o que não está](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Catálogo de projetos: versões e como os repositórios dependem uns dos outros](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)
 * [Registo de alterações deste repositório](CHANGELOG.md)
