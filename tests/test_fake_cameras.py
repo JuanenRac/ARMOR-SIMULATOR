@@ -36,7 +36,7 @@ def decode_png(data: bytes) -> tuple[int, int, list[bytes]]:
 
 
 def changed(a: list[bytes], b: list[bytes]) -> int:
-    return sum(1 for ra, rb in zip(a, b) for x, y in zip(ra, rb) if abs(x - y) > 20)
+    return sum(1 for ra, rb in zip(a, b, strict=True) for x, y in zip(ra, rb, strict=True) if abs(x - y) > 20)
 
 
 class Clock:
