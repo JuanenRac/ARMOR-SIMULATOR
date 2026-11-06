@@ -139,6 +139,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--energy-days", type=float, default=1.0, help="days of data of --energy (default 1)")
     parser.add_argument("--energy-step-s", type=int, default=900, help="seconds between the samples of --energy (default 900)")
     parser.add_argument("--record", type=Path, metavar="FILE", help="also write every emitted message to FILE as JSON lines, to play it again with --replay (an existing file is never overwritten)")
+    parser.add_argument("--replay-accepted-only", action="store_true", help="with --replay: leave out the messages a recording made by a server marks as refused (they are played by default, so that the same refusal happens again)")
     parser.add_argument("--replay", type=Path, metavar="FILE", help="emit the messages of a recording made with --record instead of generating them (faults, --validate and --server-url still apply)")
     parser.add_argument("--http-fault", choices=HTTP_FAULTS, default="none", help="spoil the delivery to --server-url, not the messages: a slow link (latency), a message that never arrives (drop) or one sent twice (duplicate)")
     parser.add_argument("--http-fault-every", type=int, default=3, help="every Nth message suffers --http-fault (default 3)")
@@ -353,6 +354,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--interval-ms, --fault-every and --health-every must not be negative")
     if args.replay and (args.alarm_scenario or args.energy or args.solar or args.electrical or args.count != 1 or args.scenario != "patrol" or args.light != "cycle" or args.node_id != "simulator-1"):
         parser.error("--replay brings its own messages: it cannot be combined with --alarm-scenario, --energy, --solar, --electrical, --count, --scenario, --light or --node-id")
+    if args.replay_accepted_only and not args.replay:
+        parser.error("--replay-accepted-only needs --replay")
     if args.record and args.replay and args.record.resolve() == args.replay.resolve():
         parser.error("--record and --replay cannot be the same file")
     if args.http_fault != "none" and not args.server_url:
@@ -443,7 +446,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.replay:
         try:
-            base = iter(load_recording(args.replay))
+            base = iter(load_recording(args.replay, accepted_only=args.replay_accepted_only))
         except RecordingError as error:
             print(f"armor-simulator: {error}", file=sys.stderr)
             return 2

@@ -78,6 +78,32 @@ class RecordingTests(unittest.TestCase):
             with self.assertRaises(RecordingError):
                 load_recording(path, max_bytes=5)
 
+    def test_a_recording_made_by_a_server_keeps_its_time_and_its_refusals_and_plays_them(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "server.jsonl"
+            lines = [
+                {"topic": "armor/node/a/telemetry", "payload": {"x": 1}, "at": "2000-01-01T00:00:00Z", "accepted": True},
+                {"topic": "armor/node/a/telemetry", "payload": {"x": "bad"}, "at": "2000-01-01T00:00:01Z", "accepted": False, "reason": "x must be a number"},
+                {"topic": "armor/node/a/health", "payload": {}},
+            ]
+            path.write_text("".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+            self.assertEqual(len(load_recording(path)), 3)   # the refused message is played too: the same refusal happens again
+            self.assertEqual([topic for topic, _ in load_recording(path, accepted_only=True)], ["armor/node/a/telemetry", "armor/node/a/health"])
+            code, out, err = run("--replay", str(path))
+            self.assertEqual((code, len(out.splitlines())), (0, 3), err)
+            code, out, err = run("--replay", str(path), "--replay-accepted-only")
+            self.assertEqual((code, len(out.splitlines())), (0, 2), err)
+            self.assertEqual(run("--replay-accepted-only")[0], 2)   # it only means something with --replay
+
+    def test_the_extra_fields_of_a_server_recording_are_checked(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "server.jsonl"
+            base = {"topic": "armor/x", "payload": {}}
+            for extra in ({"at": 5}, {"accepted": "yes"}, {"reason": 7}, {"reason": "r" * 201}, {"other": 1}):
+                path.write_text(json.dumps({**base, **extra}) + "\n", encoding="utf-8")
+                with self.assertRaises(RecordingError):
+                    load_recording(path)
+
     def test_replay_does_not_mix_with_generators(self):
         self.assertEqual(run("--replay", "x.jsonl", "--count", "3")[0], 2)
         self.assertEqual(run("--replay", "x.jsonl", "--energy")[0], 2)

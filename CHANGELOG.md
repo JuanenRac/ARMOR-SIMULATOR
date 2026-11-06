@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A recording made by a server is played too:** each line may carry `at` (when the server received the message), `accepted` (false when it refused it) and `reason`, all checked and left out of what is emitted; the refused messages are played as they came, so that the same refusal happens again, and `--replay-accepted-only` leaves them out. The format stays one `topic` and `payload` per line, so every earlier recording still plays.
+
 ## [0.3.5] - The launchers find the shared repository through ARMORCOMMONDIR: build, build-test, test and run (.sh and .bat) use the folder named by that variable when it is set and the sibling ARMOR-COMMON folder otherwise, so a checkout... (and 2 more changes)
 
 - **The launchers find the shared repository through `ARMOR_COMMON_DIR`:** `build`, `build-test`, `test` and `run` (`.sh` and `.bat`) use the folder named by that variable when it is set and the sibling `ARMOR-COMMON` folder otherwise, so a checkout with another layout builds without changing a file.

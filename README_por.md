@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-253%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-255%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 253 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 255 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturidade | Estabelecido |
 | Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, só biblioteca padrão |
-| Testes | 253 (`python -m unittest discover -s tests`) |
+| Testes | 255 (`python -m unittest discover -s tests`) |
 | Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
 | Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
@@ -57,7 +57,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
-| Testes | 🟢 | Passam 253 testes (`python -m unittest discover -s tests`). |
+| Testes | 🟢 | Passam 255 testes (`python -m unittest discover -s tests`). |
 | Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
 | Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
 | Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
