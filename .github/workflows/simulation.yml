@@ -4,6 +4,7 @@
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
 # Jobs that run the software of the system against a simulated installation, without any hardware and without Docker:
+#   * firmware in the loop: the buses of the five nodes, spoiled on purpose, played into the real firmware code of each node (python -m armor_simulator.node_bench)
 #   * server bench: a real, built ARMOR-SERVER fed by the simulator over HTTP and through a broker (python -m armor_simulator.bench_ci)
 # They are a workflow of their own, apart from the baseline one, so that a red bench is easy to tell from a red baseline.
 # A green run says the software works against a simulated installation; it says nothing about a board.
@@ -20,6 +21,40 @@ permissions:
   contents: read
 
 jobs:
+  firmware-in-the-loop:
+    name: Buses of the five nodes into their firmware code
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Fetch the node repositories
+        run: |
+          for repository in ARMOR-NODE-ALARM ARMOR-NODE-ELECTRICAL ARMOR-NODE-HMI ARMOR-NODE-RADAR ARMOR-NODE-SOLAR; do
+            git clone --depth 1 "https://github.com/JuanenRac/${repository}.git" "../${repository}"
+          done
+
+      - name: Build the five drivers and play every bus into its own
+        env:
+          PYTHONPATH: src
+        run: |
+          status=0
+          for pair in ARMOR-NODE-RADAR:ld2450 ARMOR-NODE-ELECTRICAL:pzem ARMOR-NODE-SOLAR:pylontech ARMOR-NODE-ALARM:alarm-loop ARMOR-NODE-HMI:hmi-feed; do
+            repository="${pair%%:*}"
+            bus="${pair##*:}"
+            g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o "/tmp/sim_bench_${bus}" "../${repository}/tests/sim_bench.cpp" || status=1
+            python -m armor_simulator.node_bench --bus "${bus}" --driver "/tmp/sim_bench_${bus}" || status=1
+          done
+          exit "${status}"
+
   server-bench:
     name: Real server fed by the simulator (HTTP and MQTT)
     runs-on: ubuntu-latest
