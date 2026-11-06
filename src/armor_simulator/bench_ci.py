@@ -13,6 +13,7 @@ the server it is given with secrets made up for the run (never printed, never wr
     delivery    a message sent twice and a slow link do not break it
     replay      a recording made by a server from its own traffic (examples/recordings/incident.jsonl) is played again: the accepted messages arrive, and the refused one is
                 refused again for the same reason (with --replay-accepted-only the refusal is left out)
+    replay      the same with a recording of the HTTP reports of an alarm panel, a meter, a solar device and a network node (examples/recordings/http_routes.jsonl)
     mqtt        (with a broker) a node that only exists on the broker shows in the status of the server
 
 The only process it starts besides the server is the broker, and the only ones it stops are the two it started. Nothing is sent outside this machine. The server and the broker are
@@ -41,6 +42,7 @@ from . import cli
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 RECORDING = ROOT / "examples" / "recordings" / "incident.jsonl"
+RECORDING_HTTP = ROOT / "examples" / "recordings" / "http_routes.jsonl"
 START_TIMEOUT_S = 40
 
 
@@ -163,6 +165,17 @@ def run(server_dir: Path, mosquitto: str | None) -> list[dict]:
         checks.add("replay: the accepted messages of a recording arrive", code == 0 and "incident-1" in nodes(), said[-300:])
         code, said = simulate(["--replay", str(RECORDING), "--server-url", base])
         checks.add("replay: the message the server refused is refused again", code == 1 and "armor-simulator:" in said, f"status {code}: {said[-300:]}")
+        # replay of what a server copied from its HTTP routes (alarm, electrical, solar and network reports)
+        def listed(route: str, key: str) -> list:
+            status, body = get(f"{base}{route}", operator)
+            return json.loads(body).get(key, []) if status == 200 else []
+
+        code, said = simulate(["--replay", str(RECORDING_HTTP), "--replay-accepted-only", "--server-url", base])
+        panels = [item.get("node_id") for item in listed("/api/v1/alarm/nodes", "nodes")]
+        meters = [item.get("node_id") for item in listed("/api/v1/electrical/readings", "nodes")]
+        checks.add("replay: the HTTP routes of a recording (alarm, electrical, solar, network) arrive", code == 0 and "alarm-http" in panels and "http-1" in meters, f"status {code}, alarm {panels}, electrical {meters}: {said[-200:]}")
+        code, said = simulate(["--replay", str(RECORDING_HTTP), "--server-url", base])
+        checks.add("replay: the alarm report the server refused over HTTP is refused again", code == 1 and "armor-simulator:" in said, f"status {code}: {said[-300:]}")
         # mqtt
         if broker_port:
             os.environ.pop("ARMOR_INGEST_TOKEN", None)       # the broker road takes no ingest token, and the simulator refuses one without a server address

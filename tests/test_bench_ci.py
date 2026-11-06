@@ -34,6 +34,22 @@ class RecordingTests(unittest.TestCase):
         for word in ("token", "password", "secret", "key"):
             self.assertNotIn(word, text)
 
+    def test_the_recording_of_the_http_routes_has_one_message_of_each_kind_and_one_refusal(self):
+        lines = [json.loads(line) for line in bench_ci.RECORDING_HTTP.read_text(encoding="utf-8").splitlines() if line.strip()]
+        kinds = {line["topic"].split("/")[1] for line in lines}
+        self.assertEqual(kinds, {"alarm", "electrical", "solar", "network"})
+        refused = [line for line in lines if line["accepted"] is False]
+        self.assertEqual(len(refused), 1)
+        self.assertEqual(refused[0]["reason"], "the siren sounds only in the alarm phase")
+        self.assertTrue(refused[0]["payload"]["siren"] and refused[0]["payload"]["phase"] != "alarm")
+        self.assertEqual(len(load_recording(bench_ci.RECORDING_HTTP)), len(lines))
+        self.assertEqual(len(load_recording(bench_ci.RECORDING_HTTP, accepted_only=True)), len(lines) - 1)
+
+    def test_the_recording_of_the_http_routes_has_no_secret(self):
+        text = bench_ci.RECORDING_HTTP.read_text(encoding="utf-8").lower()
+        for word in ("token", "password", "secret", "key"):
+            self.assertNotIn(word, text)
+
 
 class RunTests(unittest.TestCase):
     def test_without_a_built_server_it_does_not_run(self):
