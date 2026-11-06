@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-255%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-269%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、255 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、269 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 確立 |
 | 役割 | オフラインのテレメトリ・環境シミュレーター（ファミリー：Testing、親：ARMOR-COMMON） |
 | 技術 | Python 3.11+、標準ライブラリのみ |
-| テスト | 255 (`python -m unittest discover -s tests`) |
+| テスト | 269 (`python -m unittest discover -s tests`) |
 | シナリオと障害 | シナリオ 4、障害 7（うち 3 は意図的にコントラクト違反） |
 | 動作環境 | 任意のコンピューターまたは CI |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
@@ -57,7 +57,7 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | シナリオ、故障、サーバーへの配信は動作します。ノードを接続していないとき、コンピューター上のサーバーにデータを送るのがこれです。 |
-| テスト | 🟢 | 255 件のテストが通ります（`python -m unittest discover -s tests`）。 |
+| テスト | 🟢 | 269 件のテストが通ります（`python -m unittest discover -s tests`）。 |
 | プロトコルとデータ | 🟠 | 幾何は例示用で、実際の LD2450 レーダーのモデルではありません。実機との比較もしていません。 |
 | 連携 | 🟢 | テストではメッセージをサーバーに配信しており、CM5 テストベンチのサーバーにもこれでデータを送れます。 |
 | ドキュメント | 🟢 | 8 言語と変更履歴は最新です。 |
@@ -271,6 +271,7 @@ README とテキストは、英語、スペイン語、フランス語、イタ�
 * [アラームシナリオ](docs/ALARM_SCENARIOS.md)：ファイル形式とサーバーの応答の検証方法
 * [エネルギーモデル](docs/ENERGY_MODEL.md)：現実的な太陽光・電力データとその設定
 * [メーターバス](docs/METER_BUS.md)：TCP 経由のエネルギーメーターと設定ファイル
+* [シミュレーションベンチ](docs/NODE_BENCH.md)：ノードのバスを実際のファームウェアコードに流し込み、Docker なしでサーバーを動かす
 * [偽カメラ](docs/FAKE_CAMERAS.md)：偽の IP カメラと設定ファイル
 * [機能マトリクス：何が証明され、何が証明されていないか](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [プロジェクトカタログ：バージョンと、リポジトリ同士の依存関係](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)

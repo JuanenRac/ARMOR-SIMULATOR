@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 o successiva">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Linguaggio">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-255%20passing-2ea44f.svg" alt="Test">
+  <img src="https://img.shields.io/badge/Tests-269%20passing-2ea44f.svg" alt="Test">
   <img src="https://img.shields.io/badge/Version-0.3.5-0f6cbd.svg" alt="Versione">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturità">
 </p>
 
 ---
 
-**Controllo di onestà - cosa funziona oggi:** Gli scenari, i guasti, la consegna a un server e i 255 test sono reali, e il simulatore è ciò che alimenta un server su un computer quando nessun nodo è collegato. La geometria è **illustrativa**, non un modello del vero radar LD2450, e nulla di tutto ciò è stato confrontato con hardware reale.
+**Controllo di onestà - cosa funziona oggi:** Gli scenari, i guasti, la consegna a un server e i 269 test sono reali, e il simulatore è ciò che alimenta un server su un computer quando nessun nodo è collegato. La geometria è **illustrativa**, non un modello del vero radar LD2450, e nulla di tutto ciò è stato confrontato con hardware reale.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturità | Consolidato |
 | Ruolo | Simulatore offline di telemetria e ambiente (famiglia: Testing, padre: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, solo libreria standard |
-| Test | 255 (`python -m unittest discover -s tests`) |
+| Test | 269 (`python -m unittest discover -s tests`) |
 | Scenari e guasti | 4 scenari, 7 guasti (3 violano il contratto di proposito) |
 | Gira su | Qualsiasi computer, o CI |
 | Su hardware reale | Non applicabile: è il sostituto dell'hardware, usato su un computer |
@@ -57,7 +57,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟢 | Gli scenari, i guasti e la consegna a un server funzionano; è ciò che alimenta un server su un computer quando nessun nodo è collegato. |
-| Test | 🟢 | Superano 255 test (`python -m unittest discover -s tests`). |
+| Test | 🟢 | Superano 269 test (`python -m unittest discover -s tests`). |
 | Protocolli e dati | 🟠 | La geometria è illustrativa, non un modello del vero radar LD2450, e nulla è stato confrontato con hardware reale. |
 | Integrazione | 🟢 | Consegna i suoi messaggi a un server nei test e il server del banco di prova CM5 può essere alimentato da esso. |
 | Documentazione | 🟢 | Otto lingue e il registro delle modifiche sono aggiornati. |
@@ -271,6 +271,7 @@ Il README e i testi esistono in inglese, spagnolo, francese, italiano, tedesco, 
 * [Scenari d'allarme](docs/ALARM_SCENARIOS.md): il formato del file e come verificare la risposta di un server
 * [Modello energetico](docs/ENERGY_MODEL.md): i dati solari ed elettrici realistici e le loro impostazioni
 * [Bus dei contatori](docs/METER_BUS.md): i contatori di energia su TCP e il file di impostazioni
+* [Banco di simulazione](docs/NODE_BENCH.md): i bus dei nodi suonati contro il codice vero del firmware, e il server senza Docker
 * [False telecamere](docs/FAKE_CAMERAS.md): le false telecamere IP e il loro file di impostazioni
 * [Matrice delle capacità: cosa è provato e cosa no](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/CAPABILITY_MATRIX.md)
 * [Catalogo dei progetti: versioni e dipendenze tra i repository](https://github.com/JuanenRac/ARMOR-DOCS/blob/main/docs/PROJECT_CATALOG.md)

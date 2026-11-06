@@ -1,0 +1,62 @@
+# =============================================================================
+# A.R.M.O.R. - the simulation bench of ARMOR-SIMULATOR
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D)
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Jobs that run the software of the system against a simulated installation, without any hardware and without Docker:
+#   * server bench: a real, built ARMOR-SERVER fed by the simulator over HTTP and through a broker (python -m armor_simulator.bench_ci)
+# They are a workflow of their own, apart from the baseline one, so that a red bench is easy to tell from a red baseline.
+# A green run says the software works against a simulated installation; it says nothing about a board.
+name: Simulation bench
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  server-bench:
+    name: Real server fed by the simulator (HTTP and MQTT)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch the server the bench runs
+        run: git clone --depth 1 https://github.com/JuanenRac/ARMOR-SERVER.git ../ARMOR-SERVER
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Build the server
+        working-directory: ../ARMOR-SERVER
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Install a broker and the MQTT client of the simulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes mosquitto
+          sudo systemctl stop mosquitto || true
+          python -m pip install --quiet paho-mqtt
+
+      - name: Run the bench
+        env:
+          PYTHONPATH: src
+        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto
