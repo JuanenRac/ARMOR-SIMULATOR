@@ -4,7 +4,7 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
     python -m armor_simulator.node_shim --node radar --driver ./mqtt_shim --node-id shim-radar --mqtt-url mqtt://127.0.0.1:1883
 
-The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL, ARMOR-NODE-SOLAR and ARMOR-NODE-ALARM; `--node` says which), built from the core files of its firmware. This module plays it the serial
+The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL, ARMOR-NODE-SOLAR, ARMOR-NODE-ALARM and ARMOR-NODE-HMI; `--node` says which), built from the core files of its firmware. This module plays it the serial
 stream of the radar modules that `buses.py` makes, one chunk per line with a made-up light level, and publishes on the broker what it prints (topic, tab, payload), with the QoS and the
 topic the real node uses. The framing, the decoding and the JSON are the firmware's; only the broker client and the clock are the simulator's. Nodes are added one at a time, each one
 with a driver of its own. Only simulated data goes out, and only to a broker on this machine or a private network (see `mqtt_out.py`).
@@ -113,6 +113,32 @@ def alarm_verify(messages: list[tuple[str, dict]]) -> str | None:
     return f"the panel never reported the phases {missing}" if missing else None
 
 
+HMI_RESET_AT = 3      # the round where the supply sags and the panel restarts
+
+
+def hmi_lines(rounds: int = 6, seed: int = 1, start_ms: int = 1_000, step_ms: int = 60_000) -> tuple[list[str], int]:
+    """The health reports of a wall panel as the driver's input lines (the HMI node): it runs, the supply sags at round `HMI_RESET_AT` (the panel restarts with the reason `brownout`,
+    its uptime starting again, the broker reached once more and a last error), then it runs on."""
+    lines = []
+    for number in range(rounds):
+        restarted = number >= HMI_RESET_AT
+        uptime = (number - HMI_RESET_AT) * 60 + 8 if restarted else number * 60 + 3_600
+        reset = 9 if restarted else 1
+        error = "mqtt connection lost" if number == HMI_RESET_AT else ""
+        lines.append(f"{start_ms + step_ms * number}	{uptime}	{reset}	{180_000 - number * 100 + seed}	{150_000}	wifi	{-55 - number}	{1 if restarted else 0}	{error}")
+    return lines, rounds
+
+
+def hmi_verify(messages: list[tuple[str, dict]]) -> str | None:
+    """The reports must show the restart: a brownout after a power-on, and an uptime that started again."""
+    reports = [body for topic, body in messages if body.get("kind") == "node_health"]
+    reasons = [body.get("reset_reason") for body in reports]
+    if "power_on" not in reasons or "brownout" not in reasons:
+        return f"the reports do not show a power-on followed by a brownout: {reasons}"
+    uptimes = [body.get("uptime_s", 0) for body in reports]
+    return None if any(later < earlier for earlier, later in zip(uptimes, uptimes[1:], strict=False)) else "the uptime never started again"
+
+
 #: What each node's shim prints: the topics it may use (the first one is the message that carries the readings) and the lines it is played.
 @dataclass(frozen=True)
 class NodeShim:
@@ -126,6 +152,7 @@ NODES: dict[str, NodeShim] = {
     "radar": NodeShim(("armor/node/{id}/",), "/telemetry", stream_lines),
     "electrical": NodeShim(("armor/electrical/{id}/", "armor/health/{id}"), "/state", meter_lines),
     "alarm": NodeShim(("armor/alarm/{id}/", "armor/health/{id}"), "/state", alarm_lines, alarm_verify),
+    "hmi": NodeShim(("armor/health/{id}",), "", hmi_lines, hmi_verify),
     "solar": NodeShim(("armor/solar/{id}/", "armor/health/{id}"), "/state", solar_lines),
 }
 
@@ -176,6 +203,8 @@ def main(argv: list[str] | None = None) -> int:
             lines, frames = stream_lines(args.seed, args.frames)
         elif args.node == "solar":
             lines, frames = solar_lines(args.frames, args.seed)
+        elif args.node == "hmi":
+            lines, frames = hmi_lines(args.frames, args.seed)
         elif args.node == "alarm":
             lines, frames = alarm_lines(max(args.frames, len(ALARM_STEPS)), args.seed)
         else:

@@ -118,6 +118,18 @@ class ShimTests(unittest.TestCase):
         self.assertIsNone(node_shim.alarm_verify(every))
         self.assertIn("alarm", node_shim.alarm_verify(every[:2] + every[3:]))
 
+    def test_the_hmi_reports_a_brownout_restart_with_the_uptime_starting_again(self):
+        lines, expected = node_shim.hmi_lines(6)
+        self.assertEqual((len(lines), expected), (6, 6))
+        rows = [line.split("	") for line in lines]
+        self.assertTrue(all(len(row) == 9 for row in rows))
+        self.assertEqual([row[2] for row in rows], ["1", "1", "1", "9", "9", "9"])
+        self.assertLess(int(rows[3][1]), int(rows[2][1]))
+        good = [("armor/health/n1", {"kind": "node_health", "reset_reason": reason, "uptime_s": up}) for reason, up in (("power_on", 100), ("brownout", 5))]
+        self.assertIsNone(node_shim.hmi_verify(good))
+        self.assertIsNotNone(node_shim.hmi_verify(good[:1]))
+        self.assertIsNotNone(node_shim.hmi_verify([good[0], ("armor/health/n1", {"kind": "node_health", "reset_reason": "brownout", "uptime_s": 200})]))
+
     def test_a_topic_of_another_node_is_refused(self):
         driver = stand_in("import sys\nfor line in sys.stdin:\n    print('armor/node/other/telemetry\t{}')\n")
         with self.assertRaises(node_shim.ShimError):

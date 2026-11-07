@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The HMI node in the MQTT shim:** `--node hmi` plays the health reports of a wall panel, with a sag of the supply (restart with the reason brownout, the uptime starting again, a last error) into `tests/mqtt_shim.cpp` of ARMOR-NODE-HMI, which writes them with the firmware's own report code; the shim refuses a run that does not show the restart, and the server bench checks that the real server lists the panel as an HMI with the brownout (`--shim-hmi-driver`).
+
 - **The alarm node in the MQTT shim:** `--node alarm` plays the steps of a wired panel (arming away, a door loop that opens, a power cut and the restart that takes the alarm back, the PIN that disarms, arming again) into `tests/mqtt_shim.cpp` of ARMOR-NODE-ALARM, which runs the real zone classifier, panel and message writer; the shim refuses a run in which the panel did not report every phase, and the server bench checks that the real server shows the node armed in away mode (`--shim-alarm-driver`).
 
 - **The solar node in the MQTT shim:** `--node solar` plays the replies of a simulated inverter (text framed by the node's own code) and the console tables of a Pylontech stack, with one round on the battery after a mains loss, into `tests/mqtt_shim.cpp` of ARMOR-NODE-SOLAR; the server bench checks that the real server lists both devices in its solar readings (`--shim-solar-driver`).
