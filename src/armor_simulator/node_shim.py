@@ -2,7 +2,7 @@
 
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
-    python -m armor_simulator.node_shim --node radar --driver ./mqtt_shim --node-id shim-radar --mqtt-url mqtt://127.0.0.1:1883
+    python -m armor_simulator.node_shim --node radar --driver ./mqtt_shim --node-id shim-radar --mqtt-url mqtt://127.0.0.1:18883
 
 The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL, ARMOR-NODE-SOLAR, ARMOR-NODE-ALARM and ARMOR-NODE-HMI; `--node` says which), built from the core files of its firmware. This module plays it the serial
 stream of the radar modules that `buses.py` makes, one chunk per line with a made-up light level, and publishes on the broker what it prints (topic, tab, payload), with the QoS and the
