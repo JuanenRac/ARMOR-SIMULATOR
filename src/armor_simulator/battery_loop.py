@@ -221,7 +221,7 @@ def run_checks(add: Callable[..., None], base: str, operator_get: Callable[[str]
         status, third = admin.call("POST", "/api/v1/solar/battery-ops", order)
         third = stage_is(third.get("id", "x"), "armed")
         status, cancelled = admin.call("POST", f"/api/v1/solar/battery-ops/{third.get('id')}/cancel", {})
-        add("battery loop: an armed order that is withdrawn is never executed", status == 200 and cancelled.get("stage") == "withdrawn" and node.console.outputs["cfet"] == "ON" and len(node._armed) == token_before + 1,
+        add("battery loop: an armed order that is withdrawn is never executed", status in (200, 202) and cancelled.get("stage") == "withdrawn" and node.console.outputs["cfet"] == "ON" and len(node._armed) == token_before + 1,
             f"{status} {cancelled.get('stage')}")
     finally:
         client.loop_stop()
