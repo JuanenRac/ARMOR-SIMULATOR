@@ -17,6 +17,7 @@ the server it is given with secrets made up for the run (never printed, never wr
     cameras     two fake IP cameras (a walker, and one that answers an error on purpose) are configured in the server by its HTTP route: the picture of the first reaches the server
                 preview through a ticket as a real PNG, the second is a clean refusal (502) and the server goes on
     mqtt        (with a broker) a node that only exists on the broker shows in the status of the server
+    shim        (with a broker and --shim-driver) the message code of the real radar node, built for a computer, publishes the telemetry of a simulated walker on the broker
 
 The only process it starts besides the server is the broker, and the only ones it stops are the two it started. Nothing is sent outside this machine. The server and the broker are
 real; the nodes and what they sense are simulated, so a green run says the software side works against a simulated installation and nothing about a board.
@@ -40,7 +41,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from . import cli
+from . import cli, node_shim
 from .fake_cameras import FakeCameras, parse_config as parse_camera_config, serve as serve_fake_cameras, stop as stop_fake_cameras
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -123,6 +124,14 @@ def camera_checks(checks: "Check", base: str, operator: str) -> None:
         stop_fake_cameras(camera_server)
 
 
+def shim_main(argv: list[str]) -> tuple[int, str]:
+    """Runs the MQTT shim in this process; gives its exit status and what it said on its error output."""
+    err = io.StringIO()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+        code = node_shim.main(argv)
+    return code, err.getvalue()
+
+
 def simulate(argv: list[str]) -> tuple[int, str]:
     """Runs the command line of the simulator in this process; gives its exit status and what it said on its error output."""
     err = io.StringIO()
@@ -143,7 +152,7 @@ class Check:
         print(f"{'PASS' if passed else 'FAIL'} {name}{' - ' + detail if detail and not passed else ''}", flush=True)
 
 
-def run(server_dir: Path, mosquitto: str | None) -> list[dict]:
+def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None) -> list[dict]:
     entry = server_dir / "dist" / "server.mjs"
     node = shutil.which("node")
     if not entry.is_file() or not node:
@@ -228,6 +237,15 @@ def run(server_dir: Path, mosquitto: str | None) -> list[dict]:
             except BenchError:
                 pass
             checks.add("mqtt: a node that only exists on the broker shows in the status", code == 0 and appeared, said[-300:])
+            if shim_driver:
+                shim_code, shim_said = shim_main(["--driver", shim_driver, "--node-id", "shim-radar", "--mqtt-url", f"mqtt://127.0.0.1:{broker_port}", "--frames", "12"])
+                shim_seen = False
+                try:
+                    shim_seen = bool(wait_until(lambda: "shim-radar" in nodes(), 15, "the node shim on the broker"))
+                except BenchError:
+                    pass
+                checks.add("shim: the message code of the real radar node, built for a computer, publishes on the broker and the node shows in the status", shim_code == 0 and shim_seen, shim_said[-300:])
+                checks.add("shim: the server still answers after the shim", get(f"{base}/healthz")[0] == 200)
         else:
             print("SKIP mqtt: no broker (install mosquitto and pass --mosquitto auto)")
         checks.add("server still answers at the end", get(f"{base}/healthz")[0] == 200)
@@ -247,10 +265,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="armor_simulator.bench_ci", description=__doc__.split("\n\n")[0])
     parser.add_argument("--server-dir", type=Path, required=True, help="the ARMOR-SERVER folder, built (dist/server.mjs)")
     parser.add_argument("--mosquitto", help="a mosquitto program, or 'auto' to look for it; with one, the road through the broker is checked too")
+    parser.add_argument("--shim-driver", help="the radar node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-RADAR); with it and a broker, the message code of the real node publishes too")
     parser.add_argument("--json", type=Path, metavar="FILE", help="also write the report there")
     args = parser.parse_args(argv)
     try:
-        rows = run(args.server_dir.resolve(), args.mosquitto)
+        rows = run(args.server_dir.resolve(), args.mosquitto, args.shim_driver)
     except (BenchError, OSError) as error:
         print(f"bench: {error}", file=sys.stderr)
         return 2

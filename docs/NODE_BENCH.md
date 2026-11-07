@@ -41,3 +41,14 @@ for the same reason); two fake IP cameras (a walker, and one that answers an err
 the processes it started.
 
 The workflow `Simulation bench` runs it on every push and once a week. What it does not replace: the Docker image, its healthcheck and the real Mosquitto settings of the CM5 profile.
+
+## 3. The MQTT shim: the message code of a node, publishing
+
+`python -m armor_simulator.node_shim --driver <program> --node-id <id> --mqtt-url mqtt://127.0.0.1:1883` plays the serial stream of the radar modules, one chunk per line, into
+`tests/mqtt_shim.cpp` of ARMOR-NODE-RADAR. That program is built from the same core files as the firmware (framer, LD2450 decoder, track builder, `build_info`, `build_health`,
+`build_telemetry`, `build_topic`) and prints one `topic`, tab, `payload` line per message; the simulator publishes each line on the broker with QoS 1. The broker must be on this machine or
+a private network. In the server bench (`bench_ci --mosquitto auto --shim-driver <program>`) the node then has to show in the status of the real server. Nodes are added one at a time,
+each with a shim program of its own in its repository.
+
+**What it proves.** The messages the code of the node writes are accepted by the real server over the real broker. **What it does not.** The Wi-Fi or Ethernet link, the TLS session, the
+broker client of the board and the clock of the board; those need the board.
