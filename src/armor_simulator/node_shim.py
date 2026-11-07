@@ -184,7 +184,8 @@ def main(argv: list[str] | None = None) -> int:
         telemetry = [body for topic, body in messages if topic.endswith(NODES[args.node].main)]
         if len(telemetry) != frames:
             raise ShimError(f"{frames} rounds went in and {len(telemetry)} messages with the readings came out")
-        problem = NODES[args.node].verify(messages) if NODES[args.node].verify else None
+        verify = NODES[args.node].verify
+        problem = verify(messages) if verify is not None else None
         if problem:
             raise ShimError(problem)
         count = publish(messages, args.mqtt_url, args.mqtt_allow_network)
