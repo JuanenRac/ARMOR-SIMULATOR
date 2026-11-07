@@ -107,4 +107,4 @@ jobs:
       - name: Run the bench
         env:
           PYTHONPATH: src
-        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim --shim-electrical-driver /tmp/mqtt_shim_electrical --shim-solar-driver /tmp/mqtt_shim_solar --shim-alarm-driver /tmp/mqtt_shim_alarm --shim-hmi-driver /tmp/mqtt_shim_hmi
+        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim --shim-electrical-driver /tmp/mqtt_shim_electrical --shim-solar-driver /tmp/mqtt_shim_solar --shim-alarm-driver /tmp/mqtt_shim_alarm --shim-hmi-driver /tmp/mqtt_shim_hmi --battery-loop

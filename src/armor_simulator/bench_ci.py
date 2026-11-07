@@ -154,7 +154,7 @@ class Check:
 
 def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None, electrical_driver: str | None = None,
         solar_driver: str | None = None, alarm_driver: str | None = None,
-        hmi_driver: str | None = None) -> list[dict]:
+        hmi_driver: str | None = None, battery_loop: bool = False) -> list[dict]:
     entry = server_dir / "dist" / "server.mjs"
     node = shutil.which("node")
     if not entry.is_file() or not node:
@@ -165,6 +165,8 @@ def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None,
     secrets_ = {name: secrets.token_hex(16) for name in ("ARMOR_INGEST_TOKEN", "ARMOR_CONTROL_TOKEN", "ARMOR_OPERATOR_TOKEN", "ARMOR_CAMERA_CONFIG_KEY")}
     env = {key: os.environ[key] for key in ("PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "TMP", "TEMP", "TMPDIR") if key in os.environ}
     env.update(secrets_, ARMOR_DATA_DIR=str(work / "data"), ARMOR_HOST="127.0.0.1", ARMOR_PORT=str(port), ARMOR_TZ="UTC", ARMOR_STUDIO_USERNAME="admin", ARMOR_STUDIO_PASSWORD=secrets.token_hex(12))
+    if battery_loop:
+        env["ARMOR_BATTERY_WRITE"] = "1"      # the switch of the server; the simulated node keeps its own switch off until the loop turns it on
     children: list[subprocess.Popen] = []
     broker_port = None
     try:
@@ -279,6 +281,9 @@ def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None,
                 except BenchError:
                     pass
                 checks.add("shim: the health report code of the real HMI node, built for a computer, reaches the server, which shows the panel with the brownout restart", shim_code == 0 and report.get("last_error", "") in ("", "mqtt connection lost"), shim_said[-300:])
+            if battery_loop:
+                from . import battery_loop as loop
+                loop.run_checks(checks.add, base, lambda route: get(f"{base}{route}", operator), broker_port, "admin", env["ARMOR_STUDIO_PASSWORD"])
             checks.add("shim: the server still answers after the shims", get(f"{base}/healthz")[0] == 200)
         else:
             print("SKIP mqtt: no broker (install mosquitto and pass --mosquitto auto)")
@@ -301,13 +306,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mosquitto", help="a mosquitto program, or 'auto' to look for it; with one, the road through the broker is checked too")
     parser.add_argument("--shim-driver", help="the radar node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-RADAR); with it and a broker, the message code of the real node publishes too")
     parser.add_argument("--shim-alarm-driver", help="the alarm node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-ALARM)")
+    parser.add_argument("--battery-loop", action="store_true", help="turn ARMOR_BATTERY_WRITE on in the server and run the battery-writing loop against a simulated node with a fake Pylontech console (needs a broker and paho-mqtt)")
     parser.add_argument("--shim-hmi-driver", help="the HMI node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-HMI)")
     parser.add_argument("--shim-solar-driver", help="the solar node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-SOLAR)")
     parser.add_argument("--shim-electrical-driver", help="the electrical node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-ELECTRICAL)")
     parser.add_argument("--json", type=Path, metavar="FILE", help="also write the report there")
     args = parser.parse_args(argv)
     try:
-        rows = run(args.server_dir.resolve(), args.mosquitto, args.shim_driver, args.shim_electrical_driver, args.shim_solar_driver, args.shim_alarm_driver, args.shim_hmi_driver)
+        rows = run(args.server_dir.resolve(), args.mosquitto, args.shim_driver, args.shim_electrical_driver, args.shim_solar_driver, args.shim_alarm_driver, args.shim_hmi_driver, args.battery_loop)
     except (BenchError, OSError) as error:
         print(f"bench: {error}", file=sys.stderr)
         return 2
