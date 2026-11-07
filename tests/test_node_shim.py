@@ -53,6 +53,10 @@ ELECTRICAL_OK = "import sys\nfor line in sys.stdin:\n    print('armor/electrical
 ELECTRICAL_WRONG = "import sys\nfor line in sys.stdin:\n    print('armor/node/n1/telemetry\\t{}')\n"
 
 
+SOLAR_OK = "import sys\nfor line in sys.stdin:\n    print('armor/solar/n1/axpert-1/state\\t{}')\n"
+SOLAR_WRONG = "import sys\nfor line in sys.stdin:\n    print('armor/solar/n2/axpert-1/state\\t{}')\n"
+
+
 class ShimTests(unittest.TestCase):
     def test_a_clean_stream_is_one_chunk_per_frame(self):
         lines, frames = node_shim.stream_lines(1, 12)
@@ -80,6 +84,24 @@ class ShimTests(unittest.TestCase):
         self.assertEqual(len(node_shim.run_driver(good, "n1", ["1\t-"], node="electrical")), 2)
         with self.assertRaises(node_shim.ShimError):
             node_shim.run_driver(stand_in(ELECTRICAL_WRONG), "n1", ["1\t-"], node="electrical")
+
+    def test_the_solar_rounds_carry_an_inverter_and_a_battery_with_a_mains_loss(self):
+        lines, expected = node_shim.solar_lines(5)
+        self.assertEqual((len(lines), expected), (10, 10))
+        inverter = [line.split("	") for line in lines if "	inverter	" in line]
+        batteries = [line.split("	") for line in lines if "	battery	" in line]
+        self.assertEqual((len(inverter), len(batteries)), (5, 5))
+        self.assertTrue(all(len(item) == 6 for item in inverter) and all(len(item) == 5 for item in batteries))
+        self.assertEqual([item[4] for item in inverter], ["L", "L", "L", "B", "L"])
+        self.assertEqual(inverter[3][5][5], "1")       # the mains-loss flag of QPIWS
+        self.assertEqual(len(inverter[0][3].split()), 20)
+        self.assertEqual(len(bytes.fromhex(batteries[0][3])) > 0, True)
+
+    def test_the_solar_shim_may_print_its_own_topics_only(self):
+        good = stand_in(SOLAR_OK)
+        self.assertEqual(len(node_shim.run_driver(good, "n1", ["1	x"], node="solar")), 1)
+        with self.assertRaises(node_shim.ShimError):
+            node_shim.run_driver(stand_in(SOLAR_WRONG), "n1", ["1	x"], node="solar")
 
     def test_a_topic_of_another_node_is_refused(self):
         driver = stand_in("import sys\nfor line in sys.stdin:\n    print('armor/node/other/telemetry\t{}')\n")

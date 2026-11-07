@@ -4,7 +4,7 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
     python -m armor_simulator.node_shim --node radar --driver ./mqtt_shim --node-id shim-radar --mqtt-url mqtt://127.0.0.1:1883
 
-The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR and ARMOR-NODE-ELECTRICAL; `--node` says which), built from the core files of its firmware. This module plays it the serial
+The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL and ARMOR-NODE-SOLAR; `--node` says which), built from the core files of its firmware. This module plays it the serial
 stream of the radar modules that `buses.py` makes, one chunk per line with a made-up light level, and publishes on the broker what it prints (topic, tab, payload), with the QoS and the
 topic the real node uses. The framing, the decoding and the JSON are the firmware's; only the broker client and the clock are the simulator's. Nodes are added one at a time, each one
 with a driver of its own. Only simulated data goes out, and only to a broker on this machine or a private network (see `mqtt_out.py`).
@@ -20,7 +20,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import buses, meter_bus
+from . import buses, meter_bus, solar
 from .mqtt_out import MqttOutError, MqttSink
 
 TIMEOUT_S = 60
@@ -58,6 +58,39 @@ def meter_lines(rounds: int = 6, start_ms: int = 1_000, step_ms: int = 1_000) ->
     return lines, rounds
 
 
+def _qpigs(reading: dict) -> str:
+    """The QPIGS reply text an inverter of the Voltronic family says for a simulated reading (the standard arrangement, with the PV power in the last field)."""
+    current = reading["battery_a"]
+    bits = ("1" if reading["load_on"] else "0")
+    status = f"000{bits}0{'1' if reading['pv_charging'] else '0'}{'1' if reading['pv_charging'] else '0'}{'1' if reading['ac_charging'] else '0'}"
+    fields = [f"{reading['grid_v']:05.1f}", f"{reading['grid_hz']:04.1f}", f"{reading['out_v']:05.1f}", f"{reading['out_hz']:04.1f}", f"{reading['out_va']:04d}", f"{reading['out_w']:04d}",
+              f"{reading['load_percent']:03d}", "380", f"{reading['battery_v']:05.2f}", f"{round(max(current, 0)):03d}", f"{reading['battery_percent']:03d}", f"{reading['heatsink_c']:04d}",
+              f"{round(reading['pv_a']):04d}", f"{reading['pv_v']:05.1f}", f"{reading['battery_v']:05.2f}", f"{round(max(-current, 0)):05d}", status, "00", "00", f"{reading['pv_w']:05d}"]
+    return " ".join(fields)
+
+
+def _qpiws(reading: dict) -> str:
+    flags = ["0"] * 36
+    if "line_fail" in reading["warnings"]:
+        flags[5] = "1"
+    return "".join(flags)
+
+
+def solar_lines(rounds: int = 6, seed: int = 1, start_ms: int = 1_000, step_ms: int = 1_000, outage_at: int = 3) -> tuple[list[str], int]:
+    """The rounds of an inverter and a Pylontech stack as the driver's input lines (the solar node): the inverter's replies as text (the driver frames them with the node's CRC) and the
+    two consoles of the battery as hex. Round `outage_at` is on the battery with the mains lost. Two messages with readings must come out of every round."""
+    lines = []
+    for number in range(rounds):
+        reading = solar.inverter("shim-solar", number, seed)
+        if number == outage_at:
+            reading.update(mode="battery", grid_v=0.0, grid_hz=0.0, warnings=["line_fail"], battery_a=-3.0)
+        stamp = start_ms + step_ms * number
+        lines.append(f"{stamp}	inverter	axpert-1	{_qpigs(reading)}	{'B' if reading['mode'] == 'battery' else 'L'}	{_qpiws(reading)}")
+        pwr, bat = buses.pylontech(seed + number, "none", modules=2).payload.split(",")
+        lines.append(f"{stamp}	battery	us3000-1	{pwr}	{bat}")
+    return lines, 2 * rounds
+
+
 #: What each node's shim prints: the topics it may use (the first one is the message that carries the readings) and the lines it is played.
 @dataclass(frozen=True)
 class NodeShim:
@@ -69,6 +102,7 @@ class NodeShim:
 NODES: dict[str, NodeShim] = {
     "radar": NodeShim(("armor/node/{id}/",), "/telemetry", stream_lines),
     "electrical": NodeShim(("armor/electrical/{id}/", "armor/health/{id}"), "/state", meter_lines),
+    "solar": NodeShim(("armor/solar/{id}/", "armor/health/{id}"), "/state", solar_lines),
 }
 
 
@@ -114,7 +148,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args(argv)
     try:
-        lines, frames = stream_lines(args.seed, args.frames) if args.node == "radar" else meter_lines(args.frames)
+        if args.node == "radar":
+            lines, frames = stream_lines(args.seed, args.frames)
+        elif args.node == "solar":
+            lines, frames = solar_lines(args.frames, args.seed)
+        else:
+            lines, frames = meter_lines(args.frames)
         messages = run_driver(args.driver.split(), args.node_id, lines, node=args.node)
         telemetry = [body for topic, body in messages if topic.endswith(NODES[args.node].main)]
         if len(telemetry) != frames:
