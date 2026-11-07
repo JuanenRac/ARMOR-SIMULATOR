@@ -212,5 +212,40 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual((args.camera_port, args.camera_host), (0, "127.0.0.1"))
 
 
+class PanTiltTests(unittest.TestCase):
+    def head(self):
+        config = CameraConfig(cameras=(Camera(id="head", path="/head.png", auth="basic", ptz=True), Camera(id="fixed", path="/fixed.png")))
+        return FakeCameras(config, password=PASSWORD)
+
+    def login(self):
+        return "Basic " + base64.b64encode(f"admin:{PASSWORD}".encode()).decode()
+
+    def test_a_move_with_the_login_is_confirmed_in_the_words_of_the_camera_and_recorded(self):
+        cameras = self.head()
+        status, _, body = cameras.answer("/cgi-bin/hi3510/ptzctrl.cgi?-step=0&-act=left&-speed=38", self.login())
+        self.assertEqual((status, body), (200, b"[Succeed]set ok."))
+        self.assertEqual(cameras.moves, [("head", "left")])
+
+    def test_a_move_without_the_login_or_with_another_password_moves_nothing(self):
+        cameras = self.head()
+        self.assertEqual(cameras.answer("/cgi-bin/hi3510/ptzctrl.cgi?-act=left", None)[0], 401)
+        wrong = "Basic " + base64.b64encode(b"admin:nope").decode()
+        self.assertEqual(cameras.answer("/cgi-bin/hi3510/ptzctrl.cgi?-act=left", wrong)[0], 401)
+        self.assertEqual(cameras.moves, [])
+
+    def test_an_action_that_is_not_in_the_table_is_refused(self):
+        cameras = self.head()
+        self.assertEqual(cameras.answer("/cgi-bin/hi3510/ptzctrl.cgi?-act=sideways", self.login())[0], 400)
+        self.assertEqual(cameras.moves, [])
+
+    def test_a_server_with_no_head_has_no_such_address(self):
+        cameras = FakeCameras(CameraConfig(cameras=(Camera(id="fixed"),)))
+        self.assertEqual(cameras.answer("/cgi-bin/hi3510/ptzctrl.cgi?-act=left", None)[0], 404)
+
+    def test_the_head_flag_is_read_from_the_file(self):
+        config = parse_config({"schema": "armor-fake-cameras/1", "cameras": [{"id": "a", "path": "/a.png", "ptz": True}, {"id": "b", "path": "/b.png"}]})
+        self.assertEqual([camera.ptz for camera in config.cameras], [True, False])
+
+
 if __name__ == "__main__":
     unittest.main()

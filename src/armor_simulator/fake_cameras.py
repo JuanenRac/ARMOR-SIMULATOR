@@ -28,10 +28,13 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 SCHEMA = "armor-fake-cameras/1"
 SCENES = ("still", "walker", "flicker", "dark", "waving-tree")
 AUTHS = ("none", "basic", "digest", "digest-sha256")
+PTZ_ROUTE = "/cgi-bin/hi3510/ptzctrl.cgi"
+PTZ_ACTIONS = ("left", "right", "up", "down", "zoomin", "zoomout", "stop")
 FAULTS = ("none", "status", "not-a-picture", "empty", "late", "oversize")
 MAX_FILE_BYTES = 64 * 1024
 MAX_CAMERAS = 16
@@ -57,6 +60,7 @@ class Camera:
     fault_every: int = 1            # the fault strikes every Nth request of the camera (1: always)
     late_s: float = 2.0             # the delay of the fault `late`
     seconds_per_pass: float = 10.0  # how long the walker takes to cross the picture
+    ptz: bool = False               # the camera answers the Hi3510 move command (the first camera with this flag takes the moves of its port)
 
 
 @dataclass(frozen=True)
@@ -108,7 +112,7 @@ def parse_config(document: object) -> CameraConfig:
             username=_text(entry.get("username", "admin"), f"{label} username", 64), fault=fault,
             fault_every=int(_number(entry.get("fault_every", 1), f"{label} fault_every", 1, 1000)),
             late_s=_number(entry.get("late_s", 2.0), f"{label} late_s", 0, MAX_LATE_S),
-            seconds_per_pass=_number(entry.get("seconds_per_pass", 10.0), f"{label} seconds_per_pass", 1, 3600)))
+            seconds_per_pass=_number(entry.get("seconds_per_pass", 10.0), f"{label} seconds_per_pass", 1, 3600), ptz=entry.get("ptz", False) is True))
     if len({camera.path for camera in cameras}) != len(cameras):
         raise FakeCameraError("two cameras share a path")
     if len({camera.id for camera in cameras}) != len(cameras):
@@ -201,6 +205,7 @@ class FakeCameras:
         self._counts: dict[str, int] = {}
         self._nonces: dict[str, float] = {}
         self.counters = Counters()
+        self.moves: list[tuple[str, str]] = []     # (camera id, action) of every move the fake pan-tilt head was told
         for camera in config.cameras:
             if camera.auth != "none" and not password:
                 raise FakeCameraError(f"camera {camera.id} asks for a login: give the password with --camera-password-file or ARMOR_FAKE_CAMERA_PASSWORD")
@@ -256,11 +261,30 @@ class FakeCameras:
         expected = _md5_or_sha(algorithm, f"{ha1}:{nonce}:{p.get('nc', '')}:{p.get('cnonce', '')}:auth:{ha2}")
         return secrets.compare_digest(expected, p.get("response", ""))
 
+    def _move(self, path: str, header: str | None, method: str) -> tuple[int, dict[str, str], bytes]:
+        """The move command of a Hi3510 unit: `[Succeed]set ok.` when the login is right and the action is one of the known; the head itself is only a list of what it was told."""
+        head = next((camera for camera in self.config.cameras if camera.ptz), None)
+        if head is None:
+            return 404, {"Content-Type": "text/plain"}, b"not found"
+        if not self.login_ok(head, header, method):
+            with self._lock:
+                self.counters.refused_logins += 1 if header else 0
+                self.counters.challenged += 0 if header else 1
+            return 401, {"Content-Type": "text/plain", "WWW-Authenticate": self._challenge(head)}, b"login needed"
+        action = parse_qs(urlsplit(path).query).get("-act", [""])[0]
+        if action not in PTZ_ACTIONS:
+            return 400, {"Content-Type": "text/plain"}, b"[Error]unknown action"
+        with self._lock:
+            self.moves.append((head.id, action))
+        return 200, {"Content-Type": "text/plain"}, b"[Succeed]set ok."
+
     def answer(self, path: str, header: str | None, method: str = "GET") -> tuple[int, dict[str, str], bytes]:
         """The status, headers and body for one request, with the delay of a `late` fault already waited."""
         route = path.split("?", 1)[0]
         with self._lock:
             self.counters.requests += 1
+        if route == PTZ_ROUTE:
+            return self._move(path, header, method)
         camera = self._by_path.get(route)
         if camera is None:
             with self._lock:

@@ -99,13 +99,39 @@ def post(url: str, bearer: str, body: dict) -> tuple[int, bytes]:
         return error.code, error.read()
 
 
+PTZ_PASSWORD = "bench-camera-pass"
+
+
+def ptz_checks(checks: "Check", base: str, operator: str, port: int, fake: FakeCameras) -> None:
+    """The pan-tilt head of a fake camera: the server finds it with the login it stores, moves it, stops it by itself and says why when it cannot."""
+    login = {"username": "admin", "password": PTZ_PASSWORD, "onvifPort": port}
+    for name, extra in (("bench-mover", login), ("bench-locked", {**login, "password": "wrong"}), ("bench-fixed", {})):
+        post(f"{base}/api/v1/cameras/configure", operator, {"id": name, "name": name, "host": "127.0.0.1", "snapshotUrl": f"http://127.0.0.1:{port}/walker.png", "onvifPort": port, **extra})
+    status, _ = post(f"{base}/api/v1/cameras/bench-mover/ptz", operator, {"command": "left"})
+    checks.add("ptz: a move reaches the head of a camera with a login", status == 200 and ("mover", "left") in fake.moves, f"status {status} moves {fake.moves}")
+    stopped = False
+    try:
+        stopped = bool(wait_until(lambda: ("mover", "stop") in fake.moves, 8, "the stop the server schedules by itself"))
+    except BenchError:
+        pass
+    checks.add("ptz: the server stops the head by itself, so a lost stop never leaves it turning", stopped, f"moves {fake.moves}")
+    status, _ = post(f"{base}/api/v1/cameras/bench-mover/ptz", operator, {"command": "sideways"})
+    checks.add("ptz: a command that is not one of the table is refused and the head is not told", status == 502 and all(action != "sideways" for _, action in fake.moves), f"status {status}")
+    status, said = post(f"{base}/api/v1/cameras/bench-locked/ptz", operator, {"command": "right"})
+    checks.add("ptz: a stored login the camera refuses is told as such and nothing moves", status == 502 and b"login" in said and ("mover", "right") not in fake.moves, f"status {status} {said[:120]!r}")
+    status, _ = post(f"{base}/api/v1/cameras/bench-fixed/ptz", operator, {"command": "up"})
+    checks.add("ptz: a camera with no credentials cannot be moved", status in (409, 502) and ("mover", "up") not in fake.moves, f"status {status}")
+
+
 def camera_checks(checks: "Check", base: str, operator: str) -> None:
     """Fake IP cameras on the loopback, configured in the server by its own route: the snapshot the server fetches is a real picture, and a camera that fails is a clean refusal."""
     config = parse_camera_config({"schema": "armor-fake-cameras/1", "cameras": [
         {"id": "walker", "path": "/walker.png", "scene": "walker"},
         {"id": "broken", "path": "/broken.png", "scene": "still", "fault": "status"},
+        {"id": "mover", "path": "/mover.png", "scene": "still", "auth": "basic", "ptz": True},
     ]})
-    camera_server, _ = serve_fake_cameras(FakeCameras(config), "127.0.0.1", 0)
+    fake = FakeCameras(config, password=PTZ_PASSWORD)
+    camera_server, _ = serve_fake_cameras(fake, "127.0.0.1", 0)
     try:
         port = camera_server.server_address[1]
         for name, path in (("bench-walker", "walker.png"), ("bench-broken", "broken.png")):
@@ -120,6 +146,7 @@ def camera_checks(checks: "Check", base: str, operator: str) -> None:
         broken = json.loads(said).get("path", "") if status == 201 else ""
         broken_status, _ = get(f"{base}{broken}") if broken else (0, b"")
         checks.add("cameras: a camera that answers an error is a clean refusal (502)", broken_status == 502, f"status {broken_status}")
+        ptz_checks(checks, base, operator, port, fake)
     finally:
         stop_fake_cameras(camera_server)
 
