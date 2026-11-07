@@ -49,6 +49,10 @@ ECHO = (
 )
 
 
+ELECTRICAL_OK = "import sys\nfor line in sys.stdin:\n    print('armor/electrical/n1/state\\t{}')\nprint('armor/health/n1\\t{}')\n"
+ELECTRICAL_WRONG = "import sys\nfor line in sys.stdin:\n    print('armor/node/n1/telemetry\\t{}')\n"
+
+
 class ShimTests(unittest.TestCase):
     def test_a_clean_stream_is_one_chunk_per_frame(self):
         lines, frames = node_shim.stream_lines(1, 12)
@@ -60,6 +64,22 @@ class ShimTests(unittest.TestCase):
         messages = node_shim.run_driver(stand_in(ECHO), "n1", lines)
         self.assertEqual(len(messages), 5)
         self.assertEqual(messages[0][0], "armor/node/n1/telemetry")
+
+    def test_the_meter_rounds_carry_one_reply_per_meter_with_a_good_crc(self):
+        lines, rounds = node_shim.meter_lines(3)
+        self.assertEqual((len(lines), rounds), (3, 3))
+        stamp, _, entries = lines[0].partition("\t")
+        items = entries.split("|")
+        self.assertEqual((stamp, [item.split(":")[0] for item in items]), ("1000", ["grid", "heater", "dc-bus"]))
+        for item in items:
+            reply = bytes.fromhex(item.split(":")[3])
+            self.assertEqual(node_shim.meter_bus.crc16(reply[:-2]), int.from_bytes(reply[-2:], "little"))
+
+    def test_the_electrical_shim_may_print_its_state_and_health_topics_only(self):
+        good = stand_in(ELECTRICAL_OK)
+        self.assertEqual(len(node_shim.run_driver(good, "n1", ["1\t-"], node="electrical")), 2)
+        with self.assertRaises(node_shim.ShimError):
+            node_shim.run_driver(stand_in(ELECTRICAL_WRONG), "n1", ["1\t-"], node="electrical")
 
     def test_a_topic_of_another_node_is_refused(self):
         driver = stand_in("import sys\nfor line in sys.stdin:\n    print('armor/node/other/telemetry\t{}')\n")

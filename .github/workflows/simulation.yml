@@ -91,12 +91,14 @@ jobs:
           sudo systemctl stop mosquitto || true
           python -m pip install --quiet paho-mqtt
 
-      - name: Build the message code of the radar node as a program for this machine
+      - name: Build the message code of the radar and electrical nodes as programs for this machine
         run: |
           git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-RADAR.git ../ARMOR-NODE-RADAR
+          git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-ELECTRICAL.git ../ARMOR-NODE-ELECTRICAL
           g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o /tmp/mqtt_shim ../ARMOR-NODE-RADAR/tests/mqtt_shim.cpp
+          g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o /tmp/mqtt_shim_electrical ../ARMOR-NODE-ELECTRICAL/tests/mqtt_shim.cpp
 
       - name: Run the bench
         env:
           PYTHONPATH: src
-        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim
+        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim --shim-electrical-driver /tmp/mqtt_shim_electrical
