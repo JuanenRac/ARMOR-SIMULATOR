@@ -91,7 +91,7 @@ jobs:
           sudo systemctl stop mosquitto || true
           python -m pip install --quiet paho-mqtt
 
-      - name: Build the message code of the radar, electrical and solar nodes as programs for this machine
+      - name: Build the message code of the radar, electrical, solar and alarm nodes as programs for this machine
         run: |
           git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-RADAR.git ../ARMOR-NODE-RADAR
           git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-ELECTRICAL.git ../ARMOR-NODE-ELECTRICAL
@@ -99,8 +99,10 @@ jobs:
           g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o /tmp/mqtt_shim_electrical ../ARMOR-NODE-ELECTRICAL/tests/mqtt_shim.cpp
           git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-SOLAR.git ../ARMOR-NODE-SOLAR
           g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o /tmp/mqtt_shim_solar ../ARMOR-NODE-SOLAR/tests/mqtt_shim.cpp
+          git clone --depth 1 https://github.com/JuanenRac/ARMOR-NODE-ALARM.git ../ARMOR-NODE-ALARM
+          g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -O1 -o /tmp/mqtt_shim_alarm ../ARMOR-NODE-ALARM/tests/mqtt_shim.cpp
 
       - name: Run the bench
         env:
           PYTHONPATH: src
-        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim --shim-electrical-driver /tmp/mqtt_shim_electrical --shim-solar-driver /tmp/mqtt_shim_solar
+        run: python -m armor_simulator.bench_ci --server-dir ../ARMOR-SERVER --mosquitto auto --shim-driver /tmp/mqtt_shim --shim-electrical-driver /tmp/mqtt_shim_electrical --shim-solar-driver /tmp/mqtt_shim_solar --shim-alarm-driver /tmp/mqtt_shim_alarm

@@ -153,7 +153,7 @@ class Check:
 
 
 def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None, electrical_driver: str | None = None,
-        solar_driver: str | None = None) -> list[dict]:
+        solar_driver: str | None = None, alarm_driver: str | None = None) -> list[dict]:
     entry = server_dir / "dist" / "server.mjs"
     node = shutil.which("node")
     if not entry.is_file() or not node:
@@ -262,6 +262,14 @@ def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None,
                 except BenchError:
                     pass
                 checks.add("shim: the message code of the real solar node, built for a computer, publishes on the broker and its inverter and battery show in the solar readings", shim_code == 0 and bool(kinds), shim_said[-300:])
+            if alarm_driver:
+                shim_code, shim_said = shim_main(["--node", "alarm", "--driver", alarm_driver, "--node-id", "shim-alarm", "--mqtt-url", f"mqtt://127.0.0.1:{broker_port}", "--frames", "8"])
+                final = {}
+                try:
+                    final = wait_until(lambda: next((item.get("state", {}) for item in listed("/api/v1/alarm/nodes", "nodes") if item.get("node_id") == "shim-alarm" and item.get("state", {}).get("phase") == "armed"), None), 15, "the alarm shim on the broker")
+                except BenchError:
+                    pass
+                checks.add("shim: the panel and message code of the real alarm node, built for a computer, goes through exit delay, alarm, a power cut, disarming and arming again, and the server shows it armed in away mode", shim_code == 0 and final.get("mode") == "away", shim_said[-300:])
             checks.add("shim: the server still answers after the shims", get(f"{base}/healthz")[0] == 200)
         else:
             print("SKIP mqtt: no broker (install mosquitto and pass --mosquitto auto)")
@@ -283,12 +291,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--server-dir", type=Path, required=True, help="the ARMOR-SERVER folder, built (dist/server.mjs)")
     parser.add_argument("--mosquitto", help="a mosquitto program, or 'auto' to look for it; with one, the road through the broker is checked too")
     parser.add_argument("--shim-driver", help="the radar node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-RADAR); with it and a broker, the message code of the real node publishes too")
+    parser.add_argument("--shim-alarm-driver", help="the alarm node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-ALARM)")
     parser.add_argument("--shim-solar-driver", help="the solar node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-SOLAR)")
     parser.add_argument("--shim-electrical-driver", help="the electrical node's mqtt_shim program (built from tests/mqtt_shim.cpp of ARMOR-NODE-ELECTRICAL)")
     parser.add_argument("--json", type=Path, metavar="FILE", help="also write the report there")
     args = parser.parse_args(argv)
     try:
-        rows = run(args.server_dir.resolve(), args.mosquitto, args.shim_driver, args.shim_electrical_driver, args.shim_solar_driver)
+        rows = run(args.server_dir.resolve(), args.mosquitto, args.shim_driver, args.shim_electrical_driver, args.shim_solar_driver, args.shim_alarm_driver)
     except (BenchError, OSError) as error:
         print(f"bench: {error}", file=sys.stderr)
         return 2

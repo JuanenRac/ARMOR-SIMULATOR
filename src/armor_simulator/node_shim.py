@@ -4,7 +4,7 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
 
     python -m armor_simulator.node_shim --node radar --driver ./mqtt_shim --node-id shim-radar --mqtt-url mqtt://127.0.0.1:1883
 
-The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL and ARMOR-NODE-SOLAR; `--node` says which), built from the core files of its firmware. This module plays it the serial
+The program given by `--driver` is `tests/mqtt_shim.cpp` of a node repository (so far ARMOR-NODE-RADAR, ARMOR-NODE-ELECTRICAL, ARMOR-NODE-SOLAR and ARMOR-NODE-ALARM; `--node` says which), built from the core files of its firmware. This module plays it the serial
 stream of the radar modules that `buses.py` makes, one chunk per line with a made-up light level, and publishes on the broker what it prints (topic, tab, payload), with the QoS and the
 topic the real node uses. The framing, the decoding and the JSON are the firmware's; only the broker client and the clock are the simulator's. Nodes are added one at a time, each one
 with a driver of its own. Only simulated data goes out, and only to a broker on this machine or a private network (see `mqtt_out.py`).
@@ -91,17 +91,41 @@ def solar_lines(rounds: int = 6, seed: int = 1, start_ms: int = 1_000, step_ms: 
     return lines, 2 * rounds
 
 
+ALARM_STEPS = ("-", "arm_away", "-", "-", "restart", "disarm", "arm_away", "-")   # what happens to the panel, one step per second
+ALARM_DOOR_OPEN_AT = (3, 4)                                                          # the steps where the door loop reads "open"
+ALARM_PHASES = ("exit_delay", "armed", "alarm", "disarmed")                          # the phases the panel must go through
+
+
+def alarm_lines(rounds: int = 8, seed: int = 1, start_ms: int = 1_000, step_ms: int = 1_000) -> tuple[list[str], int]:
+    """The steps of a wired alarm panel as the driver's input lines (the alarm node): armed away, the door loop opens and the siren starts, a power cut and the restart that
+    takes the alarm back, the PIN that disarms, armed again. The voltages are the ones the bus of the simulator calls a closed loop and an open one."""
+    lines = []
+    for number in range(rounds):
+        door = 1_800 if number in ALARM_DOOR_OPEN_AT else 800 + (seed + number) % 3 * 10
+        lines.append(f"{start_ms + step_ms * number}	{ALARM_STEPS[number % len(ALARM_STEPS)]}	door:instant:{door}|hall:interior:{800 + number % 4 * 5}")
+    return lines, rounds
+
+
+def alarm_verify(messages: list[tuple[str, dict]]) -> str | None:
+    """The panel must have gone through every phase of the scenario, in the message it wrote and not only in the last one."""
+    seen = [body.get("phase") for topic, body in messages if topic.endswith("/state")]
+    missing = [phase for phase in ALARM_PHASES if phase not in seen]
+    return f"the panel never reported the phases {missing}" if missing else None
+
+
 #: What each node's shim prints: the topics it may use (the first one is the message that carries the readings) and the lines it is played.
 @dataclass(frozen=True)
 class NodeShim:
     prefixes: tuple[str, ...]                    # the topics the shim may print, with {id} for the node
     main: str                                    # the end of the topic of the message that carries the readings
     lines: Callable[..., tuple[list[str], int]]  # makes the input lines and says how many messages with readings must come out
+    verify: Callable[[list[tuple[str, dict]]], str | None] | None = None   # a check on the whole of what the driver printed; says what is wrong, or None
 
 
 NODES: dict[str, NodeShim] = {
     "radar": NodeShim(("armor/node/{id}/",), "/telemetry", stream_lines),
     "electrical": NodeShim(("armor/electrical/{id}/", "armor/health/{id}"), "/state", meter_lines),
+    "alarm": NodeShim(("armor/alarm/{id}/", "armor/health/{id}"), "/state", alarm_lines, alarm_verify),
     "solar": NodeShim(("armor/solar/{id}/", "armor/health/{id}"), "/state", solar_lines),
 }
 
@@ -152,12 +176,17 @@ def main(argv: list[str] | None = None) -> int:
             lines, frames = stream_lines(args.seed, args.frames)
         elif args.node == "solar":
             lines, frames = solar_lines(args.frames, args.seed)
+        elif args.node == "alarm":
+            lines, frames = alarm_lines(max(args.frames, len(ALARM_STEPS)), args.seed)
         else:
             lines, frames = meter_lines(args.frames)
         messages = run_driver(args.driver.split(), args.node_id, lines, node=args.node)
         telemetry = [body for topic, body in messages if topic.endswith(NODES[args.node].main)]
         if len(telemetry) != frames:
             raise ShimError(f"{frames} rounds went in and {len(telemetry)} messages with the readings came out")
+        problem = NODES[args.node].verify(messages) if NODES[args.node].verify else None
+        if problem:
+            raise ShimError(problem)
         count = publish(messages, args.mqtt_url, args.mqtt_allow_network)
     except (ShimError, buses.BusError, MqttOutError, OSError, subprocess.SubprocessError) as error:
         print(f"node shim: {error}", file=sys.stderr)

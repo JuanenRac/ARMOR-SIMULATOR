@@ -103,6 +103,21 @@ class ShimTests(unittest.TestCase):
         with self.assertRaises(node_shim.ShimError):
             node_shim.run_driver(stand_in(SOLAR_WRONG), "n1", ["1	x"], node="solar")
 
+    def test_the_alarm_steps_open_the_door_and_cut_the_power(self):
+        lines, expected = node_shim.alarm_lines(8)
+        self.assertEqual((len(lines), expected), (8, 8))
+        actions = [line.split("	")[1] for line in lines]
+        self.assertEqual(actions, list(node_shim.ALARM_STEPS))
+        self.assertTrue(all(len(line.split("	")) == 3 for line in lines))
+        self.assertIn("door:instant:1800", lines[3])
+        self.assertIn("door:instant:1800", lines[4])
+        self.assertNotIn("door:instant:1800", lines[5])
+
+    def test_the_alarm_must_pass_every_phase(self):
+        every = [("armor/alarm/n1/state", {"phase": phase}) for phase in node_shim.ALARM_PHASES]
+        self.assertIsNone(node_shim.alarm_verify(every))
+        self.assertIn("alarm", node_shim.alarm_verify(every[:2] + every[3:]))
+
     def test_a_topic_of_another_node_is_refused(self):
         driver = stand_in("import sys\nfor line in sys.stdin:\n    print('armor/node/other/telemetry\t{}')\n")
         with self.assertRaises(node_shim.ShimError):
