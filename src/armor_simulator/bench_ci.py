@@ -14,6 +14,8 @@ the server it is given with secrets made up for the run (never printed, never wr
     replay      a recording made by a server from its own traffic (examples/recordings/incident.jsonl) is played again: the accepted messages arrive, and the refused one is
                 refused again for the same reason (with --replay-accepted-only the refusal is left out)
     replay      the same with a recording of the HTTP reports of an alarm panel, a meter, a solar device and a network node (examples/recordings/http_routes.jsonl)
+    cameras     two fake IP cameras (a walker, and one that answers an error on purpose) are configured in the server by its HTTP route: the picture of the first reaches the server
+                preview through a ticket as a real PNG, the second is a clean refusal (502) and the server goes on
     mqtt        (with a broker) a node that only exists on the broker shows in the status of the server
 
 The only process it starts besides the server is the broker, and the only ones it stops are the two it started. Nothing is sent outside this machine. The server and the broker are
@@ -39,11 +41,13 @@ import urllib.request
 from pathlib import Path
 
 from . import cli
+from .fake_cameras import FakeCameras, parse_config as parse_camera_config, serve as serve_fake_cameras, stop as stop_fake_cameras
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 RECORDING = ROOT / "examples" / "recordings" / "incident.jsonl"
 RECORDING_HTTP = ROOT / "examples" / "recordings" / "http_routes.jsonl"
 START_TIMEOUT_S = 40
+PNG_MAGIC = bytes([0x89]) + b"PNG"
 
 
 class BenchError(RuntimeError):
@@ -83,6 +87,40 @@ def wait_until(check, seconds: float, what: str):
 def _reachable(port: int) -> bool:
     with socket.create_connection(("127.0.0.1", port), 1):
         return True
+
+
+def post(url: str, bearer: str, body: dict) -> tuple[int, bytes]:
+    request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), method="POST", headers={"Authorization": f"Bearer {bearer}", "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=10) as reply:  # noqa: S310 - a loopback address chosen here
+            return reply.status, reply.read()
+    except urllib.error.HTTPError as error:
+        return error.code, error.read()
+
+
+def camera_checks(checks: "Check", base: str, operator: str) -> None:
+    """Fake IP cameras on the loopback, configured in the server by its own route: the snapshot the server fetches is a real picture, and a camera that fails is a clean refusal."""
+    config = parse_camera_config({"schema": "armor-fake-cameras/1", "cameras": [
+        {"id": "walker", "path": "/walker.png", "scene": "walker"},
+        {"id": "broken", "path": "/broken.png", "scene": "still", "fault": "status"},
+    ]})
+    camera_server, _ = serve_fake_cameras(FakeCameras(config), "127.0.0.1", 0)
+    try:
+        port = camera_server.server_address[1]
+        for name, path in (("bench-walker", "walker.png"), ("bench-broken", "broken.png")):
+            status, _ = post(f"{base}/api/v1/cameras/configure", operator, {"id": name, "name": name, "host": "127.0.0.1", "snapshotUrl": f"http://127.0.0.1:{port}/{path}"})
+            checks.add(f"cameras: {name} is configured", status == 200, f"status {status}")
+        status, said = post(f"{base}/api/v1/cameras/bench-walker/preview-ticket", operator, {})
+        ticket = json.loads(said).get("path", "") if status == 201 else ""
+        checks.add("cameras: a preview ticket is given for a camera with a snapshot address", status == 201 and ticket.startswith("/api/v1/cameras/bench-walker/preview"), f"status {status}")
+        picture_status, picture = get(f"{base}{ticket}") if ticket else (0, b"")
+        checks.add("cameras: the preview is the PNG the fake camera made", picture_status == 200 and picture[:4] == PNG_MAGIC, f"status {picture_status}, {len(picture)} bytes")
+        status, said = post(f"{base}/api/v1/cameras/bench-broken/preview-ticket", operator, {})
+        broken = json.loads(said).get("path", "") if status == 201 else ""
+        broken_status, _ = get(f"{base}{broken}") if broken else (0, b"")
+        checks.add("cameras: a camera that answers an error is a clean refusal (502)", broken_status == 502, f"status {broken_status}")
+    finally:
+        stop_fake_cameras(camera_server)
 
 
 def simulate(argv: list[str]) -> tuple[int, str]:
@@ -176,6 +214,8 @@ def run(server_dir: Path, mosquitto: str | None) -> list[dict]:
         checks.add("replay: the HTTP routes of a recording (alarm, electrical, solar, network) arrive", code == 0 and "alarm-http" in panels and "http-1" in meters, f"status {code}, alarm {panels}, electrical {meters}: {said[-200:]}")
         code, said = simulate(["--replay", str(RECORDING_HTTP), "--server-url", base])
         checks.add("replay: the alarm report the server refused over HTTP is refused again", code == 1 and "armor-simulator:" in said, f"status {code}: {said[-300:]}")
+        # cameras
+        camera_checks(checks, base, operator)
         # mqtt
         if broker_port:
             os.environ.pop("ARMOR_INGEST_TOKEN", None)       # the broker road takes no ingest token, and the simulator refuses one without a server address

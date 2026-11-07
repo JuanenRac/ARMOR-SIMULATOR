@@ -37,7 +37,7 @@ up from the descriptions the firmware files cite; nothing has been compared with
 `python -m armor_simulator.bench_ci --server-dir <ARMOR-SERVER, built>` is `docker/bench.sh` without Docker. It starts the built server on a free loopback port with secrets made up for
 the run, feeds it with the simulator and checks the status of the server after each step: patrol, solar and electrical messages over HTTP; impossible readings refused; a message sent
 twice and a slow link; a recording of the traffic of a server played again (`examples/recordings/incident.jsonl` and `examples/recordings/http_routes.jsonl`, the second with the HTTP reports of an alarm panel, a meter, solar equipment and a network node: the accepted messages arrive and the refused one is refused again
-for the same reason); and, when `mosquitto` is installed (`--mosquitto auto`) and `paho-mqtt` too, a node that exists only on the broker. It removes its temporary folder and stops only
+for the same reason); two fake IP cameras (a walker, and one that answers an error on purpose) configured in the server by its own route, whose picture reaches the preview of the server through a ticket as a real PNG while the broken one is a clean refusal; and, when `mosquitto` is installed (`--mosquitto auto`) and `paho-mqtt` too, a node that exists only on the broker. It removes its temporary folder and stops only
 the processes it started.
 
 The workflow `Simulation bench` runs it on every push and once a week. What it does not replace: the Docker image, its healthcheck and the real Mosquitto settings of the CM5 profile.

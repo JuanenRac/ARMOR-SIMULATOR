@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The server bench plays fake IP cameras too:** two cameras on the loopback (a walker, and one that answers an error on purpose) are configured in the built server through its own route; the preview of the first reaches the console through a ticket as a real PNG, the second is a clean refusal and the server goes on. It proves the code path of the picture, not any real camera.
+
 ## [0.3.6] - A recording of the HTTP reports is played in the bench too: examples/recordings/httproutes.jsonl holds the report of an alarm panel, a meter, a solar inverter and battery and a network node as a server copies them, and one... (and 3 more changes)
 
 - **A recording of the HTTP reports is played in the bench too:** `examples/recordings/http_routes.jsonl` holds the report of an alarm panel, a meter, a solar inverter and battery and a network node as a server copies them, and one alarm report the server refused (the siren sounding outside the alarm phase); the bench plays it twice against the real server, once with the refused one left out (the panel and the meter show) and once with it (refused again for the same reason). Tests: 2 more.
