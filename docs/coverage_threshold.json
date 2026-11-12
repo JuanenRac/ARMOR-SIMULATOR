@@ -1,0 +1,5 @@
+{
+  "about": "The floor of the test coverage of src/armor_simulator, measured by the workflow coverage-floor.yml: a figure a little under what the tests reach. Raise it only with a measured figure.",
+  "lines": 85.5,
+  "branches": 85.5
+}

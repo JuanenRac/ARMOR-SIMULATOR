@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A floor for the test coverage:** the workflow `coverage-floor.yml` runs the Python tests under coverage and fails when the lines or the branches fall below `docs/coverage_threshold.json`. Floor of src/armor_simulator: lines 85.5, branches 85.5 (measured 86.21 and 86.32). Raising it is a change of that file, made with a figure measured by the workflow.
+
 - **Tests for the helpers of the bench without Docker:** the two HTTP readers, the waiting loop, the list of checks, the report the command writes, the options that reach the run and the camera checks seen from a stand-in server (one that refuses everything and one that answers as a good one does) are tested on the loopback address, without a server, a broker or a camera.
 
 - **A fake pan-tilt head:** a camera of the file may say `"ptz": true` and then answers the move command of a Hi3510 unit (`/cgi-bin/hi3510/ptzctrl.cgi?-act=left`) with `[Succeed]set ok.` after its login, refuses a wrong login or an action that is not in the table, and keeps the list of the moves it was told. The server bench uses it: the real server finds the head with the login it stores, moves it, stops it by itself, refuses a command that is not in the table, tells a refused login and does not move a camera that has no credentials.
