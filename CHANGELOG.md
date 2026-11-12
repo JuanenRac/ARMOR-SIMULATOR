@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The battery-writing loop is tried in its parts that need no server or broker:** the fake console, the node that answers arm, execute and cancel (disabled by default, wrong serial, one arm and one execute, an execute for another order, a made-up token), the administrator that signs in and proves themselves again against a server on the loopback, and the wait for a condition.
 - **Vision scenarios in files:** `--vision-scenario FILE` plays a JSON file (schema `armor-vision-scenario/1`, documented in `docs/VISION_SCENARIOS.md`) with cameras, their detection zones and their mode profiles (the shape the server hands to the observation service) and a timeline of the arming mode and of objects walking across the picture, and prints the vision events the rules would raise (`armor.vision.event/v1`, one per line, in the contract of the shared vision event). `--check-vision-scenario` validates the file and `--verify-vision` compares the events with the `expect` and `forbidden` rows of the file. A mode with no profile watches every zone. It is a twin of the rules, not of a detector. Two examples in `examples/vision`. Tests: 22 more.
 
 ## [0.3.7] - A floor for the test coverage: the workflow `coverage-floor.yml` runs the Python tests under coverage and fails when the lines or the branches fall below `docs/coverage_threshold.json`. Floor of src/armor_simulator: lines 85.5, branches 85
