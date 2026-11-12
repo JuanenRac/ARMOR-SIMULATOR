@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .alarm_scenarios import ScenarioError, build_stream, load_observed, load_scenario, summary, verify_alarms
+from . import vision_scenarios
 from .energy import MAX_STEPS, DAY_S, energy_messages, load_config
 from .faults import FAULTS, INVALID_FAULTS, TOPIC_KINDS, Message
 from .http_faults import HTTP_FAULTS, MAX_LATENCY_MS, plan as delivery_plan
@@ -113,6 +114,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--per-node-token", action="store_true", help="send each message with the token derived for its node (needed when the server runs with ARMOR_INGEST_STRICT=1)")
     parser.add_argument("--start-ms", default="0", help="date of the first sample: 0 (the default, identical runs), a number of milliseconds, or 'now' (the date the server takes as it is)")
     parser.add_argument("--alarm-scenario", type=Path, metavar="FILE", help="play an alarm scenario described in a JSON file (see docs/ALARM_SCENARIOS.md) instead of --scenario/--count")
+    parser.add_argument("--vision-scenario", type=Path, metavar="FILE", help="play a vision scenario (cameras with detection zones and mode profiles, and objects walking across them; see docs/VISION_SCENARIOS.md) and print the vision events the rules would raise, one JSON object per line; it emits nothing else")
+    parser.add_argument("--check-vision-scenario", action="store_true", help="only validate the file of --vision-scenario and print what it contains")
+    parser.add_argument("--verify-vision", action="store_true", help="with --vision-scenario, compare the events with what the file expects (and forbids); exit 1 when they differ")
     parser.add_argument("--check-alarm-scenario", action="store_true", help="only validate the file of --alarm-scenario and print what it contains")
     parser.add_argument("--verify-alarms", type=Path, metavar="FILE", help="compare the alarms a server raised (a JSON list or JSON lines) with what the file of --alarm-scenario expects; exit 1 when they differ")
     parser.add_argument("--drive-server", action="store_true", help="play the file of --alarm-scenario against the real ARMOR-SERVER of --server-url (the mode events become orders to the server, in real time) and check the alarms it raised; needs --studio-user")
@@ -317,6 +321,29 @@ def _verify_panel_sync(parser: argparse.ArgumentParser, args: argparse.Namespace
     return 1 if problems else 0
 
 
+def _vision_scenario(args: argparse.Namespace) -> int:
+    """Plays a vision scenario on the host: validates it, prints the events (one JSON object per line) and, with --verify-vision, compares them with what the file expects."""
+    try:
+        scenario = vision_scenarios.load_scenario(args.vision_scenario)
+    except ScenarioError as error:
+        print(f"armor-simulator: {args.vision_scenario.name}: {error}", file=sys.stderr)
+        return 2
+    if args.check_vision_scenario:
+        print(vision_scenarios.summary(scenario))
+        return 0
+    events = vision_scenarios.build_events(scenario)
+    for event in events:
+        print(json.dumps(event, sort_keys=True))
+    print(f"armor-simulator: {scenario.name}: {len(events)} vision event(s)", file=sys.stderr)
+    if args.verify_vision:
+        problems = vision_scenarios.verify_events(scenario, events)
+        for problem in problems:
+            print(f"armor-simulator: {problem}", file=sys.stderr)
+        print(f"armor-simulator: {scenario.name}: " + ("the rules answered as expected" if not problems else f"{len(problems)} difference(s) with what was expected"), file=sys.stderr)
+        return 1 if problems else 0
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -338,6 +365,12 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--info, --alarm-node and --network-node cannot be combined with --alarm-scenario, --replay or --energy")
     if args.mqtt_allow_network and not args.mqtt_url:
         parser.error("--mqtt-allow-network needs --mqtt-url")
+    if args.vision_scenario:
+        if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync or args.camera_port is not None or args.meter_bus_port is not None:
+            parser.error("--vision-scenario prints vision events and emits no other messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault, --verify-panel-sync, --camera-port or --meter-bus-port")
+        return _vision_scenario(args)
+    if args.check_vision_scenario or args.verify_vision:
+        parser.error("--check-vision-scenario and --verify-vision need --vision-scenario")
     if args.camera_port is not None:
         if args.alarm_scenario or args.replay or args.record or args.server_url or args.solar or args.electrical or args.energy or args.fault != "none" or args.verify_panel_sync or args.meter_bus_port is not None:
             parser.error("--camera-port plays cameras and emits no messages: it cannot be combined with --alarm-scenario, --replay, --record, --server-url, --solar, --electrical, --energy, --fault, --verify-panel-sync or --meter-bus-port")

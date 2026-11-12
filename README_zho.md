@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-311%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-333%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 311 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
+**诚实性检查 - 今天真正能运行的部分：** 场景、故障、向服务器的投递和 333 个测试都是真实的，没有节点接入时，模拟器用来给计算机上的服务器供数据。几何是**示意性的**，不是真实 LD2450 雷达的模型，这里的一切都没有与真实硬件对比过。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 成熟 |
 | 角色 | 离线遥测与环境模拟器（家族：Testing，上级：ARMOR-COMMON） |
 | 技术栈 | Python 3.11+，仅标准库 |
-| 测试 | 311 (`python -m unittest discover -s tests`) |
+| 测试 | 333 (`python -m unittest discover -s tests`) |
 | 场景与故障 | 4 个场景、7 种故障（其中 3 种故意违反合约） |
 | 运行位置 | 任何计算机或 CI |
 | 真实硬件 | 不适用：它是硬件的替身，在计算机上使用 |
@@ -57,7 +57,7 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟢 | 场景、故障和向服务器的投递都能工作；没有接入节点时，它为电脑上的服务器提供数据。 |
-| 测试 | 🟢 | 311 项测试通过（`python -m unittest discover -s tests`）。 |
+| 测试 | 🟢 | 333 项测试通过（`python -m unittest discover -s tests`）。 |
 | 协议与数据 | 🟠 | 几何模型仅作示意，并不是真实 LD2450 雷达的模型，也没有与真实硬件对比过。 |
 | 集成 | 🟢 | 测试中它会把消息投递到服务器，CM5 测试台的服务器也可以由它提供数据。 |
 | 文档 | 🟢 | 八种语言和更新日志均为最新。 |
@@ -164,6 +164,7 @@ python -I tools/armor_ci_validate.py
 | `test_simulator.py` | 37 | 场景、故障、太阳能、电气、校验、向本地 HTTP 服务器投递 |
 | `test_cli_options.py` | 26 | 选项、其限制和拒绝情形 |
 | `test_alarm_scenarios.py` | 32 | 报警场景文件：严格读取、消息流、模式与日历、响应验证、选项 |
+| `test_vision_scenarios.py` | 22 | 视觉场景文件：严格读取、停留、标签与按模式的配置、事件契约、验证、选项 |
 | `test_energy.py` | 32 | 能源模型：多种子下的物理性质、电价、电表、设置、契约、选项 |
 | `test_fake_cameras.py` | 17 | 模拟摄像头：图像、Basic 与 Digest 登录、故障、文件和命令行 |
 
@@ -195,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           选项与运行
 │   ├── scenarios.py cycle.py            五个场景、270 度几何和一天的光照
 │   ├── alarm_scenarios.py               来自 JSON 文件的报警场景、其消息以及对响应的检查
+│   ├── vision_scenarios.py              视觉场景：各模式下穿过检测区域的物体
 │   ├── solar.py                         逆变器和两模块电池组
 │   ├── electrical.py                    电气节点的三个通道
 │   ├── meter_bus.py                     通过 TCP 模拟能量电表的串行线路 (PZEM-004T、PZEM-017)
@@ -269,6 +271,7 @@ README 和文本提供英语、西班牙语、法语、意大利语、德语、�
 
 * [用法](docs/USAGE.md)：所有选项、场景和故障
 * [报警场景](docs/ALARM_SCENARIOS.md)：文件格式以及如何验证服务器的响应
+* [视觉场景](docs/VISION_SCENARIOS.md)：文件格式、按模式划分的检测区域以及如何验证事件
 * [能源模型](docs/ENERGY_MODEL.md)：真实的太阳能与电力数据及其设置
 * [电表总线](docs/METER_BUS.md)：通过 TCP 的能量电表及设置文件
 * [仿真台](docs/NODE_BENCH.md)：把节点的总线送入真实的固件代码，并在没有 Docker 的情况下运行服务器

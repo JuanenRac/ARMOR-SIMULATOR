@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-311%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-333%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、311 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
+**正直さのチェック - 今日動いているもの:** シナリオ、故障、サーバーへの送信、333 件のテストは実在し、ノードを接続していないときにコンピューター上のサーバーにデータを送るのがシミュレーターです。ジオメトリは**例示的**なもので、実際の LD2450 レーダーのモデルではなく、実機との比較は一切していません。
 
 ---
 
@@ -40,7 +40,7 @@
 | 成熟度 | 確立 |
 | 役割 | オフラインのテレメトリ・環境シミュレーター（ファミリー：Testing、親：ARMOR-COMMON） |
 | 技術 | Python 3.11+、標準ライブラリのみ |
-| テスト | 311 (`python -m unittest discover -s tests`) |
+| テスト | 333 (`python -m unittest discover -s tests`) |
 | シナリオと障害 | シナリオ 4、障害 7（うち 3 は意図的にコントラクト違反） |
 | 動作環境 | 任意のコンピューターまたは CI |
 | 実機での確認 | 該当なし：ハードウェアの代役で、コンピューター上で使います |
@@ -57,7 +57,7 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟢 | シナリオ、故障、サーバーへの配信は動作します。ノードを接続していないとき、コンピューター上のサーバーにデータを送るのがこれです。 |
-| テスト | 🟢 | 311 件のテストが通ります（`python -m unittest discover -s tests`）。 |
+| テスト | 🟢 | 333 件のテストが通ります（`python -m unittest discover -s tests`）。 |
 | プロトコルとデータ | 🟠 | 幾何は例示用で、実際の LD2450 レーダーのモデルではありません。実機との比較もしていません。 |
 | 連携 | 🟢 | テストではメッセージをサーバーに配信しており、CM5 テストベンチのサーバーにもこれでデータを送れます。 |
 | ドキュメント | 🟢 | 8 言語と変更履歴は最新です。 |
@@ -164,6 +164,7 @@ python -I tools/armor_ci_validate.py
 | `test_simulator.py` | 37 | シナリオ、障害、ソーラー、電気、検証、ローカル HTTP サーバーへの配信 |
 | `test_cli_options.py` | 26 | オプション、その制限、拒否 |
 | `test_alarm_scenarios.py` | 32 | アラームシナリオファイル：厳格な読み込み、メッセージ列、モードとカレンダー、応答の検証、オプション |
+| `test_vision_scenarios.py` | 22 | ビジョンシナリオファイル：厳格な読み込み、滞在、ラベルとモード別プロファイル、イベントの契約、検証、オプション |
 | `test_energy.py` | 32 | エネルギーモデル：多数のシードでの物理的性質、料金、メーター、設定、契約、オプション |
 | `test_fake_cameras.py` | 17 | 偽カメラ：画像、Basic と Digest のログイン、故障、ファイルとコマンドライン |
 
@@ -195,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           オプションと実行
 │   ├── scenarios.py cycle.py            5つのシナリオ、270度の形状、光の一日
 │   ├── alarm_scenarios.py               JSON ファイルのアラームシナリオ、そのメッセージ、応答の検証
+│   ├── vision_scenarios.py              ビジョンシナリオ：各モードで検知ゾーンを横切る物体
 │   ├── solar.py                         インバーターと 2 モジュールのバッテリー
 │   ├── electrical.py                    電気ノードの 3 チャンネル
 │   ├── meter_bus.py                     エネルギーメーターのシリアル回線をTCPで再現 (PZEM-004T、PZEM-017)
@@ -269,6 +271,7 @@ README とテキストは、英語、スペイン語、フランス語、イタ�
 
 * [使い方](docs/USAGE.md)：すべてのオプション、シナリオ、障害
 * [アラームシナリオ](docs/ALARM_SCENARIOS.md)：ファイル形式とサーバーの応答の検証方法
+* [ビジョンシナリオ](docs/VISION_SCENARIOS.md)：ファイル形式、モードごとの検知ゾーン、イベントの検証方法
 * [エネルギーモデル](docs/ENERGY_MODEL.md)：現実的な太陽光・電力データとその設定
 * [メーターバス](docs/METER_BUS.md)：TCP 経由のエネルギーメーターと設定ファイル
 * [シミュレーションベンチ](docs/NODE_BENCH.md)：ノードのバスを実際のファームウェアコードに流し込み、Docker なしでサーバーを動かす

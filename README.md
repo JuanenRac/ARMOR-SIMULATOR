@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-311%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-333%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 311 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 333 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturity | Established |
 | Role | Offline telemetry and environment simulator (family: Testing, parent: ARMOR-COMMON) |
 | Stack | Python 3.11+, standard library only |
-| Tests | 311 (`python -m unittest discover -s tests`) |
+| Tests | 333 (`python -m unittest discover -s tests`) |
 | Scenarios and faults | 4 scenarios, 7 faults (3 break the contract on purpose) |
 | Runs on | Any computer, or CI |
 | On real hardware | Not applicable: it is the stand-in for hardware, used on a computer |
@@ -57,7 +57,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | The scenarios, the faults and the delivery to a server work; it is what feeds a server on a computer when no node is plugged in. |
-| Tests | 🟢 | 311 tests pass (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 333 tests pass (`python -m unittest discover -s tests`). |
 | Protocols and data | 🟠 | The geometry is illustrative, not a model of the real LD2450 radar, and nothing has been compared with real hardware. |
 | Integration | 🟢 | It delivers its messages to a server in the tests, and the server of the CM5 test bench can be fed by it. |
 | Documentation | 🟢 | Eight languages and the changelog are up to date. |
@@ -164,6 +164,7 @@ python -I tools/armor_ci_validate.py
 | `test_simulator.py` | 37 | Scenarios, faults, solar, electrical, validation, delivery to a local HTTP server |
 | `test_cli_options.py` | 26 | The options, their limits and the refusals |
 | `test_alarm_scenarios.py` | 32 | Alarm scenario files: strict reading, the stream, modes and calendar, verification of the answer, the options |
+| `test_vision_scenarios.py` | 22 | Vision scenario files: strict reading, visits, labels and profiles by mode, the contract of the event, the verification and the options |
 | `test_energy.py` | 32 | Energy model: physical properties for many seeds, tariff, meter, settings, contracts, the options |
 | `test_fake_cameras.py` | 17 | Fake cameras: the pictures, Basic and Digest logins, faults, the file and the command line |
 
@@ -195,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           the options and the run
 │   ├── scenarios.py cycle.py            the five scenarios, the 270 degree geometry and the day of light
 │   ├── alarm_scenarios.py               alarm scenarios from JSON files, their messages and the check of the answer
+│   ├── vision_scenarios.py              vision scenarios: objects walking across detection zones in each arming mode
 │   ├── solar.py                         an inverter and a two-module battery stack
 │   ├── electrical.py                    the three channels of an electrical node
 │   ├── meter_bus.py                     the serial line of the energy meters over TCP (PZEM-004T, PZEM-017)
@@ -269,6 +271,7 @@ README and texts exist in English, Spanish, French, Italian, German, Chinese, Ja
 
 * [Usage](docs/USAGE.md): every option, scenario and fault
 * [Alarm scenarios](docs/ALARM_SCENARIOS.md): the file format and how to verify a server's answer
+* [Vision scenarios](docs/VISION_SCENARIOS.md): the file format, the detection zones by mode and how to verify the events
 * [Energy model](docs/ENERGY_MODEL.md): the realistic solar and electrical data and its settings
 * [Meter bus](docs/METER_BUS.md): the energy meters over TCP and the settings file
 * [Simulation bench](docs/NODE_BENCH.md): the buses of the nodes played into the real firmware code, and the server without Docker

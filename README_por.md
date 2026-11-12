@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-311%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-333%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 311 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
+**Verificação de honestidade - o que funciona hoje:** Os cenários, as falhas, a entrega a um servidor e os 333 testes são reais, e o simulador é o que alimenta um servidor num computador quando nenhum nó está ligado. A geometria é **ilustrativa**, não um modelo do radar LD2450 real, e nada disto foi comparado com hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturidade | Estabelecido |
 | Função | Simulador offline de telemetria e ambiente (família: Testing, pai: ARMOR-COMMON) |
 | Tecnologia | Python 3.11+, só biblioteca padrão |
-| Testes | 311 (`python -m unittest discover -s tests`) |
+| Testes | 333 (`python -m unittest discover -s tests`) |
 | Cenários e falhas | 4 cenários, 7 falhas (3 violam o contrato de propósito) |
 | Funciona em | Qualquer computador, ou CI |
 | Em hardware real | Não se aplica: é o substituto do hardware, usado num computador |
@@ -57,7 +57,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟢 | Os cenários, as avarias e a entrega a um servidor funcionam; é o que alimenta um servidor num computador quando nenhum nó está ligado. |
-| Testes | 🟢 | Passam 311 testes (`python -m unittest discover -s tests`). |
+| Testes | 🟢 | Passam 333 testes (`python -m unittest discover -s tests`). |
 | Protocolos e dados | 🟠 | A geometria é ilustrativa, não um modelo do radar LD2450 real, e nada foi comparado com hardware real. |
 | Integração | 🟢 | Entrega as suas mensagens a um servidor nos testes, e o servidor da bancada de testes CM5 pode ser alimentado por ele. |
 | Documentação | 🟢 | Oito idiomas e o registo de alterações estão atualizados. |
@@ -164,6 +164,7 @@ python -I tools/armor_ci_validate.py
 | `test_simulator.py` | 37 | Cenários, falhas, solar, elétrico, validação, entrega a um servidor HTTP local |
 | `test_cli_options.py` | 26 | As opções, os seus limites e as recusas |
 | `test_alarm_scenarios.py` | 32 | Ficheiros de cenários de alarme: leitura estrita, o fluxo, modos e calendário, verificação da resposta, as opções |
+| `test_vision_scenarios.py` | 22 | Ficheiros de cenários de visão: leitura estrita, visitas, etiquetas e perfis por modo, o contrato do evento, a verificação e as opções |
 | `test_energy.py` | 32 | Modelo de energia: propriedades físicas com muitas sementes, tarifa, contador, definições, contratos, as opções |
 | `test_fake_cameras.py` | 17 | Câmaras falsas: as imagens, os logins Basic e Digest, as falhas, o ficheiro e a linha de comandos |
 
@@ -195,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           as opções e a execução
 │   ├── scenarios.py cycle.py            os cinco cenários, a geometria de 270 graus e o dia de luz
 │   ├── alarm_scenarios.py               cenários de alarme a partir de ficheiros JSON, as suas mensagens e a verificação da resposta
+│   ├── vision_scenarios.py              cenários de visão: objetos que atravessam zonas de deteção em cada modo
 │   ├── solar.py                         um inversor e uma pilha de dois módulos
 │   ├── electrical.py                    os três canais de um nó elétrico
 │   ├── meter_bus.py                     a linha série dos contadores de energia por TCP (PZEM-004T, PZEM-017)
@@ -269,6 +271,7 @@ O **A.R.M.O.R.** (Autonomous Radar & Multimodal Observation Range) é um sistema
 
 * [Utilização](docs/USAGE.md): todas as opções, cenários e falhas
 * [Cenários de alarme](docs/ALARM_SCENARIOS.md): o formato do ficheiro e como verificar a resposta de um servidor
+* [Cenários de visão](docs/VISION_SCENARIOS.md): o formato do ficheiro, as zonas de deteção por modo e como verificar os eventos
 * [Modelo de energia](docs/ENERGY_MODEL.md): os dados solares e elétricos realistas e as suas definições
 * [Bus de contadores](docs/METER_BUS.md): os contadores de energia por TCP e o ficheiro de definições
 * [Banco de simulação](docs/NODE_BENCH.md): os barramentos dos nós jogados contra o código real do firmware, e o servidor sem Docker

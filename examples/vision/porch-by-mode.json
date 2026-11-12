@@ -1,0 +1,42 @@
+{
+  "schema": "armor-vision-scenario/1",
+  "name": "Porch and garden by arming mode",
+  "description": "A person walks from the street to the porch door three times, once in each mode: at home (only the porch is watched), away (the porch and the garden) and disarmed (the profile watches nothing). A cat crosses the garden and is ignored because the zone only counts people.",
+  "duration_s": 120,
+  "step_s": 0.5,
+  "cameras": [
+    {
+      "id": "front",
+      "detection": {
+        "zones": [
+          { "id": "porch", "name": "Porch", "points": [[0.55, 0.5], [0.95, 0.5], [0.95, 0.95], [0.55, 0.95]], "kind": "alert", "labels": ["person"], "min_frames": 2, "min_seconds": 1 },
+          { "id": "garden", "name": "Garden", "points": [[0.05, 0.5], [0.45, 0.5], [0.45, 0.95], [0.05, 0.95]], "kind": "detection", "labels": ["person"] }
+        ],
+        "profiles": {
+          "home": { "watch": ["porch"], "sensitivity": "normal", "notify": true },
+          "away": { "watch": ["porch", "garden"], "sensitivity": "high", "notify": true },
+          "disarmed": { "watch": [], "sensitivity": "low", "notify": false }
+        }
+      }
+    }
+  ],
+  "events": [
+    { "type": "mode", "at_s": 0, "mode": "home" },
+    { "type": "walk", "at_s": 5, "camera": "front", "label": "person", "speed": 0.1, "path": [[0.5, 0.3], [0.2, 0.8], [0.5, 0.8], [0.8, 0.8]] },
+    { "type": "walk", "at_s": 25, "camera": "front", "label": "cat", "speed": 0.1, "path": [[0.05, 0.7], [0.45, 0.7]] },
+    { "type": "mode", "at_s": 40, "mode": "away" },
+    { "type": "walk", "at_s": 45, "camera": "front", "label": "person", "speed": 0.1, "path": [[0.5, 0.3], [0.2, 0.8], [0.5, 0.8], [0.8, 0.8]] },
+    { "type": "mode", "at_s": 80, "mode": "disarmed" },
+    { "type": "walk", "at_s": 85, "camera": "front", "label": "person", "speed": 0.1, "path": [[0.5, 0.3], [0.2, 0.8], [0.5, 0.8], [0.8, 0.8]] }
+  ],
+  "expect": {
+    "events": [
+      { "camera": "front", "zone": "porch", "label": "person", "between_s": [5, 38] },
+      { "camera": "front", "zone": "garden", "label": "person", "between_s": [45, 78] },
+      { "camera": "front", "zone": "porch", "label": "person", "between_s": [45, 78] }
+    ],
+    "forbidden": [
+      { "camera": "front", "zone": "garden", "label": "cat" }
+    ]
+  }
+}

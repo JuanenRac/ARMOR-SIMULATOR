@@ -1,0 +1,33 @@
+{
+  "schema": "armor-vision-scenario/1",
+  "name": "A mode without a profile watches everything",
+  "description": "Only the mode away has a profile. At night, which has none, every zone is watched: an unknown mode never watches less than the owner drew. A van parks in the yard zone and a person passes the gate zone.",
+  "duration_s": 60,
+  "step_s": 0.5,
+  "cameras": [
+    {
+      "id": "yard-cam",
+      "detection": {
+        "zones": [
+          { "id": "gate", "name": "Gate", "points": [[0.0, 0.2], [0.3, 0.2], [0.3, 1.0], [0.0, 1.0]], "labels": ["person"] },
+          { "id": "yard", "name": "Yard", "points": [[0.4, 0.4], [1.0, 0.4], [1.0, 1.0], [0.4, 1.0]], "kind": "detection", "labels": ["car", "person"], "min_seconds": 2 }
+        ],
+        "profiles": { "away": { "watch": ["gate"] } }
+      }
+    }
+  ],
+  "events": [
+    { "type": "mode", "at_s": 0, "mode": "night" },
+    { "type": "walk", "at_s": 2, "camera": "yard-cam", "label": "person", "speed": 0.05, "path": [[0.1, 0.6], [0.2, 0.9]] },
+    { "type": "walk", "at_s": 10, "camera": "yard-cam", "label": "car", "speed": 0.1, "path": [[0.5, 0.6], [0.9, 0.9]] },
+    { "type": "mode", "at_s": 30, "mode": "away" },
+    { "type": "walk", "at_s": 32, "camera": "yard-cam", "label": "car", "speed": 0.1, "path": [[0.5, 0.6], [0.9, 0.9]] }
+  ],
+  "expect": {
+    "events": [
+      { "camera": "yard-cam", "zone": "gate", "between_s": [2, 29] },
+      { "camera": "yard-cam", "zone": "yard", "label": "car", "between_s": [10, 29] }
+    ],
+    "forbidden": []
+  }
+}

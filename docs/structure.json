@@ -59,6 +59,19 @@
           }
         },
         {
+          "name": "vision_scenarios.py",
+          "desc": {
+            "en": "vision scenarios: objects walking across detection zones in each arming mode",
+            "es": "escenarios de visión: objetos que cruzan zonas de detección en cada modo",
+            "de": "Visionsszenarien: Objekte, die in jedem Modus durch Erkennungszonen laufen",
+            "fr": "scénarios de vision : des objets qui traversent des zones de détection dans chaque mode",
+            "it": "scenari di visione: oggetti che attraversano le zone di rilevamento in ogni modalità",
+            "ja": "ビジョンシナリオ：各モードで検知ゾーンを横切る物体",
+            "zh": "视觉场景：各模式下穿过检测区域的物体",
+            "pt": "cenários de visão: objetos que atravessam zonas de deteção em cada modo"
+          }
+        },
+        {
           "name": "solar.py",
           "desc": {
             "en": "an inverter and a two-module battery stack",
@@ -231,6 +244,19 @@
           }
         },
         {
+          "name": "test_vision_scenarios.py",
+          "desc": {
+            "en": "vision scenarios",
+            "es": "escenarios de visión",
+            "de": "Visionsszenarien",
+            "fr": "scénarios de vision",
+            "it": "scenari di visione",
+            "ja": "ビジョンシナリオ",
+            "zh": "视觉场景",
+            "pt": "cenários de visão"
+          }
+        },
+        {
           "name": "test_energy.py",
           "desc": {
             "en": "32 tests",
@@ -335,6 +361,19 @@
             "ja": "アラームシナリオ",
             "zh": "报警场景文件",
             "pt": "cenários de alarme"
+          }
+        },
+        {
+          "name": "VISION_SCENARIOS.md",
+          "desc": {
+            "en": "vision scenario files",
+            "es": "ficheros de escenarios de visión",
+            "de": "Visionsszenarien",
+            "fr": "scénarios de vision",
+            "it": "scenari di visione",
+            "ja": "ビジョンシナリオ",
+            "zh": "视觉场景文件",
+            "pt": "cenários de visão"
           }
         },
         {
