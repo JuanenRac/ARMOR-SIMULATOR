@@ -87,7 +87,7 @@ def _number(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
 
 
-def _only(raw: Any, allowed: set[str], where: str) -> dict[str, Any]:
+def _only(raw: Any, allowed: set[str], where: str) -> Any:
     _need(isinstance(raw, dict), f"{where} must be an object")
     unknown = sorted(set(raw) - allowed)
     _need(not unknown, f"{where}: unknown field {unknown[0][:30]!r}" if unknown else "")
@@ -119,7 +119,7 @@ def _parse_zone(raw: Any, where: str) -> Zone:
     points = item.get("points")
     _need(isinstance(points, list) and MIN_POINTS <= len(points) <= MAX_POINTS, f"{where}: {MIN_POINTS} to {MAX_POINTS} corners")
     corners = tuple(_point(p, where) for p in points)
-    area = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(corners, corners[1:] + corners[:1]))) / 2
+    area = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(corners, corners[1:] + corners[:1], strict=True))) / 2
     _need(area >= 0.0001, f"{where}: the corners enclose no area")
     kind = item.get("kind", "alert")
     _need(kind in KINDS, f"{where}: kind is alert or detection")
@@ -190,9 +190,9 @@ def load_scenario(path: Path | str) -> VisionScenario:
         _need(isinstance(item.get("label"), str) and LABEL.match(item["label"]) is not None, f"{where}: label is a name of a-z, 0-9, - and _")
         speed = item.get("speed", 0.1)
         _need(_number(speed) and SPEED_RANGE[0] <= speed <= SPEED_RANGE[1], f"{where}: speed is from {SPEED_RANGE[0]} to {SPEED_RANGE[1]} picture widths per second")
-        path = item.get("path")
-        _need(isinstance(path, list) and 2 <= len(path) <= MAX_PATH, f"{where}: path has 2 to {MAX_PATH} points")
-        walks.append(Walk(float(at), item["camera"], item["label"], float(speed), tuple(_point(p, where) for p in path)))
+        route = item.get("path")
+        _need(isinstance(route, list) and 2 <= len(route) <= MAX_PATH, f"{where}: path has 2 to {MAX_PATH} points")
+        walks.append(Walk(float(at), item["camera"], item["label"], float(speed), tuple(_point(p, where) for p in route)))
     _need(bool(modes) and min(t for t, _ in modes) == 0, "the first mode event must be at 0 s (the scenario has to start in a mode)")
     _need(len({t for t, _ in modes}) == len(modes), "two mode events at the same time")
     expect, forbidden = _parse_expect(raw.get("expect", {}), cameras, duration)
@@ -222,7 +222,7 @@ def _parse_expect(raw: Any, cameras: dict[str, Camera], duration: float) -> tupl
 
 def _position(walk: Walk, t: float) -> tuple[float, float] | None:
     """Where the feet are at time t, or None before the walk starts and after it ends."""
-    lengths = [math.dist(a, b) for a, b in zip(walk.path, walk.path[1:])]
+    lengths = [math.dist(a, b) for a, b in zip(walk.path, walk.path[1:], strict=False)]
     total = sum(lengths)
     duration = total / walk.speed
     local = t - walk.at_s
@@ -231,7 +231,7 @@ def _position(walk: Walk, t: float) -> tuple[float, float] | None:
     if total == 0:
         return walk.path[0]
     travelled = local * walk.speed
-    for (a, b), length in zip(zip(walk.path, walk.path[1:]), lengths):
+    for (a, b), length in zip(zip(walk.path, walk.path[1:], strict=False), lengths, strict=True):
         if travelled <= length:
             ratio = 0.0 if length == 0 else travelled / length
             return a[0] + (b[0] - a[0]) * ratio, a[1] + (b[1] - a[1]) * ratio
