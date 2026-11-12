@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.7] - A floor for the test coverage: the workflow `coverage-floor.yml` runs the Python tests under coverage and fails when the lines or the branches fall below `docs/coverage_threshold.json`. Floor of src/armor_simulator: lines 85.5, branches 85
+
 - **A floor for the test coverage:** the workflow `coverage-floor.yml` runs the Python tests under coverage and fails when the lines or the branches fall below `docs/coverage_threshold.json`. Floor of src/armor_simulator: lines 85.5, branches 85.5 (measured 86.21 and 86.32). Raising it is a change of that file, made with a figure measured by the workflow.
 
 - **Tests for the helpers of the bench without Docker:** the two HTTP readers, the waiting loop, the list of checks, the report the command writes, the options that reach the run and the camera checks seen from a stand-in server (one that refuses everything and one that answers as a good one does) are tested on the loopback address, without a server, a broker or a camera.
