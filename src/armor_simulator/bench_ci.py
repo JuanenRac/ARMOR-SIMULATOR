@@ -179,6 +179,16 @@ class Check:
         print(f"{'PASS' if passed else 'FAIL'} {name}{' - ' + detail if detail and not passed else ''}", flush=True)
 
 
+def private_broker(program: str, work: Path) -> str:
+    """The broker to start. On Linux a broker installed from a package can run under a security profile (AppArmor) that lets it read only its own folders and then cannot open the
+    configuration of the bench; a copy of the program in the working folder runs without it. Anything that is not a file (or any other system) is used as it is."""
+    if not sys.platform.startswith("linux") or not Path(program).is_file():
+        return program
+    private = work / "mosquitto-broker"
+    shutil.copy2(program, private)
+    return str(private)
+
+
 def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None, electrical_driver: str | None = None,
         solar_driver: str | None = None, alarm_driver: str | None = None,
         hmi_driver: str | None = None, battery_loop: bool = False) -> list[dict]:
@@ -203,11 +213,7 @@ def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None,
                 broker_port = free_port()
                 conf = work / "mosquitto.conf"
                 conf.write_text(f"listener {broker_port} 127.0.0.1\nallow_anonymous true\npersistence false\n", encoding="utf-8")
-                if sys.platform.startswith("linux"):
-                    # A broker installed from a package can run under a security profile that lets it read only its own folders; a copy of the program in the working folder runs without it.
-                    private = work / "mosquitto-broker"
-                    shutil.copy2(program, private)
-                    program = str(private)
+                program = private_broker(program, work)
                 children.append(subprocess.Popen([program, "-c", str(conf)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))  # noqa: S603
                 wait_until(lambda: _reachable(broker_port), 15, "the broker")
                 env["ARMOR_MQTT_URL"] = f"mqtt://127.0.0.1:{broker_port}"

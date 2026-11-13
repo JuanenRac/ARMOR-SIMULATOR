@@ -87,7 +87,7 @@ def main() -> int:
         broker_log = work / "mosquitto.log"
         # A broker installed from a distribution package can run under a security profile (AppArmor) that lets it read only its own folders, and then it cannot open the configuration
         # of this run ("Unable to open config file"). A copy of the program in the working folder runs without that profile.
-        if sys.platform.startswith("linux"):
+        if sys.platform.startswith("linux") and Path(mosquitto).is_file():
             private = work / "mosquitto-broker"
             shutil.copy2(mosquitto, private)
             mosquitto = str(private)
