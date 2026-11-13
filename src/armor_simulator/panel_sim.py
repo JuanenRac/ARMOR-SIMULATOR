@@ -28,6 +28,8 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
+from .command_signature import NonceMemory, verify
+
 BEHAVIORS = ("accept", "refuse", "silent")
 MODE_PROFILE = {"away": "away", "home": "stay", "night": "night"}
 MODE_BASE = {"away": "away", "home": "stay", "night": "stay"}
@@ -50,6 +52,9 @@ class SimulatedPanel:
     mode: str = "disarmed"
     profile: str | None = None
     received: list[dict[str, Any]] = field(default_factory=list)
+    command_key: str = ""   # the key of this node for the signed commands (64 hex digits); empty: any command is taken, as before
+    refused: list[str] = field(default_factory=list)   # why each command was dropped (no_signature, bad_signature, replay, stale...)
+    _nonces: NonceMemory = field(default_factory=NonceMemory, repr=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def __post_init__(self) -> None:
@@ -75,6 +80,23 @@ class SimulatedPanel:
             if self.profile is not None:
                 message["profile"] = self.profile
             return message
+
+    def handle_raw(self, text: str, now_ms: int, wall_ms: int = 0) -> dict[str, Any] | None:
+        """One message of the command topic as it arrived. With a `command_key` only a command the server signed is taken (the bytes are checked, as a node does); a command that does not
+        verify gets no answer and its reason is kept in `refused`."""
+        try:
+            payload = json.loads(text)
+        except ValueError:
+            return None
+        if not isinstance(payload, dict):
+            return None
+        if self.command_key:
+            verdict = verify(text, self.command_key, self._nonces, wall_ms)
+            if verdict != "ok":
+                with self._lock:
+                    self.refused.append(verdict)
+                return None
+        return self.handle_command(payload, now_ms)
 
     def handle_command(self, payload: dict[str, Any], now_ms: int) -> dict[str, Any] | None:
         """The answer to one command (`armor/alarm/<node>/command`), or None when the panel stays silent or the message is not for it."""
@@ -142,13 +164,12 @@ class PanelLink:
 
         def on_message(c: Any, _u: Any, message: Any) -> None:
             try:
-                payload = json.loads(message.payload)
-            except ValueError:
+                text = message.payload.decode("utf-8")
+            except UnicodeDecodeError:
                 return
-            if isinstance(payload, dict):
-                answer = self.panel.handle_command(payload, int(self.clock() * 1000))
-                if answer is not None:
-                    c.publish(f"{topic}/result", json.dumps(answer), qos=0)
+            answer = self.panel.handle_raw(text, int(self.clock() * 1000), int(self.clock() * 1000))
+            if answer is not None:
+                c.publish(f"{topic}/result", json.dumps(answer), qos=0)
 
         client.on_connect, client.on_message = on_connect, on_message
         try:
