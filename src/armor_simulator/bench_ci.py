@@ -203,6 +203,11 @@ def run(server_dir: Path, mosquitto: str | None, shim_driver: str | None = None,
                 broker_port = free_port()
                 conf = work / "mosquitto.conf"
                 conf.write_text(f"listener {broker_port} 127.0.0.1\nallow_anonymous true\npersistence false\n", encoding="utf-8")
+                if sys.platform.startswith("linux"):
+                    # A broker installed from a package can run under a security profile that lets it read only its own folders; a copy of the program in the working folder runs without it.
+                    private = work / "mosquitto-broker"
+                    shutil.copy2(program, private)
+                    program = str(private)
                 children.append(subprocess.Popen([program, "-c", str(conf)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))  # noqa: S603
                 wait_until(lambda: _reachable(broker_port), 15, "the broker")
                 env["ARMOR_MQTT_URL"] = f"mqtt://127.0.0.1:{broker_port}"
