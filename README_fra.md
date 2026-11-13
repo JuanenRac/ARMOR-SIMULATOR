@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 ou ultérieure">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Langage">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-333%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-382%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.3.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturité">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 333 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
+**Vérification d'honnêteté - ce qui fonctionne aujourd'hui :** Les scénarios, les pannes, la livraison à un serveur et les 382 tests sont réels, et le simulateur est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. La géométrie est **illustrative**, pas un modèle du vrai radar LD2450, et rien de tout cela n'a été comparé à du matériel réel.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturité | Établi |
 | Rôle | Simulateur hors ligne de télémétrie et d'environnement (famille : Testing, parent : ARMOR-COMMON) |
 | Technologie | Python 3.11+, bibliothèque standard uniquement |
-| Tests | 333 (`python -m unittest discover -s tests`) |
+| Tests | 382 (`python -m unittest discover -s tests`) |
 | Scénarios et pannes | 4 scénarios, 7 pannes (3 violent le contrat exprès) |
 | Fonctionne sur | N'importe quel ordinateur, ou la CI |
 | Sur matériel réel | Sans objet : c'est le substitut du matériel, utilisé sur un ordinateur |
@@ -57,7 +57,7 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟢 | Les scénarios, les pannes et la remise à un serveur fonctionnent ; c'est ce qui alimente un serveur sur un ordinateur quand aucun nœud n'est branché. |
-| Tests | 🟢 | 333 tests réussissent (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 382 tests réussissent (`python -m unittest discover -s tests`). |
 | Protocoles et données | 🟠 | La géométrie est illustrative, pas un modèle du vrai radar LD2450, et rien n'a été comparé à du matériel réel. |
 | Intégration | 🟢 | Il remet ses messages à un serveur dans les tests, et le serveur du banc d'essai CM5 peut être alimenté par lui. |
 | Documentation | 🟢 | Huit langues et le journal des modifications sont à jour. |
