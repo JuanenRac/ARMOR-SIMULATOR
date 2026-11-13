@@ -180,3 +180,22 @@ class Run(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PrivateBroker(unittest.TestCase):
+    def test_on_linux_a_broker_that_is_a_file_is_copied_into_the_working_folder_and_anything_else_is_used_as_it_is(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            original = work / "installed-broker"
+            original.write_bytes(b"#!/bin/sh\n")
+            with mock.patch.object(bench_ci.sys, "platform", "linux"):
+                copy = bench_ci.private_broker(str(original), work)
+                self.assertEqual(copy, str(work / "mosquitto-broker"))
+                self.assertEqual(Path(copy).read_bytes(), b"#!/bin/sh\n")
+                self.assertEqual(bench_ci.private_broker("mosquitto", work), "mosquitto", "a name that is not a file is left to the system")
+            with mock.patch.object(bench_ci.sys, "platform", "win32"):
+                self.assertEqual(bench_ci.private_broker(str(original), work), str(original))
