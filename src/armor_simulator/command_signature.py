@@ -18,9 +18,9 @@ import re
 from collections import deque
 
 PREFIX = "armor-command-v2|"
-ENDING = re.compile(r'^(.*),"sig":"([0-9a-f]{64})"\}$', re.S)
-NONCE = re.compile(r',"nonce":"([0-9a-f]{16})"\}$')
-KEY = re.compile(r"^[0-9a-f]{64}$")
+ENDING = re.compile(r'^(.*),"sig":"([0-9a-f]{64})"\}\Z', re.S)
+NONCE = re.compile(r',"nonce":"([0-9a-f]{16})"\}\Z')
+KEY = re.compile(r"^[0-9a-f]{64}\Z")
 FRESH_MS = 120_000
 MEMORY = 32
 

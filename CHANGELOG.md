@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The simulated check of a signed command no longer accepts a line break after it:** the closing of the payload, the nonce and the key are matched to the very end of the text (a `$` also matches before a final line break), as the node does, so a command or key with a trailing newline is refused; two tests cover both.
+
 ## [0.3.8] - Bench hardening: private broker copy, signed commands on the panel and wider tests of the bench
 
 - **The private copy of the broker is made only when the program is a file:** the bench (`armor_simulator.bench_ci.private_broker`) and `tools/ci_panel_sync.py` copy the broker into their working folder on Linux so that a packaged broker under a security profile can open its configuration, but a name that is not a file (a stand-in in the tests) is used as it is, which the first version of the copy broke. Tests of the copy, of a name that is not a file and of another system.

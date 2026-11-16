@@ -78,3 +78,14 @@ class SimulatedPanelWithAKey(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TrailingLineBreak(unittest.TestCase):
+    """The firmware takes a payload only when it ends exactly with the closing brace, and a key only when it has exactly 64 characters."""
+
+    def test_a_signed_command_followed_by_a_line_break_is_refused(self) -> None:
+        self.assertEqual(verify(ARM, KEY, NonceMemory()), "ok")
+        self.assertNotEqual(verify(ARM + "\n", KEY, NonceMemory()), "ok")
+
+    def test_a_key_followed_by_a_line_break_is_refused(self) -> None:
+        self.assertNotEqual(verify(ARM, KEY + "\n", NonceMemory()), "ok")
