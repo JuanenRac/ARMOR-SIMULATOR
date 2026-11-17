@@ -55,10 +55,10 @@ class Case:
 
 
 FAULTS: dict[str, tuple[str, ...]] = {
-    "ld2450": ("none", "noise", "truncate", "bad-tail", "out-of-range", "no-resolution", "origin", "chunks", "silence"),
-    "pzem": ("none", "corrupt", "exception", "silent", "short", "long", "other-address", "implausible"),
+    "ld2450": ("none", "noise", "truncate", "bad-tail", "out-of-range", "no-resolution", "origin", "chunks", "silence", "false-header"),
+    "pzem": ("none", "corrupt", "exception", "silent", "short", "long", "other-address", "implausible", "wrong-function", "bad-count"),
     "pylontech": ("none", "absent", "garbled-row", "no-header", "prompt", "cell-out-of-range", "cells-out-of-order"),
-    "alarm-loop": ("none", "bounce", "noise", "power-up-glitch", "cut", "short", "slow-open"),
+    "alarm-loop": ("none", "bounce", "noise", "power-up-glitch", "cut", "short", "slow-open", "jitter"),
     "hmi-feed": ("none", "wrong-type", "not-json", "truncated", "bad-mode", "no-blocks", "oversize", "silent-code", "many-alarms", "heartbeat-limits"),
 }
 
@@ -140,6 +140,14 @@ def ld2450(seed: int, fault: str = "none", frames: int = 40, every: int = 4) -> 
             frame, lost = frame[:-2] + bytes(2), True
         if spoiled and fault == "noise":
             stream += bytes(rng.choice([b for b in range(256) if b != 0xAA]) for _ in range(rng.randint(1, 20)))
+        if spoiled and fault == "false-header":
+            # a header that is not a frame: the whole header (and bytes that cannot end a frame, so the false frame fails on its tail) or only the start of one; the real frame
+            # that follows must still be found, because a bad frame costs one byte and never the stream
+            quiet = [b for b in range(256) if b not in (0xAA, 0x55)]
+            if n % 2:
+                stream += LD_HEADER + bytes(rng.choice(quiet) for _ in range(26))
+            else:
+                stream += LD_HEADER[: rng.randint(1, 3)] + bytes(rng.choice(quiet) for _ in range(rng.randint(1, 20)))
         if fault == "silence":
             continue
         stream += frame
@@ -191,7 +199,7 @@ def pzem(seed: int, fault: str = "none", requests: int = 12) -> Case:
         sample["n"] += rng.randint(20, 400)
         count = 10 if meter.model == "pzem-004t" else 8
         reply = bus.answer(with_crc(bytes((meter.address, 0x04, 0, 0, 0, count))))
-        spoil = fault in ("short", "long", "other-address", "implausible") and n % 2 == 1
+        spoil = fault in ("short", "long", "other-address", "implausible", "wrong-function", "bad-count") and n % 2 == 1
         if spoil and reply is not None:
             if fault == "short":
                 reply = reply[: rng.randint(3, len(reply) - 2)]
@@ -201,6 +209,10 @@ def pzem(seed: int, fault: str = "none", requests: int = 12) -> Case:
                 other = next((m for m in config.meters if m.address != meter.address and m.model == meter.model), None)
                 if other:
                     reply = bus.answer(with_crc(bytes((other.address, 0x04, 0, 0, 0, count))))
+            elif fault == "wrong-function":
+                reply = with_crc(bytes((reply[0], 0x03)) + reply[2:-2])             # the right length and a right CRC, but not the function that was asked for
+            elif fault == "bad-count":
+                reply = with_crc(bytes(reply[:2]) + bytes((reply[2] + 2,)) + reply[3:-2])   # the byte count says more than the frame holds
             elif fault == "implausible" and meter.model == "pzem-004t":
                 reply = with_crc(bytes((meter.address, 0x04, 20, 0xFF, 0xFF)) + reply[5:-2])    # 6553.5 V with a CRC that is right: only the plausibility check can refuse it
         if reply is None or len(reply) < 5:
@@ -213,6 +225,10 @@ def pzem(seed: int, fault: str = "none", requests: int = 12) -> Case:
             answer = "crc"
         elif reply[0] != meter.address:
             answer = "address"
+        elif reply[1] != 0x04:
+            answer = "function"
+        elif reply[2] != 2 * count:
+            answer = "length"
         else:
             answer = _pzem_values(meter.model, reply)
             if answer.startswith("ok v=") and (float(answer.split()[1][2:]) > 1000):
@@ -336,7 +352,7 @@ def alarm_loop(seed: int, fault: str = "none", seconds: int = 12) -> Case:
             level = 60
         elif fault == "slow-open" and 3000 <= now < 3600:
             level = 1800 if (now // 50) % 3 == 0 else 800
-        samples.append((now, level))
+        samples.append((now + (rng.randint(-15, 15) if fault == "jitter" and n > 0 else 0), level))
     states = _loop_debounce(samples)
     payload = ",".join(f"{t}:{mv}" for t, mv in samples)
     return Case("alarm-loop", f"alarm-loop-{fault}", ",".join(str(int(x)) for x in LOOP_LIMITS), payload, ",".join(states), fault)

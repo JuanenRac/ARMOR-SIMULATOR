@@ -11,15 +11,15 @@ from the same core files the firmware is built from (no ESP-IDF, no board), so t
 
 | Bus | Node | What the firmware code does with it | Faults injected |
 | --- | --- | --- | --- |
-| `ld2450` | ARMOR-NODE-RADAR | frames the serial stream of the HLK-LD2450 modules and turns the targets into tracks | noise between frames, frames cut short, a bad tail, a target beyond what the module can measure, a target without resolution, a target at the origin, the stream handed over in pieces, silence |
-| `pzem` | ARMOR-NODE-ELECTRICAL | checks and decodes the Modbus-RTU replies of the PZEM-004T and PZEM-017 meters (the replies are the ones of `meter_bus.py`) | a flipped bit, an exception, a silent meter, a short reply, a long reply, the reply of another meter, a reading no meter could give |
+| `ld2450` | ARMOR-NODE-RADAR | frames the serial stream of the HLK-LD2450 modules and turns the targets into tracks | noise between frames, frames cut short, a bad tail, a target beyond what the module can measure, a target without resolution, a target at the origin, the stream handed over in pieces, silence, a header that is not a frame (the real frame that follows must still be found) |
+| `pzem` | ARMOR-NODE-ELECTRICAL | checks and decodes the Modbus-RTU replies of the PZEM-004T and PZEM-017 meters (the replies are the ones of `meter_bus.py`) | a flipped bit, an exception, a silent meter, a short reply, a long reply, the reply of another meter, a reading no meter could give, a reply of another function (expected `function`), a byte count that says more than the frame holds (expected `length`) |
 | `pylontech` | ARMOR-NODE-SOLAR | reads the `pwr` table and the `bat` table printed by the console of a Pylontech stack | an absent module, a garbled row, no header, the prompt after the table, a cell voltage out of range, cells out of order |
-| `alarm-loop` | ARMOR-NODE-ALARM | classifies the voltage of a wired loop and holds it for 200 ms before it counts | a bouncing contact, noise, a converter still settling at power-up, a cut wire, a shorted wire, a slow opening |
+| `alarm-loop` | ARMOR-NODE-ALARM | classifies the voltage of a wired loop and holds it for 200 ms before it counts | a bouncing contact, noise, a converter still settling at power-up, a cut wire, a shorted wire, a slow opening, samples that are not exactly 50 ms apart (jitter of up to 15 ms) |
 | `hmi-feed` | ARMOR-NODE-HMI | reads the frames of the live channel of the server and keeps the summary | a frame of another type, text that is not JSON, a frame cut in half, an unknown mode, a missing block, a frame over the size limit, a silent alarm code, more alarms than fit, heartbeats beyond the limits |
 
 Every case carries the answer it must get, worked out in `buses.py` from the rules each firmware file documents, not by running the firmware, so a run is a comparison between two
 separate statements of the same rules. `--fault` plays only some of the faults, `--seed` changes the data, `--record FILE` writes the cases as JSON lines and `--replay FILE`
-plays them again later (an existing file is never overwritten). The exit status is 0 when every case passes, 1 when one differs and 2 when the run could not be made.
+plays them again later (an existing file is never overwritten). `--report FILE` also writes which fault of the bus passed, failed or was not run (JSON, never over an existing file) and `--merge FILE...` joins several reports into one matrix of bus by fault. The exit status is 0 when every case passes, 1 when one differs and 2 when the run could not be made.
 
 To try one by hand from the repository of a node (the simulator next to it):
 

@@ -75,6 +75,24 @@ class CaseTests(unittest.TestCase):
         self.assertIn("address", pzem["other-address"])
         self.assertIn("length", pzem["long"])
 
+    def test_the_new_faults_state_the_rule_they_exercise(self):
+        from armor_simulator.buses import cases_for
+        none_pzem = cases_for("pzem", 5, ("none",))[0].expect.split("|")
+        wrong = cases_for("pzem", 5, ("wrong-function",))[0].expect.split("|")
+        count = cases_for("pzem", 5, ("bad-count",))[0].expect.split("|")
+        self.assertEqual([wrong[n] for n in range(0, len(wrong), 2)], [none_pzem[n] for n in range(0, len(wrong), 2)], "the replies that were not spoiled are the same")
+        self.assertTrue(all(item == "function" for item in wrong[1::2]))
+        self.assertTrue(all(item == "length" for item in count[1::2]))
+        plain = cases_for("ld2450", 5, ("none",))[0]
+        false_header = cases_for("ld2450", 5, ("false-header",))[0]
+        self.assertTrue(false_header.expect.startswith("frames=40 ") and plain.expect.startswith("frames=40 "), "a false header costs no frame: the real one that follows is found")
+        self.assertGreater(len(false_header.payload), len(plain.payload))
+        jitter = cases_for("alarm-loop", 5, ("jitter",))[0]
+        times = [int(item.split(":")[0]) for item in jitter.payload.split(",")]
+        self.assertTrue(all(0 < later - earlier < 100 for earlier, later in zip(times, times[1:], strict=False)))
+        self.assertNotEqual({later - earlier for earlier, later in zip(times, times[1:], strict=False)}, {50})
+        self.assertEqual(cases_for("alarm-loop", 5, ("jitter",))[0], jitter, "the same seed gives the same jitter")
+
     def test_unknown_fault_and_bus_are_refused(self):
         with self.assertRaises(buses.BusError):
             buses.cases_for("pzem", 1, ("melted",))
@@ -102,6 +120,28 @@ class BenchTests(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("FAIL pzem-corrupt", out)
             self.assertIn("failed=1", out)
+
+    def test_the_report_says_what_was_played_and_the_matrix_joins_several(self):
+        with tempfile.TemporaryDirectory() as folder:
+            tmp = Path(folder)
+            cases = buses.cases_for("pzem", 1, ("corrupt", "silent"))
+            short = buses.cases_for("pzem", 1, ("short",))
+            first, second = tmp / "a.json", tmp / "b.json"
+            code, _, _ = self.run_main(["--bus", "pzem", "--fault", "corrupt", "--fault", "silent", "--driver", " ".join(echo_driver(tmp, cases, {"pzem-silent"})), "--report", str(first)])
+            self.assertEqual(code, 1)
+            data = json.loads(first.read_text(encoding="utf-8"))
+            self.assertEqual((data["bus"], data["seed"], data["cases"], data["failed"]), ("pzem", 1, 2, 1))
+            self.assertEqual((data["faults"]["corrupt"], data["faults"]["silent"], data["faults"]["short"]), ("passed", "failed", "not-run"))
+            self.assertEqual(self.run_main(["--bus", "pzem", "--fault", "short", "--driver", " ".join(echo_driver(tmp, short)), "--report", str(first)])[0], 2, "an existing report is never overwritten")
+            self.assertEqual(self.run_main(["--bus", "pzem", "--fault", "short", "--driver", " ".join(echo_driver(tmp, short)), "--report", str(second)])[0], 0)
+            code, out, _ = self.run_main(["--merge", str(first), str(second)])
+            self.assertEqual(code, 0)
+            self.assertIn("corrupt=passed", out)
+            self.assertIn("silent=failed", out)
+            self.assertIn("short=passed", out)
+            self.assertIn("long=not-run", out)
+            (tmp / "bad.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(self.run_main(["--merge", str(tmp / "bad.json")])[0], 2)
 
     def test_a_missing_answer_is_a_failure(self):
         cases = buses.cases_for("hmi-feed", 1, ("none",))
