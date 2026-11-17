@@ -135,6 +135,30 @@ class PanelModelTests(unittest.TestCase):
         self.assertEqual((answer["accepted"], answer["refusal"], answer["phase"]), (False, "zones_open", "disarmed"))
         self.assertEqual(panel.state(6)["phase"], "disarmed")
 
+    def test_a_panel_with_the_commands_off_refuses_both_orders_and_stays_as_it_was(self) -> None:
+        panel = SimulatedPanel(commands_enabled=False)
+        for action in ("arm", "disarm"):
+            answer = panel.handle_command({**self.command(), "action": action}, 5)
+            assert answer is not None
+            self.assertEqual((answer["accepted"], answer["refusal"], answer["phase"]), (False, "commands_disabled", "disarmed"))
+        self.assertEqual(panel.state(6)["commands_enabled"], False)
+        self.assertEqual(SimulatedPanel(behavior="silent", commands_enabled=False).handle_command(self.command(), 5), None)
+
+    def test_a_delayed_panel_goes_through_the_exit_delay_and_then_arms(self) -> None:
+        panel = SimulatedPanel(behavior="accept_delayed", exit_delay_s=30)
+        answer = panel.handle_command(self.command(), 1000)
+        assert answer is not None
+        self.assertEqual((answer["accepted"], answer["phase"]), (True, "exit_delay"))
+        self.assertEqual(panel.state(30_999)["phase"], "exit_delay")
+        self.assertEqual(panel.state(31_000)["phase"], "armed")
+        self.assertEqual(panel.state(31_000)["mode"], "stay")
+        panel.handle_command(self.command(), 40_000)
+        panel.handle_command({**self.command(), "action": "disarm", "command_id": "00000000000000cc"}, 41_000)
+        self.assertEqual(panel.state(100_000)["phase"], "disarmed")
+        panel.handle_command(self.command(), 200_000)
+        panel.reset()
+        self.assertEqual(panel.state(400_000)["phase"], "disarmed")
+
     def test_a_silent_panel_receives_but_never_answers(self) -> None:
         panel = SimulatedPanel(behavior="silent")
         self.assertIsNone(panel.handle_command(self.command(), 5))

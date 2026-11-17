@@ -8,7 +8,10 @@ contract (state on `armor/alarm/<node>/state`, command on `.../command`, answer 
 
 * `accept`: the command is taken and the panel arms with the profile;
 * `refuse`: the command is answered with a refusal (`zones_open` by default);
-* `silent`: the command is received and never answered.
+* `silent`: the command is received and never answered;
+* `accept_delayed`: the command is taken, but the panel goes through its exit delay (`exit_delay`, for `exit_delay_s` seconds) before it is `armed`, as a real panel does.
+
+A panel whose `commands_enabled` is false answers every arm and disarm with the refusal `commands_disabled` (the words of this model, not a code of the firmware).
 
 `verify_panel_sync` plays that against the server through Studio's own routes: for each behaviour and each mode it disarms, chooses the mode, waits for the report and compares it with
 what must be true: the server defends the mode whatever the panel does; the panel was asked for the profile of the mode and nothing else (no disarm travels); the report says `confirmed`
@@ -30,7 +33,9 @@ from urllib.parse import urlparse
 
 from .command_signature import NonceMemory, verify
 
-BEHAVIORS = ("accept", "refuse", "silent")
+BEHAVIORS = ("accept", "refuse", "silent", "accept_delayed")
+ACCEPTING = ("accept", "accept_delayed")   # the behaviours whose answer says accepted
+COMMANDS_DISABLED = "commands_disabled"
 MODE_PROFILE = {"away": "away", "home": "stay", "night": "night"}
 MODE_BASE = {"away": "away", "home": "stay", "night": "stay"}
 ALARM_CODE = "mode_panel_sync_failed"
@@ -48,6 +53,7 @@ class SimulatedPanel:
     refusal: str = "zones_open"
     arm_profiles: bool = True
     commands_enabled: bool = True
+    exit_delay_s: float = 30.0   # how long `accept_delayed` stays in the exit delay before the panel is armed
     phase: str = "disarmed"
     mode: str = "disarmed"
     profile: str | None = None
@@ -56,6 +62,7 @@ class SimulatedPanel:
     refused: list[str] = field(default_factory=list)   # why each command was dropped (no_signature, bad_signature, replay, stale...)
     _nonces: NonceMemory = field(default_factory=NonceMemory, repr=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    _exit_until_ms: int | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.behavior not in BEHAVIORS:
@@ -67,11 +74,13 @@ class SimulatedPanel:
         """Disarmed again, and the commands received so far forgotten (the panel was armed by hand, or by the last step)."""
         with self._lock:
             self.phase, self.mode, self.profile = "disarmed", "disarmed", None
+            self._exit_until_ms = None
             self.received.clear()
 
     def state(self, now_ms: int) -> dict[str, Any]:
         """The message of `armor/alarm/<node>/state`, as ARMOR-COMMON's alarm schema has it."""
         with self._lock:
+            self._settle(now_ms)
             message: dict[str, Any] = {
                 "kind": "alarm", "node_id": self.node_id, "timestamp_ms": now_ms, "phase": self.phase, "mode": self.mode, "siren": False, "locked_out": False,
                 "commands_enabled": self.commands_enabled, "zones": [{"id": "front-door", "kind": "entry", "state": "normal", "bypassed": False}], "open_zones": [], "events": [],
@@ -103,22 +112,34 @@ class SimulatedPanel:
         if payload.get("kind") != "alarm_command" or payload.get("node_id") != self.node_id or not isinstance(payload.get("command_id"), str):
             return None
         with self._lock:
+            self._settle(now_ms)
             self.received.append(payload)
             if self.behavior == "silent":
                 return None
             action = payload.get("action")
             result: dict[str, Any] = {"kind": "alarm_result", "node_id": self.node_id, "timestamp_ms": now_ms, "command_id": payload["command_id"], "action": action}
+            if self.behavior != "refuse" and not self.commands_enabled and action in ("arm", "disarm"):
+                result.update(accepted=False, refusal=COMMANDS_DISABLED, phase=self.phase)
+                return result
             if self.behavior == "refuse" or action not in ("arm", "disarm"):
                 result.update(accepted=False, refusal=self.refusal if action == "arm" else "not_armed", phase=self.phase)
                 return result
             if action == "disarm":
                 self.phase, self.mode, self.profile = "disarmed", "disarmed", None
+                self._exit_until_ms = None
             else:
                 profile = payload.get("profile")
-                self.phase, self.mode = "armed", str(payload.get("mode", "away"))
+                delayed = self.behavior == "accept_delayed"
+                self.phase, self.mode = "exit_delay" if delayed else "armed", str(payload.get("mode", "away"))
+                self._exit_until_ms = now_ms + int(self.exit_delay_s * 1000) if delayed else None
                 self.profile = profile.get("id") if isinstance(profile, dict) and isinstance(profile.get("id"), str) else None
             result.update(accepted=True, refusal="none", phase=self.phase)
             return result
+
+    def _settle(self, now_ms: int) -> None:
+        """Ends the exit delay when its time is up (the lock is held by the caller)."""
+        if self.phase == "exit_delay" and self._exit_until_ms is not None and now_ms >= self._exit_until_ms:
+            self.phase, self._exit_until_ms = "armed", None
 
     def arms_received(self) -> list[dict[str, Any]]:
         with self._lock:
@@ -317,12 +338,12 @@ def verify_panel_sync(
                 state = _pending_wait(session, wait_s, clock, sleep)
                 raw_sync = state.get("panel_sync")
                 sync: dict[str, Any] = raw_sync if isinstance(raw_sync, dict) else {}
-                want = "confirmed" if behavior == "accept" else "failed"
+                want = "confirmed" if behavior in ACCEPTING else "failed"
                 if state.get("arming_mode") != mode or state.get("mode") != "armed":
                     problems.append(f"{where}: the server does not defend the mode (it says {state.get('mode')}/{state.get('arming_mode')}): a panel must never hold the server back")
                 if sync.get("status") != want:
                     problems.append(f"{where}: the report says {sync.get('status')!r}, it must be {want!r}")
-                if behavior != "accept" and sync.get("status") == "confirmed":
+                if behavior not in ACCEPTING and sync.get("status") == "confirmed":
                     problems.append(f"{where}: a panel that did not accept is shown as confirmed")
                 if sync.get("profile") != MODE_PROFILE[mode]:
                     problems.append(f"{where}: the report names the profile {sync.get('profile')!r}, the mode asks for {MODE_PROFILE[mode]!r}")
@@ -343,8 +364,8 @@ def verify_panel_sync(
                 listed: dict[str, Any] = session.call("GET", "/api/v1/alarms") or {}
                 active = listed.get("active")
                 open_alarms = [alarm for alarm in (active if isinstance(active, list) else []) if isinstance(alarm, dict) and alarm.get("code") == ALARM_CODE and not alarm.get("cleared_at")]
-                if len(open_alarms) != (0 if behavior == "accept" else 1):
-                    problems.append(f"{where}: {len(open_alarms)} open alarm(s) {ALARM_CODE!r}, it must be {0 if behavior == 'accept' else 1}")
+                if len(open_alarms) != (0 if behavior in ACCEPTING else 1):
+                    problems.append(f"{where}: {len(open_alarms)} open alarm(s) {ALARM_CODE!r}, it must be {0 if behavior in ACCEPTING else 1}")
                 elif open_alarms and (open_alarms[0].get("severity") != "high" or open_alarms[0].get("silent")):
                     problems.append(f"{where}: the alarm {ALARM_CODE!r} must be high and not silent")
                 log.append(f"{where}: the report says {sync.get('status')}, the panel received {len(arms)} arm(s)")

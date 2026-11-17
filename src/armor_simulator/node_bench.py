@@ -6,6 +6,8 @@ Copyright (C) 2026 JuanenRac (Electro Hobby 3D). GPL-3.0-or-later.
     python -m armor_simulator.node_bench --bus pzem --driver ./sim_bench --fault corrupt --fault silent
     python -m armor_simulator.node_bench --bus alarm-loop --record cases.jsonl        # only write the cases
     python -m armor_simulator.node_bench --bus alarm-loop --replay cases.jsonl --driver ./sim_bench
+    python -m armor_simulator.node_bench --bus pzem --driver ./sim_bench --report pzem.json        # also keep which fault passed or failed
+    python -m armor_simulator.node_bench --merge pzem.json ld2450.json                              # one matrix, bus by fault, from several reports
 
 The driver is a small program that every node keeps in its tests (`tests/sim_bench.cpp`): it is built from the core files of the firmware, reads the cases from its standard
 input and prints one answer per case (see `buses.py`). A case passes when the answer is exactly the expected text. The exit status is 0 when every case passes, 1 when one
@@ -47,20 +49,60 @@ def compare(cases: list[buses.Case], answers: dict[str, str]) -> list[dict]:
     return report
 
 
+def coverage(bus: str, seed: int, driver: str, report: list[dict]) -> dict:
+    """What a run played, for `--report`: every fault of the bus as passed, failed or not-run (the ones that were not asked for)."""
+    played = {row["fault"]: ("passed" if row["passed"] else "failed") for row in report}
+    faults = {name: played.get(name, "not-run") for name in buses.FAULTS[bus]}
+    return {"bus": bus, "seed": seed, "driver": driver, "faults": faults, "cases": len(report), "failed": sum(1 for row in report if not row["passed"])}
+
+
+def merge(paths: list[Path]) -> str:
+    """The reports of several runs as one matrix (a line per bus, a column per fault); a fault that failed in any run is failed, one played anywhere is not 'not-run'."""
+    rows: dict[str, dict[str, str]] = {}
+    for path in paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            bus, faults = data["bus"], data["faults"]
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise buses.BusError(f"{path} is not a report of the bench ({error})") from None
+        if bus not in buses.FAULTS or not isinstance(faults, dict):
+            raise buses.BusError(f"{path} is not a report of the bench (bus {bus!r})")
+        row = rows.setdefault(bus, {})
+        for name, state in faults.items():
+            old = row.get(name, "not-run")
+            row[name] = "failed" if "failed" in (old, state) else ("passed" if "passed" in (old, state) else "not-run")
+    lines = []
+    for bus in sorted(rows):
+        lines.append(bus + ": " + ", ".join(f"{name}={state}" for name, state in rows[bus].items()))
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="armor_simulator.node_bench", description=__doc__.split("\n\n")[0])
-    parser.add_argument("--bus", choices=buses.BUSES, required=True)
+    parser.add_argument("--bus", choices=buses.BUSES)
     parser.add_argument("--fault", action="append", help="only this fault (repeat for several); default: every fault of the bus")
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--driver", help="the program built from the firmware core files (a path; arguments may follow in the same text)")
     parser.add_argument("--record", type=Path, metavar="FILE", help="write the cases to FILE as JSON lines and stop (an existing file is never overwritten)")
     parser.add_argument("--replay", type=Path, metavar="FILE", help="play the cases of a recording instead of generating them")
     parser.add_argument("--json", action="store_true", help="print the report as JSON")
+    parser.add_argument("--report", type=Path, metavar="FILE", help="also write which fault of the bus passed, failed or was not run, as JSON (an existing file is never overwritten)")
+    parser.add_argument("--merge", type=Path, nargs="+", metavar="FILE", help="print one matrix (bus by fault) from several reports written with --report, and stop")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.merge:
+        try:
+            print(merge(args.merge))
+        except buses.BusError as error:
+            print(f"node bench: {error}", file=sys.stderr)
+            return 2
+        return 0
+    if not args.bus:
+        parser.error("--bus is needed (or --merge to join reports)")
     try:
         cases = buses.load(args.replay) if args.replay else buses.cases_for(args.bus, args.seed, tuple(args.fault) if args.fault else None)
         cases = [case for case in cases if case.bus == args.bus]
@@ -75,6 +117,10 @@ def main(argv: list[str] | None = None) -> int:
             print("--driver is needed (or --record to only write the cases)", file=sys.stderr)
             return 2
         report = compare(cases, run_driver(args.driver.split(), cases))
+        if args.report:
+            if args.report.exists():
+                raise buses.BusError(f"{args.report} exists already; it is never overwritten")
+            args.report.write_text(json.dumps(coverage(args.bus, args.seed, args.driver, report), indent=1) + "\n", encoding="utf-8")
     except (buses.BusError, OSError, subprocess.SubprocessError) as error:
         print(f"node bench: {error}", file=sys.stderr)
         return 2

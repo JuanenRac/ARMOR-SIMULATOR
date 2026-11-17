@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The bench can keep what it played:** `--report FILE` writes which fault of the bus passed, failed or was not run, and `--merge FILE...` joins several reports into one matrix of bus by fault. The output of a run is unchanged.
+
+- **The bench has four more faults:** an LD2450 stream with a false header between frames (the real frame must still be found), a meter reply of another function (`function`) or with a byte count that says more than the frame holds (`length`), and an alarm loop sampled with a jitter of up to 15 ms. A node whose bench driver is stricter or looser than the documented rules will now fail on them; `--fault` leaves any of them out.
+
+- **The simulated panel can refuse because its commands are off and can take the exit delay:** a panel with `commands_enabled` false answers an arm or a disarm with the refusal `commands_disabled` (the words of the model, not a code of the firmware), and the new behaviour `accept_delayed` goes through `exit_delay` for `exit_delay_s` seconds before it is `armed`; the panel-sync check plays it with the others and treats it as accepting.
+
 - **The check of a signed command is also tried against the shared file of vectors:** when ARMOR-COMMON is next to the repository, every published command must verify with the key the master key gives its node and every refused payload must be refused, so the simulator and the firmware answer to the same oracle. Skipped when that file is not there.
 
 - **The simulated check of a signed command no longer accepts a line break after it:** the closing of the payload, the nonce and the key are matched to the very end of the text (a `$` also matches before a final line break), as the node does, so a command or key with a trailing newline is refused; two tests cover both.
