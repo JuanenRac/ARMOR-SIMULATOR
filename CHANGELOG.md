@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The check of a signed command is also tried against the shared file of vectors:** when ARMOR-COMMON is next to the repository, every published command must verify with the key the master key gives its node and every refused payload must be refused, so the simulator and the firmware answer to the same oracle. Skipped when that file is not there.
+
 - **The simulated check of a signed command no longer accepts a line break after it:** the closing of the payload, the nonce and the key are matched to the very end of the text (a `$` also matches before a final line break), as the node does, so a command or key with a trailing newline is refused; two tests cover both.
 
 ## [0.3.8] - Bench hardening: private broker copy, signed commands on the panel and wider tests of the bench

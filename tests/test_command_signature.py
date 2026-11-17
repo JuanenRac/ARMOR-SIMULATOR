@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 import unittest
+from pathlib import Path
 
 from armor_simulator.command_signature import NonceMemory, node_key, sign_command, verify
 from armor_simulator.panel_sim import SimulatedPanel
+
+SHARED = Path(__file__).resolve().parents[2] / "ARMOR-COMMON" / "conformance" / "signatures" / "command.json"
 
 MASTER = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"   # the made-up key of the vectors
 KEY = "156a3ba893545ebfde6009ac5393395fcb033e467f7ee6fb1839548da19a66b3"       # the key of "alarm-1"
@@ -89,3 +92,28 @@ class TrailingLineBreak(unittest.TestCase):
 
     def test_a_key_followed_by_a_line_break_is_refused(self) -> None:
         self.assertNotEqual(verify(ARM, KEY + "\n", NonceMemory()), "ok")
+
+
+class SharedFile(unittest.TestCase):
+    """The check is held to the very file the firmware and the server are held to, not only to the copy above (skipped when ARMOR-COMMON is not next to this repository)."""
+
+    def shared(self) -> dict:
+        if not SHARED.is_file():
+            self.skipTest("ARMOR-COMMON is not next to this repository")
+        return json.loads(SHARED.read_text(encoding="utf-8"))
+
+    def test_every_published_command_verifies_with_its_key_and_the_key_comes_from_the_master(self) -> None:
+        shared = self.shared()
+        self.assertTrue(shared["cases"])
+        for case in shared["cases"]:
+            with self.subTest(case["name"]):
+                self.assertEqual(node_key(shared["master_key"], case["node_id"]), case["node_key"])
+                self.assertEqual(verify(case["payload"], case["node_key"], NonceMemory()), "ok")
+
+    def test_every_refused_payload_is_refused(self) -> None:
+        shared = self.shared()
+        self.assertTrue(shared["refused"])
+        for case in shared["refused"]:
+            with self.subTest(case["name"]):
+                self.assertNotEqual(verify(case["payload"], case["node_key"], NonceMemory()), "ok")
+
