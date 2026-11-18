@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The shared tools of the manifest and the status lights gain an opt-in strict check of the evidence:** `sync_manifests.py` and `status_lights.py` take `--strict-evidence` (off by default; `ARMOR_STRICT_EVIDENCE=1` switches it on for `armor_ci_validate.py`).
 - **The bench can keep what it played:** `--report FILE` writes which fault of the bus passed, failed or was not run, and `--merge FILE...` joins several reports into one matrix of bus by fault. The output of a run is unchanged.
 
 - **The bench has four more faults:** an LD2450 stream with a false header between frames (the real frame must still be found), a meter reply of another function (`function`) or with a byte count that says more than the frame holds (`length`), and an alarm loop sampled with a jitter of up to 15 ms. A node whose bench driver is stricter or looser than the documented rules will now fail on them; `--fault` leaves any of them out.
