@@ -4,21 +4,18 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.9] - A bench that keeps its report, four more bus faults, a refusing panel and shared signed-command vectors
+
 - **The structure generator can write a figure read from the code:** `tools/make_structure.py` resolves `{{fact:NAME|LAST}}` in the descriptions of `docs/structure.json` where the documentation tools are next to the repository, and writes LAST (the figure it had when last written) everywhere else, so a repository still builds on its own.
 - **The test counts of the repository structure are read from the code:** the tests, test modules, JSON Schemas and conformance payloads that `docs/structure.json` states are `{{fact:...}}` markers now, so the tree and the picture follow the tests instead of a number typed by hand.
 - **The Security and Updates lights of the Project status table follow the evidence ceiling:** they cannot be above what the Hardware row may show for the evidence of the manifest, and Security is never green; the rows that were higher are now orange in the eight READMEs, and `tools/status_lights.py` is the new shared copy.
-
 - **The file tree of the README is drawn from the structure source:** the text tree in the eight READMEs is generated from `docs/structure.json`, the file that also draws the picture, so the two cannot disagree.
 - **The Architecture picture rounds its coordinates to two decimals:** the legend positions no longer carry floating-point noise such as 399.9999999999999, so `make_architecture.py --check` gives the same answer on every machine; the shared tool is the one of ARMOR-COMMON.
 - **The shared tools of the manifest and the status lights gain an opt-in strict check of the evidence:** `sync_manifests.py` and `status_lights.py` take `--strict-evidence` (off by default; `ARMOR_STRICT_EVIDENCE=1` switches it on for `armor_ci_validate.py`).
 - **The bench can keep what it played:** `--report FILE` writes which fault of the bus passed, failed or was not run, and `--merge FILE...` joins several reports into one matrix of bus by fault. The output of a run is unchanged.
-
 - **The bench has four more faults:** an LD2450 stream with a false header between frames (the real frame must still be found), a meter reply of another function (`function`) or with a byte count that says more than the frame holds (`length`), and an alarm loop sampled with a jitter of up to 15 ms. A node whose bench driver is stricter or looser than the documented rules will now fail on them; `--fault` leaves any of them out.
-
 - **The simulated panel can refuse because its commands are off and can take the exit delay:** a panel with `commands_enabled` false answers an arm or a disarm with the refusal `commands_disabled` (the words of the model, not a code of the firmware), and the new behaviour `accept_delayed` goes through `exit_delay` for `exit_delay_s` seconds before it is `armed`; the panel-sync check plays it with the others and treats it as accepting.
-
 - **The check of a signed command is also tried against the shared file of vectors:** when ARMOR-COMMON is next to the repository, every published command must verify with the key the master key gives its node and every refused payload must be refused, so the simulator and the firmware answer to the same oracle. Skipped when that file is not there.
-
 - **The simulated check of a signed command no longer accepts a line break after it:** the closing of the payload, the nonce and the key are matched to the very end of the text (a `$` also matches before a final line break), as the node does, so a command or key with a trailing newline is refused; two tests cover both.
 
 ## [0.3.8] - Bench hardening: private broker copy, signed commands on the panel and wider tests of the bench
