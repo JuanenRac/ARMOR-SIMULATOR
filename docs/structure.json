@@ -207,40 +207,40 @@
         {
           "name": "test_simulator.py",
           "desc": {
-            "en": "37 tests",
-            "es": "37 pruebas",
-            "de": "37 Tests",
-            "fr": "37 tests",
-            "it": "37 test",
-            "ja": "37 件",
-            "zh": "37 个",
-            "pt": "37 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_simulator.py|37}} testes"
           }
         },
         {
           "name": "test_cli_options.py",
           "desc": {
-            "en": "26 tests",
-            "es": "26 pruebas",
-            "de": "26 Tests",
-            "fr": "26 tests",
-            "it": "26 test",
-            "ja": "26 件",
-            "zh": "26 个",
-            "pt": "26 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_cli_options.py|26}} testes"
           }
         },
         {
           "name": "test_alarm_scenarios.py",
           "desc": {
-            "en": "32 tests",
-            "es": "32 pruebas",
-            "de": "32 Tests",
-            "fr": "32 tests",
-            "it": "32 test",
-            "ja": "32 件",
-            "zh": "32 个",
-            "pt": "32 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_alarm_scenarios.py|32}} testes"
           }
         },
         {
@@ -259,66 +259,66 @@
         {
           "name": "test_energy.py",
           "desc": {
-            "en": "32 tests",
-            "es": "32 pruebas",
-            "de": "32 Tests",
-            "fr": "32 tests",
-            "it": "32 test",
-            "ja": "32 件",
-            "zh": "32 个",
-            "pt": "32 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_energy.py|32}} testes"
           }
         },
         {
           "name": "test_meter_bus.py",
           "desc": {
-            "en": "28 tests",
-            "es": "28 pruebas",
-            "de": "28 Tests",
-            "fr": "28 tests",
-            "it": "28 test",
-            "ja": "28 件",
-            "zh": "28 个",
-            "pt": "28 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_meter_bus.py|28}} testes"
           }
         },
         {
           "name": "test_fake_cameras.py",
           "desc": {
-            "en": "17 tests",
-            "es": "17 pruebas",
-            "de": "17 Tests",
-            "fr": "17 tests",
-            "it": "17 test",
-            "ja": "17 件",
-            "zh": "17 个",
-            "pt": "17 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_fake_cameras.py|22}} testes"
           }
         },
         {
           "name": "test_other_nodes.py",
           "desc": {
-            "en": "21 tests",
-            "es": "21 pruebas",
-            "de": "21 Tests",
-            "fr": "21 tests",
-            "it": "21 test",
-            "ja": "21 件",
-            "zh": "21 个",
-            "pt": "21 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_other_nodes.py|21}} testes"
           }
         },
         {
           "name": "test_bench_script.py",
           "desc": {
-            "en": "5 tests",
-            "es": "5 pruebas",
-            "de": "5 Tests",
-            "fr": "5 tests",
-            "it": "5 test",
-            "ja": "5 件",
-            "zh": "5 个",
-            "pt": "5 testes"
+            "en": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} tests",
+            "es": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} pruebas",
+            "de": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} Tests",
+            "fr": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} tests",
+            "it": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} test",
+            "ja": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} 件",
+            "zh": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} 个",
+            "pt": "{{fact:tests_in:ARMOR-SIMULATOR:test_bench_script.py|5}} testes"
           }
         }
       ]
