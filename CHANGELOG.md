@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the shared validator is current:** `tools/armor_ci_validate.py` now also checks with `node --check` that the scripts served to a browser parse, in a repository that has them under `panel/` or `public/`.
 ## [0.3.9] - A bench that keeps its report, four more bus faults, a refusing panel and shared signed-command vectors
 
 - **The structure generator can write a figure read from the code:** `tools/make_structure.py` resolves `{{fact:NAME|LAST}}` in the descriptions of `docs/structure.json` where the documentation tools are next to the repository, and writes LAST (the figure it had when last written) everywhere else, so a repository still builds on its own.
