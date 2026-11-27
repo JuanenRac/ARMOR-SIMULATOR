@@ -4,13 +4,14 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.4.0] - Cut or garbled answers retried and differently encoded files read
+
 - **A cut or garbled server answer is retried and reported like an unreachable server**, instead of ending the run with a traceback.
 - **Token and password files saved with a byte-order mark are read**, and the node drivers are spoken to in UTF-8 whatever the code page of the console is.
 - **The shared project tool is the current one:** the copy follows the shared repository, which now knows the new solar panel node.
-
 - **The shared CI workflow pins the current setup-java action:** the line follows the template of the shared repository.
-
 - **The copy of the shared validator is current:** `tools/armor_ci_validate.py` now also checks with `node --check` that the scripts served to a browser parse, in a repository that has them under `panel/` or `public/`.
+
 ## [0.3.9] - A bench that keeps its report, four more bus faults, a refusing panel and shared signed-command vectors
 
 - **The structure generator can write a figure read from the code:** `tools/make_structure.py` resolves `{{fact:NAME|LAST}}` in the descriptions of `docs/structure.json` where the documentation tools are next to the repository, and writes LAST (the figure it had when last written) everywhere else, so a repository still builds on its own.
