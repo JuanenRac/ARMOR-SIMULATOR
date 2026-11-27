@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 o posterior">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Lenguaje">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-415%20passing-2ea44f.svg" alt="Pruebas">
-  <img src="https://img.shields.io/badge/Version-0.3.9-0f6cbd.svg" alt="Versión">
+  <img src="https://img.shields.io/badge/Tests-417%20passing-2ea44f.svg" alt="Pruebas">
+  <img src="https://img.shields.io/badge/Version-0.4.0-0f6cbd.svg" alt="Versión">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Madurez">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 415 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
+**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 417 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
 
 ---
 
@@ -36,11 +36,11 @@
 
 | | |
 |---|---|
-| Versión | `0.3.9` |
+| Versión | `0.4.0` |
 | Madurez | Establecido |
 | Función | Simulador offline de telemetría y entorno (familia: Testing, padre: ARMOR-COMMON) |
 | Tecnología | Python 3.11+, solo biblioteca estándar |
-| Pruebas | 415 (`python -m unittest discover -s tests`) |
+| Pruebas | 417 (`python -m unittest discover -s tests`) |
 | Escenarios y averías | 4 escenarios, 7 averías (3 rompen el contrato a propósito) |
 | Funciona en | Cualquier ordenador, o CI |
 | En hardware real | No aplica: es el sustituto del hardware, usado en un ordenador |
@@ -57,7 +57,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟢 | Los escenarios, los fallos y la entrega a un servidor funcionan; es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. |
-| Pruebas | 🟢 | Pasan 415 pruebas (`python -m unittest discover -s tests`). |
+| Pruebas | 🟢 | Pasan 417 pruebas (`python -m unittest discover -s tests`). |
 | Protocolos y datos | 🟠 | La geometría es ilustrativa, no un modelo del radar LD2450 real, y nada se ha comparado con hardware real. |
 | Integración | 🟢 | Entrega sus mensajes a un servidor en las pruebas, y el servidor del banco de pruebas CM5 puede alimentarse con él. |
 | Documentación | 🟢 | Ocho idiomas y el historial de cambios están al día. |
