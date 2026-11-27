@@ -30,7 +30,7 @@ TIMEOUT_S = 60
 def run_driver(driver: list[str], cases: list[buses.Case], timeout: float = TIMEOUT_S) -> dict[str, str]:
     """Plays the cases to the driver and gives its answers by case id."""
     text = "".join(case.line() + "\n" for case in cases)
-    done = subprocess.run(driver, input=text, capture_output=True, text=True, timeout=timeout, check=False)
+    done = subprocess.run(driver, input=text, capture_output=True, encoding="utf-8", errors="replace", timeout=timeout, check=False)
     if done.returncode != 0:
         raise buses.BusError(f"the driver stopped with status {done.returncode}: {done.stderr.strip()[:300]}")
     answers: dict[str, str] = {}
