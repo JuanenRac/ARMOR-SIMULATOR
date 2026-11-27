@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import http.client
 import json
 import time
 from urllib.error import HTTPError, URLError
@@ -84,7 +85,7 @@ def post(server_url: str, token: str, kind: str, payload: dict, timeout: float =
             last = f"HTTP {error.code}"
         except URLError:
             last = "server is unreachable"
-        except OSError:   # a read that timed out, a connection reset halfway: the same as an unreachable server (it used to end the run with a traceback)
+        except (OSError, http.client.HTTPException):   # a read that timed out, a connection reset halfway, a cut or garbled answer: the same as an unreachable server (it used to end the run with a traceback)
             last = "the server did not answer in time"
         if attempt + 1 < attempts:
             time.sleep(pause_s)

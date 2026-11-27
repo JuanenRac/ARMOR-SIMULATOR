@@ -376,7 +376,7 @@ def read_password(file: Path | None) -> str:
         try:
             if file.stat().st_size > 4096:
                 raise FakeCameraError("the password file is larger than 4 KiB")
-            return file.read_text(encoding="utf-8").splitlines()[0].strip() if file.stat().st_size else ""
+            return file.read_text(encoding="utf-8-sig").splitlines()[0].strip() if file.stat().st_size else ""
         except OSError as error:
             raise FakeCameraError(f"cannot read {file}: {error.strerror or error}") from None
     return os.environ.get("ARMOR_FAKE_CAMERA_PASSWORD", "")

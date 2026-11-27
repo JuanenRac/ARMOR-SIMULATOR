@@ -160,7 +160,7 @@ NODES: dict[str, NodeShim] = {
 def run_driver(driver: list[str], node_id: str, lines: list[str], timeout: float = TIMEOUT_S, node: str = "radar") -> list[tuple[str, dict]]:
     """Plays the lines to the driver; gives the (topic, payload) messages it printed. A line that is not a topic and a JSON object is an error."""
     prefixes = tuple(prefix.format(id=node_id) for prefix in NODES[node].prefixes)
-    done = subprocess.run([*driver, node_id], input="".join(line + "\n" for line in lines), capture_output=True, text=True, timeout=timeout, check=False)  # noqa: S603
+    done = subprocess.run([*driver, node_id], input="".join(line + "\n" for line in lines), capture_output=True, encoding="utf-8", errors="replace", timeout=timeout, check=False)  # noqa: S603
     if done.returncode != 0:
         raise ShimError(f"the driver stopped with status {done.returncode}: {done.stderr.strip()[:300]}")
     messages = []

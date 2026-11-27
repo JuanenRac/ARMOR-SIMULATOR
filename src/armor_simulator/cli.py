@@ -237,7 +237,7 @@ def _token(args: argparse.Namespace) -> str:
     if args.ingest_token:
         return args.ingest_token
     if args.ingest_token_file:
-        text = Path(args.ingest_token_file).read_text(encoding="utf-8").strip()
+        text = Path(args.ingest_token_file).read_text(encoding="utf-8-sig").strip()   # an editor on Windows may add a byte-order mark
         for line in text.splitlines():
             if line.startswith("ARMOR_INGEST_TOKEN="):
                 return line.split("=", 1)[1].strip()
@@ -248,7 +248,7 @@ def _token(args: argparse.Namespace) -> str:
 def _first_line(parser: argparse.ArgumentParser, path: Path | None, variable: str) -> str:
     if path:
         try:
-            text = Path(path).read_text(encoding="utf-8").strip()
+            text = Path(path).read_text(encoding="utf-8-sig").strip()
         except (OSError, UnicodeDecodeError) as error:
             parser.error(f"cannot read {path}: {getattr(error, 'strerror', None) or error}")
         return text.splitlines()[0].strip() if text else ""
