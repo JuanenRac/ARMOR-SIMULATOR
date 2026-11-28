@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A battery emulated over CAN, as a design and a simulation only:** `python -m armor_simulator.pylon_can` prints the frames a Pylontech low-voltage battery would say for a given state, with rules that only ever lower the bank's limits (see `docs/CAN_BATTERY_EMULATION.md`). Nothing opens a CAN interface or sends anything; no inverter has seen these frames.
 - **The shared tools read the output of processes as UTF-8:** `tools/status_lights.py`, `tools/sync_manifests.py` and `tools/universal_readme_check.py` are the current copies; on Windows a character outside the code page no longer breaks a check.
 
 ## [0.4.0] - Cut or garbled answers retried and differently encoded files read
