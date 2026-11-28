@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 o posterior">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Lenguaje">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-417%20passing-2ea44f.svg" alt="Pruebas">
+  <img src="https://img.shields.io/badge/Tests-428%20passing-2ea44f.svg" alt="Pruebas">
   <img src="https://img.shields.io/badge/Version-0.4.0-0f6cbd.svg" alt="Versión">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Madurez">
 </p>
 
 ---
 
-**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 417 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
+**Comprobación de honestidad - qué funciona hoy:** Los escenarios, los fallos, la entrega a un servidor y los 428 tests son reales, y el simulador es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. La geometría es **ilustrativa**, no un modelo del radar LD2450 real, y nada de esto se ha comparado con hardware real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Madurez | Establecido |
 | Función | Simulador offline de telemetría y entorno (familia: Testing, padre: ARMOR-COMMON) |
 | Tecnología | Python 3.11+, solo biblioteca estándar |
-| Pruebas | 417 (`python -m unittest discover -s tests`) |
+| Pruebas | 428 (`python -m unittest discover -s tests`) |
 | Escenarios y averías | 4 escenarios, 7 averías (3 rompen el contrato a propósito) |
 | Funciona en | Cualquier ordenador, o CI |
 | En hardware real | No aplica: es el sustituto del hardware, usado en un ordenador |
@@ -57,7 +57,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟢 | Los escenarios, los fallos y la entrega a un servidor funcionan; es lo que alimenta a un servidor en un ordenador cuando no hay ningún nodo conectado. |
-| Pruebas | 🟢 | Pasan 417 pruebas (`python -m unittest discover -s tests`). |
+| Pruebas | 🟢 | Pasan 428 pruebas (`python -m unittest discover -s tests`). |
 | Protocolos y datos | 🟠 | La geometría es ilustrativa, no un modelo del radar LD2450 real, y nada se ha comparado con hardware real. |
 | Integración | 🟢 | Entrega sus mensajes a un servidor en las pruebas, y el servidor del banco de pruebas CM5 puede alimentarse con él. |
 | Documentación | 🟢 | Ocho idiomas y el historial de cambios están al día. |
@@ -196,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           las opciones y la ejecución
 │   ├── scenarios.py cycle.py            los cinco escenarios, la geometría de 270 grados y el día de luz
 │   ├── alarm_scenarios.py               escenarios de alarma desde ficheros JSON, sus mensajes y la comprobación de la respuesta
+│   ├── pylon_can.py                     batería por CAN, simulada
 │   ├── vision_scenarios.py              escenarios de visión: objetos que cruzan zonas de detección en cada modo
 │   ├── solar.py                         un inversor y una pila de dos módulos
 │   ├── electrical.py                    los tres canales de un nodo eléctrico
