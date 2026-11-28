@@ -21,14 +21,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python%203.11%2B-3776ab.svg" alt="Language">
   <img src="https://img.shields.io/badge/Dependencies-none-2ea44f.svg" alt="Dependencies">
-  <img src="https://img.shields.io/badge/Tests-417%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-428%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.4.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-established-2EA44F.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 417 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
+**Honesty check - what runs today:** Scenarios, faults, delivery to a server and the 428 tests are real, and the simulator is what feeds a server on a computer when no node is plugged in. The geometry is **illustrative**, not a model of the real LD2450 radar, and nothing here has been compared with real hardware.
 
 ---
 
@@ -40,7 +40,7 @@
 | Maturity | Established |
 | Role | Offline telemetry and environment simulator (family: Testing, parent: ARMOR-COMMON) |
 | Stack | Python 3.11+, standard library only |
-| Tests | 417 (`python -m unittest discover -s tests`) |
+| Tests | 428 (`python -m unittest discover -s tests`) |
 | Scenarios and faults | 4 scenarios, 7 faults (3 break the contract on purpose) |
 | Runs on | Any computer, or CI |
 | On real hardware | Not applicable: it is the stand-in for hardware, used on a computer |
@@ -57,7 +57,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟢 | The scenarios, the faults and the delivery to a server work; it is what feeds a server on a computer when no node is plugged in. |
-| Tests | 🟢 | 417 tests pass (`python -m unittest discover -s tests`). |
+| Tests | 🟢 | 428 tests pass (`python -m unittest discover -s tests`). |
 | Protocols and data | 🟠 | The geometry is illustrative, not a model of the real LD2450 radar, and nothing has been compared with real hardware. |
 | Integration | 🟢 | It delivers its messages to a server in the tests, and the server of the CM5 test bench can be fed by it. |
 | Documentation | 🟢 | Eight languages and the changelog are up to date. |
@@ -196,6 +196,7 @@ ARMOR-SIMULATOR/
 │   ├── cli.py                           the options and the run
 │   ├── scenarios.py cycle.py            the five scenarios, the 270 degree geometry and the day of light
 │   ├── alarm_scenarios.py               alarm scenarios from JSON files, their messages and the check of the answer
+│   ├── pylon_can.py                     a battery over CAN, simulated
 │   ├── vision_scenarios.py              vision scenarios: objects walking across detection zones in each arming mode
 │   ├── solar.py                         an inverter and a two-module battery stack
 │   ├── electrical.py                    the three channels of an electrical node

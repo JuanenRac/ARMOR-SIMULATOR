@@ -59,6 +59,19 @@
           }
         },
         {
+          "name": "pylon_can.py",
+          "desc": {
+            "en": "a battery over CAN, simulated",
+            "es": "batería por CAN, simulada",
+            "de": "Batterie über CAN, simuliert",
+            "fr": "batterie par CAN, simulée",
+            "it": "batteria via CAN, simulata",
+            "ja": "CAN 経由の電池（模擬）",
+            "zh": "CAN 电池（仿真）",
+            "pt": "bateria por CAN, simulada"
+          }
+        },
+        {
           "name": "vision_scenarios.py",
           "desc": {
             "en": "vision scenarios: objects walking across detection zones in each arming mode",
